@@ -1,14 +1,14 @@
 :root {
-  --bg: #071018;
-  --bg-raise: #0c1520;
-  --text: #f4f1ea;
-  --muted: #b7c0c8;
-  --accent: #67d2ff;
-  --gold: #d4b483;
-  --ink: #140e08;
-  --line: rgba(212, 180, 131, 0.22);
+  --bg: #f3f0ea;
+  --bg-raise: #fffcf8;
+  --text: #1c1b19;
+  --muted: #5e5a54;
+  --accent: #1c1b19;
+  --gold: #6f5b3e;
+  --ink: #f3f0ea;
+  --line: rgba(28, 27, 25, 0.12);
   --nav-h: 76px;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -46,8 +46,8 @@ a {
 }
 
 ::selection {
-  background: rgba(212, 180, 131, 0.35);
-  color: #fff;
+  background: rgba(28, 27, 25, 0.14);
+  color: var(--text);
 }
 
 :focus-visible {
@@ -62,7 +62,7 @@ a {
   z-index: 20;
   transform: translateY(-120%);
   background: var(--text);
-  color: var(--ink);
+  color: var(--bg);
   padding: 10px 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -114,8 +114,9 @@ a {
 
 .lockup {
   display: block;
-  width: min(720px, 100%);
+  width: min(520px, 100%);
   height: auto;
+  margin-bottom: 28px;
 }
 
 .lede,
@@ -135,9 +136,9 @@ a {
 }
 
 .lede {
-  max-width: 38ch;
-  padding-left: 16px;
-  border-left: 1px solid rgba(212, 180, 131, 0.5);
+  max-width: 36ch;
+  padding-left: 0;
+  border-left: 0;
 }
 
 .nav {
@@ -145,15 +146,8 @@ a {
   inset: 0 0 auto;
   z-index: 10;
   height: var(--nav-h);
-  border-bottom: 1px solid transparent;
-  background: linear-gradient(180deg, rgba(7, 16, 24, 0.82), rgba(7, 16, 24, 0));
-  transition: background 0.25s ease, border-color 0.25s ease;
-}
-
-.nav.is-scrolled,
-.nav.is-solid {
-  background: rgba(7, 16, 24, 0.88);
-  border-bottom-color: var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(243, 240, 234, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -262,7 +256,7 @@ a {
   font-weight: 700;
   letter-spacing: 0.2em;
   color: var(--ink);
-  background: var(--gold);
+  background: var(--text);
 }
 
 .nav-cta {
@@ -281,7 +275,7 @@ a {
 
 .nav-cta:hover,
 .btn:hover {
-  background: #e4cba3;
+  background: #3a3834;
 }
 
 .actions {
@@ -307,12 +301,28 @@ a {
 }
 
 .hero {
+  padding: var(--nav-h) 0 0;
+}
+
+.hero-photo,
+.mast {
+  margin: 0;
+}
+
+.hero-photo img,
+.mast img {
+  width: 100%;
+  height: min(74vh, 780px);
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+.hero-copy {
   position: relative;
-  min-height: 100dvh;
-  display: flex;
-  align-items: flex-end;
-  padding: calc(var(--nav-h) + 40px) 0 72px;
-  overflow: hidden;
+  z-index: 1;
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 56px 0 8px;
 }
 
 .stage {
@@ -347,13 +357,6 @@ a {
 @keyframes ken {
   from { transform: scale(1.04); }
   to { transform: scale(1.12); }
-}
-
-.hero-copy {
-  position: relative;
-  z-index: 1;
-  width: min(1120px, calc(100% - 48px));
-  margin-inline: auto;
 }
 
 .band {
@@ -473,17 +476,15 @@ a {
 }
 
 .page-hero-plain {
-  min-height: 46vh;
-  background:
-    radial-gradient(ellipse at 20% 80%, rgba(103, 210, 255, 0.08), transparent 46%),
-    linear-gradient(180deg, #0c1824, var(--bg));
+  min-height: 42vh;
+  background: var(--bg);
 }
 
 .page-hero::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(7, 16, 24, 0.35) 0%, rgba(7, 16, 24, 0.12) 36%, var(--bg) 100%);
+  background: linear-gradient(180deg, rgba(243, 240, 234, 0.05) 0%, rgba(243, 240, 234, 0.2) 55%, var(--bg) 100%);
 }
 
 .page-hero-plain::after {
@@ -549,6 +550,15 @@ a {
   object-fit: cover;
 }
 
+.split figure img {
+  aspect-ratio: 4 / 5;
+  object-position: center 18%;
+}
+
+.page-start {
+  padding-top: calc(var(--nav-h) + 64px);
+}
+
 .chapter figcaption,
 .split figcaption,
 .still figcaption,
@@ -574,7 +584,7 @@ a {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: 72% 42%;
+  object-position: center 18%;
 }
 
 .dossier-photo figcaption {
@@ -602,7 +612,7 @@ a {
 .board-card {
   padding: 26px 22px 28px;
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+  background: var(--bg-raise);
   min-height: 100%;
 }
 
@@ -855,7 +865,7 @@ a {
     right: 0;
     padding: 10px;
     flex-direction: column;
-    background: rgba(7, 16, 24, 0.97);
+    background: #f7f4ee;
     border: 1px solid var(--line);
     backdrop-filter: blur(16px);
   }

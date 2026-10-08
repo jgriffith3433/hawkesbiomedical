@@ -11,7 +11,6 @@ export default defineConfig({
         'index.html',
         'company.html',
         'leadership.html',
-        'category.html',
         'contact.html',
         '404.html',
       ],

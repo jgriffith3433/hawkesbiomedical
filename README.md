@@ -27,7 +27,6 @@ npm run preview    # serve the build on port 4174
 | `index.html` | Home |
 | `company.html` | The company |
 | `leadership.html` | Pierce Hawkes, Hale, Voss, Lang |
-| `category.html` | Category ownership |
 | `contact.html` | Tower office and the Zurich desk |
 
 Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
