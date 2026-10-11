@@ -692,6 +692,70 @@ a {
   line-height: 1.5;
 }
 
+.products {
+  display: grid;
+  margin-top: 56px;
+}
+
+.product {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+  padding: 40px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--nav-h) + 16px);
+}
+
+.product-shot {
+  display: block;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  background: #111;
+}
+
+.product-shot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.product p.kicker {
+  margin: 0 0 12px;
+  max-width: none;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.product h2 {
+  margin: 0 0 14px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 600;
+  line-height: 0.95;
+}
+
+.product p {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.product .text-link {
+  display: inline-block;
+  margin-top: 22px;
+  padding: 0;
+}
+
 .contact-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
@@ -824,8 +888,13 @@ a {
   .dossier,
   .closing,
   .contact-grid,
-  .practice {
+  .practice,
+  .product {
     grid-template-columns: 1fr;
+  }
+
+  .product-shot {
+    width: min(220px, 100%);
   }
 
   .facts > div + div {
@@ -901,12 +970,17 @@ a {
   .lede,
   .prose p,
   .dossier p,
-  .practice p {
+  .practice p,
+  .product p {
     font-size: 18px;
   }
 
   .band {
     padding: 64px 0;
+  }
+
+  .page-start {
+    padding-top: calc(var(--nav-h) + 28px);
   }
 }
 

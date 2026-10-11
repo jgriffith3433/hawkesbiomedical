@@ -26,6 +26,14 @@ navLinks?.querySelectorAll('a').forEach((link) => {
   });
 });
 
+document.querySelectorAll('.product a[target="_blank"]').forEach((link) => {
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    const opened = window.open(link.href, '_blank');
+    opened?.focus();
+  });
+});
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') setMenu(false);
 });

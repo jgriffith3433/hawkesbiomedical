@@ -10,6 +10,7 @@ export default defineConfig({
       input: [
         'index.html',
         'company.html',
+        'products.html',
         'leadership.html',
         'contact.html',
         '404.html',
