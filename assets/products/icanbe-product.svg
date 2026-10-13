@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="I Can Be logo.">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f9fbfa"/>
+      <stop offset="1" stop-color="#dfeaec"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#214c58"/>
+      <stop offset="1" stop-color="#5fa7aa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#background)"/>
+  <g transform="translate(800 330)">
+    <circle r="190" fill="none" stroke="#c7d9dc" stroke-width="8"/>
+    <circle r="142" fill="none" stroke="url(#mark)" stroke-width="24" stroke-dasharray="620 272" stroke-linecap="round" transform="rotate(-48)"/>
+    <g stroke="#214c58" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0-18v72" stroke-width="54"/>
+      <path d="M-22-3-76 61M22-3l54 64" stroke-width="28"/>
+      <path d="M-13 46-48 112M13 46l35 66" stroke-width="34"/>
+    </g>
+    <circle cy="-72" r="36" fill="#e1a45d"/>
+    <path d="M-60 25Q0 48 60 25" fill="none" stroke="#79afb1" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <text x="800" y="650" fill="#173740" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="700" letter-spacing="18" text-anchor="middle">I CAN BE</text>
+  <text x="800" y="720" fill="#5c747a" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="600" letter-spacing="10" text-anchor="middle">SEE THE WHOLE PICTURE</text>
+</svg>
