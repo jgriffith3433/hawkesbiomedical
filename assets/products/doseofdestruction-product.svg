@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Dose Of Destruction logo.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f4ee"/>
+      <stop offset="1" stop-color="#e8e0d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="900" fill="url(#bg)"/>
+  <g transform="translate(450 360)">
+    <circle r="196" fill="none" stroke="#c9bba8" stroke-width="8"/>
+    <circle r="148" fill="none" stroke="#6f5b3e" stroke-width="16"/>
+    <circle r="38" fill="#7a1f24"/>
+    <path d="M0-118v-46" fill="none" stroke="#2a2420" stroke-width="18" stroke-linecap="round"/>
+    <path d="M-22-164h44l12 28H-34z" fill="#2a2420"/>
+    <rect x="-20" y="-118" width="40" height="86" rx="8" fill="#2a2420"/>
+    <rect x="-12" y="-78" width="24" height="38" rx="4" fill="#7a1f24"/>
+  </g>
+  <text x="450" y="640" fill="#1c1b19" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" letter-spacing="10" text-anchor="middle">DOSE OF</text>
+  <text x="450" y="710" fill="#7a1f24" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" letter-spacing="8" text-anchor="middle">DESTRUCTION</text>
+</svg>

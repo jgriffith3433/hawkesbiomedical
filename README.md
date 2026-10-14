@@ -26,10 +26,10 @@ npm run preview    # serve the build on port 4174
 |---|---|
 | `index.html` | Home |
 | `company.html` | The company |
-| `products.html` | PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be |
+| `products.html` | PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, Dose Of Destruction |
 | `leadership.html` | Pierce Hawkes, Hale, Voss, Lang |
 | `contact.html` | Tower office and the Zurich desk |
 
 Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
 
-Do not invent first names for Hale, Voss, or Lang. Do not put the basement, the vat, or the rest of the plot on these pages. The public line is category ownership, not a cure. Products are PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, and I Can Be, written as the line, with links out to their sites.
+Do not invent first names for Hale, Voss, or Lang. Do not put the basement, the vat, or the rest of the plot on these pages. The public line is category ownership, not a cure. Products are PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, and Dose Of Destruction, written as the line, with links out to their sites.
