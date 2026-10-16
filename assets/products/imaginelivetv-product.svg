@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Imagine Live TV: a live clinical lecture on a studio screen in daylight.">
+  <!-- Studio wall, faceted -->
+  <rect width="900" height="900" fill="#ebe5da"/>
+  <polygon points="0,0 420,0 0,260" fill="#f0ebe2"/>
+  <polygon points="420,0 900,0 900,220 600,300" fill="#e6dfd2"/>
+  <polygon points="0,260 420,0 600,300 0,620" fill="#eee8de"/>
+  <polygon points="600,300 900,220 900,620 0,620" fill="#e8e1d6"/>
+
+  <!-- Daylight window at the side, sky only -->
+  <g transform="translate(700 90)">
+    <rect width="170" height="380" fill="#d6e8f0"/>
+    <polygon points="0,0 170,0 60,160" fill="#e1eef4"/>
+    <polygon points="0,0 60,160 0,260" fill="#cde2eb"/>
+    <polygon points="60,160 170,0 170,300" fill="#d9eaf1"/>
+    <polygon points="0,260 60,160 170,300 170,380 0,380" fill="#e7f1f5"/>
+    <rect x="0" y="180" width="170" height="14" fill="#f8f5ef"/>
+    <rect x="-10" y="-10" width="190" height="400" fill="none" stroke="#f8f5ef" stroke-width="20"/>
+  </g>
+
+  <!-- Screen with the lecture -->
+  <g transform="translate(70 110)">
+    <polygon points="0,0 580,0 580,350 0,350" fill="#3c4a50"/>
+    <polygon points="14,14 566,14 566,336 14,336" fill="#f7f8f6"/>
+    <polygon points="14,14 300,14 14,200" fill="#eef3f3"/>
+    <!-- ECG trace -->
+    <polyline points="40,220 170,220 196,220 214,170 232,270 252,120 274,250 292,220 400,220 420,200 440,220 540,220" fill="none" stroke="#2f7f86" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- Slide title bars -->
+    <rect x="40" y="48" width="220" height="22" fill="#214c58"/>
+    <rect x="40" y="82" width="150" height="14" fill="#9fb8bd"/>
+    <!-- LIVE tag -->
+    <rect x="452" y="40" width="94" height="38" fill="#ffffff" stroke="#d3c9b8" stroke-width="2"/>
+    <circle cx="474" cy="59" r="9" fill="#b3322f"/>
+    <text x="490" y="68" fill="#1c1b19" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" letter-spacing="2">LIVE</text>
+    <!-- Lower third -->
+    <rect x="40" y="280" width="300" height="34" fill="#214c58"/>
+    <rect x="56" y="292" width="180" height="10" fill="#e8f0f0"/>
+    <!-- Stand -->
+    <polygon points="270,350 310,350 320,420 260,420" fill="#9aa5a8"/>
+    <polygon points="200,420 380,420 396,436 184,436" fill="#7f8b8f"/>
+  </g>
+
+  <!-- Floor -->
+  <polygon points="0,620 900,620 900,900 0,900" fill="#d9cfbd"/>
+  <polygon points="0,620 440,620 0,790" fill="#e1d8c8"/>
+  <polygon points="440,620 900,620 900,740" fill="#d2c7b3"/>
+  <polygon points="0,790 440,620 900,740 620,900 0,900" fill="#d6ccb9"/>
+  <polygon points="700,620 870,620 760,900 520,900" fill="#efe8da" fill-opacity="0.6"/>
+
+  <!-- Lectern, low-poly -->
+  <g transform="translate(560 560)">
+    <polygon points="0,0 160,0 140,40 20,40" fill="#cbbfa9"/>
+    <polygon points="20,40 140,40 130,250 30,250" fill="#b9ab92"/>
+    <polygon points="20,40 80,40 70,250 30,250" fill="#c6b9a1"/>
+    <polygon points="-6,-12 166,-12 160,0 0,0" fill="#ddd3c1"/>
+    <rect x="70" y="100" width="20" height="20" fill="#f3efe6"/>
+    <polygon points="0,250 160,250 190,266 -20,266" fill="#bfb49f" fill-opacity="0.6"/>
+  </g>
+</svg>

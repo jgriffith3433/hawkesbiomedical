@@ -1,30 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="A dark apartment looking out a wide window at night.">
-  <rect width="1600" height="900" fill="#100e0c"/>
-  <rect x="180" y="70" width="1240" height="620" fill="#1a2430"/>
-  <g fill="#243140">
-    <rect x="230" y="120" width="90" height="160"/>
-    <rect x="350" y="160" width="70" height="220"/>
-    <rect x="450" y="100" width="120" height="280"/>
-    <rect x="600" y="190" width="80" height="180"/>
-    <rect x="720" y="80" width="150" height="320"/>
-    <rect x="900" y="150" width="100" height="240"/>
-    <rect x="1030" y="110" width="130" height="300"/>
-    <rect x="1190" y="180" width="90" height="200"/>
-    <rect x="1300" y="90" width="70" height="260"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="The Place Department: a filing cabinet and record folders in a bright records room by day.">
+  <!-- Records room wall, faceted -->
+  <rect width="900" height="900" fill="#ece6dc"/>
+  <polygon points="0,0 380,0 0,220" fill="#f1ece3"/>
+  <polygon points="380,0 900,0 900,160 560,260" fill="#e7e0d4"/>
+  <polygon points="0,220 380,0 560,260 0,600" fill="#efe9df"/>
+  <polygon points="560,260 900,160 900,600 0,600" fill="#e9e3d8"/>
+
+  <!-- Daylight window, sky only -->
+  <g transform="translate(60 70)">
+    <rect width="380" height="400" fill="#d6e8f0"/>
+    <polygon points="0,0 190,0 80,150" fill="#e2eff4"/>
+    <polygon points="190,0 380,0 290,130" fill="#d0e4ed"/>
+    <polygon points="0,0 80,150 0,240" fill="#cde2eb"/>
+    <polygon points="80,150 190,0 290,130" fill="#dbebf1"/>
+    <polygon points="290,130 380,0 380,280" fill="#d8e9f0"/>
+    <polygon points="0,240 80,150 290,130 380,280 380,400 0,400" fill="#e6f1f4"/>
+    <polygon points="40,230 120,190 190,225 140,262 56,266" fill="#fbfcfc"/>
+    <polygon points="220,310 300,276 370,310 320,338 236,340" fill="#f6f9fa"/>
+    <g fill="#f8f5ef">
+      <rect x="180" y="0" width="20" height="400"/>
+      <rect x="0" y="190" width="380" height="16"/>
+    </g>
+    <rect x="-12" y="-12" width="404" height="424" fill="none" stroke="#f8f5ef" stroke-width="24"/>
   </g>
-  <g fill="#f0b36a" opacity="0.85">
-    <rect x="268" y="150" width="14" height="18"/>
-    <rect x="490" y="140" width="16" height="20"/>
-    <rect x="760" y="130" width="18" height="22"/>
-    <rect x="1080" y="160" width="14" height="18"/>
-    <rect x="1220" y="210" width="12" height="16"/>
+
+  <!-- Floor, with the light from the window -->
+  <polygon points="0,600 900,600 900,900 0,900" fill="#d9cfbd"/>
+  <polygon points="0,600 380,600 0,760" fill="#e0d7c7"/>
+  <polygon points="380,600 900,600 900,720" fill="#d2c7b3"/>
+  <polygon points="0,760 380,600 900,720 640,900 0,900" fill="#d6ccb9"/>
+  <polygon points="60,600 440,600 600,900 140,900" fill="#efe8da" fill-opacity="0.6"/>
+
+  <!-- Filing cabinet, low-poly -->
+  <g transform="translate(520 150)">
+    <polygon points="0,30 260,30 260,470 0,470" fill="#c9d3d6"/>
+    <polygon points="260,30 330,0 330,440 260,470" fill="#aebcc1"/>
+    <polygon points="0,30 70,0 330,0 260,30" fill="#dde4e6"/>
+    <g fill="#d7dfe1" stroke="#a3b2b7" stroke-width="4">
+      <rect x="20" y="50" width="220" height="126"/>
+      <rect x="20" y="192" width="220" height="126"/>
+      <rect x="20" y="334" width="220" height="120"/>
+    </g>
+    <g fill="#8d9ea4">
+      <polygon points="100,116 160,116 152,130 108,130"/>
+      <polygon points="100,258 160,258 152,272 108,272"/>
+      <polygon points="100,396 160,396 152,410 108,410"/>
+    </g>
+    <g fill="#fbfaf6" stroke="#b9ad97" stroke-width="2">
+      <rect x="98" y="70" width="64" height="30"/>
+      <rect x="98" y="212" width="64" height="30"/>
+      <rect x="98" y="352" width="64" height="30"/>
+    </g>
+    <polygon points="-10,470 260,470 330,440 370,460 290,492 -10,492" fill="#bfb49f" fill-opacity="0.55"/>
   </g>
-  <g stroke="#2a2118" stroke-width="14" fill="none">
-    <path d="M180 70h1240v620H180z"/>
-    <path d="M800 70v620M180 380h1240"/>
+
+  <!-- Record folders stacked on the floor -->
+  <g transform="translate(150 660)">
+    <polygon points="0,90 240,90 260,110 20,110" fill="#c79a5c"/>
+    <polygon points="0,60 240,60 240,90 0,90" fill="#e2bd84"/>
+    <polygon points="10,30 250,30 250,60 10,60" fill="#d9ae6f"/>
+    <polygon points="-6,0 234,0 234,30 -6,30" fill="#ead0a2"/>
+    <polygon points="30,-14 110,-14 120,0 20,0" fill="#ead0a2"/>
+    <g fill="#fbfaf6">
+      <rect x="150" y="8" width="60" height="14"/>
+      <rect x="20" y="66" width="60" height="14"/>
+    </g>
   </g>
-  <rect x="0" y="640" width="1600" height="260" fill="#171410"/>
-  <ellipse cx="1280" cy="760" rx="180" ry="28" fill="#f0b36a" opacity="0.16"/>
-  <rect x="1240" y="748" width="14" height="70" fill="#3a2a1c"/>
-  <ellipse cx="1247" cy="738" rx="22" ry="12" fill="#f0b36a"/>
 </svg>
