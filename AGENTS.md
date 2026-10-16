@@ -27,3 +27,17 @@ CNAME favicon.svg
 `npm run dev` serves port **5174**. `npm run build` writes `dist/`.
 
 When you change the board, the floor, or these constraints, update this file and `README.md`.
+
+## Generative AI: Hawkes Gen
+
+Images, textures, video, 3D, music, voice, sound and Claude all go through **Hawkes Gen**
+(`C:\Projects\hawkesgen`, dashboard http://127.0.0.1:8790; start it with `hawkesgen\auto-start.bat`). It holds
+the API and AWS keys and runs the shared GPU fleet. This project never holds those keys.
+
+- **Agents:** the `hawkesgen` MCP server is in this folder's `.mcp.json`. Use `hawkesgen_presets` (project
+  `hawkesbiomedical`) for the art direction, then `hawkesgen_run`.
+- **Command line:** `C:\Projects\hawkesgen\hawkesgen.cmd run - --project hawkesbiomedical --preset <name> --param prompt="..." --out <folder>`
+- **Art direction:** `hawkesgen/presets/hawkesbiomedical.json` (style line and named presets). Edit it there.
+- **Code:** copy `hawkesgen/clients/js/hawkesgen.mjs` into `tools/` and use `new HawkesGen({ project: 'hawkesbiomedical' })`.
+- The brand rules above apply to generated images too: daylight low-poly, light page, never B3, the vat, the creature or the night city.
+- GPU tools cost money while a server runs. Ask J before starting servers or running big batches.
