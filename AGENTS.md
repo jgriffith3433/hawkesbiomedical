@@ -26,6 +26,14 @@ CNAME favicon.svg
 
 `npm run dev` serves port **5174**. `npm run build` writes `dist/`.
 
+## Playtest
+
+`site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
+`site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke` and
+`products`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
+line's contrast on every page (a bug under 4.5:1). Product thumbnails are square crops: draw new ones at 900x900.
+
 When you change the board, the floor, or these constraints, update this file and `README.md`.
 
 ## Generative AI: Hawkes Gen
