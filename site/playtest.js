@@ -17,6 +17,9 @@ const PAGES = [
 const SHARE_URLS = {
   Home: 'https://hawkesbiomedical.com/',
   Products: 'https://hawkesbiomedical.com/products.html',
+  Company: 'https://hawkesbiomedical.com/company.html',
+  Leadership: 'https://hawkesbiomedical.com/leadership.html',
+  Contact: 'https://hawkesbiomedical.com/contact.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -245,6 +248,7 @@ async function products(options, t, everyPage) {
       doc = await clickLink(t, doc, `footer nav a[href="${p.href}"]`, `${p.name} (footer)`);
       t.scene(p.name);
       t.add('pagesOpened');
+      if (SHARE_URLS[p.name]) checkShareTags(t, doc, p.name);
       worst = await checkFooter(t, doc, p.name, worst);
       t.progress(0.6 + (0.35 * (i + 1)) / (PAGES.length + 1));
     }
@@ -266,10 +270,10 @@ installPlaytest({
     { id: 'smoke', title: 'Home link-preview tags and footer, Products through the nav and its link-preview tags, every thumbnail, the Products footer', seconds: 25, tags: ['smoke'] },
     {
       id: 'products',
-      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads on every page',
+      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads on every page; every page with link-preview tags has them right',
       seconds: 45,
       tags: ['full'],
-      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer and measures the footer line contrast (404 loaded directly).',
+      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, and measures the footer line contrast (404 loaded directly).',
     },
   ],
   isReady: () => document.readyState === 'complete',
