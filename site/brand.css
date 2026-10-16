@@ -711,7 +711,7 @@ a {
   display: block;
   border: 1px solid var(--line);
   overflow: hidden;
-  background: #111;
+  background: var(--bg-raise);
 }
 
 .product-shot img {
@@ -862,9 +862,9 @@ a {
 
 .legal {
   padding: 0 0 36px;
-  color: rgba(183, 192, 200, 0.72);
+  color: var(--muted);
   letter-spacing: 0.08em;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
