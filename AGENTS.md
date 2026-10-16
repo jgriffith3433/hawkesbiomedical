@@ -32,7 +32,9 @@ CNAME favicon.svg
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke` and
 `products`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
-line's contrast on every page (a bug under 4.5:1). Product thumbnails are square crops: draw new ones at 900x900.
+line's contrast on every page (a bug under 4.5:1). It also checks the link-preview tags (Open Graph, Twitter card)
+on Home, Products, Company, Leadership and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
+have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
 
 When you change the board, the floor, or these constraints, update this file and `README.md`.
 

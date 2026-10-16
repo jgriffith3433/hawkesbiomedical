@@ -13,6 +13,14 @@ const PAGES = [
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
 ];
+// Pages that carry the link-preview (Open Graph and Twitter card) tags, and the og:url each must give.
+const SHARE_URLS = {
+  Home: 'https://hawkesbiomedical.com/',
+  Products: 'https://hawkesbiomedical.com/products.html',
+  Company: 'https://hawkesbiomedical.com/company.html',
+  Leadership: 'https://hawkesbiomedical.com/leadership.html',
+  Contact: 'https://hawkesbiomedical.com/contact.html',
+};
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
 const MIN_LIGHTNESS = 0.4;
@@ -144,6 +152,33 @@ async function checkFooter(t, doc, page, worst) {
   return Math.min(worst, ratio);
 }
 
+/** The link-preview tags: og:title and og:description match the page's own title and description. */
+function checkShareTags(t, doc, page) {
+  const meta = (attr, key) => doc.head.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content') ?? null;
+  const og = (key) => meta('property', `og:${key}`);
+  const title = doc.title.trim();
+  const description = meta('name', 'description');
+  const tags = {
+    'og:title': og('title'),
+    'og:description': og('description'),
+    'og:type': og('type'),
+    'og:url': og('url'),
+    'og:site_name': og('site_name'),
+    'twitter:card': meta('name', 'twitter:card'),
+  };
+  t.event('share-tags', `${page}: ${Object.entries(tags).map(([k, v]) => `${k}="${v ?? '(missing)'}"`).join(', ')}`);
+  for (const [k, v] of Object.entries(tags)) if (!v) t.problem('bug', `${page}: no ${k} tag (link previews)`);
+  if (tags['og:title'] && tags['og:title'] !== title) t.problem('bug', `${page}: og:title "${tags['og:title']}" isn't the page title "${title}"`);
+  if (tags['og:description'] && tags['og:description'] !== description) t.problem('bug', `${page}: og:description isn't the page's meta description`);
+  if (tags['og:type'] && tags['og:type'] !== 'website') t.problem('bug', `${page}: og:type is "${tags['og:type']}", not "website"`);
+  if (tags['og:url'] && tags['og:url'] !== SHARE_URLS[page]) t.problem('bug', `${page}: og:url is "${tags['og:url']}", not ${SHARE_URLS[page]}`);
+  if (tags['og:site_name'] && tags['og:site_name'] !== 'Hawkes Biomedical') t.problem('bug', `${page}: og:site_name is "${tags['og:site_name']}"`);
+  if (tags['twitter:card'] && tags['twitter:card'] !== 'summary') t.problem('bug', `${page}: twitter:card is "${tags['twitter:card']}", not "summary"`);
+  const text = Object.values(tags).join(' ');
+  if (/\b(B3|vat|creature|game|gameplay|play)\b/i.test(text)) t.problem('bug', `${page}: a link-preview tag breaks the brand rules ("${text}")`);
+  t.add('shareTagsChecked');
+}
+
 /** Every product row: its thumbnail loads and reads as a daylight image. Holds on PH Origins. */
 async function checkProducts(t, doc) {
   await t.until(() => imagesLoaded(doc), 15000, 'the product images');
@@ -187,6 +222,7 @@ async function checkProducts(t, doc) {
 
 async function products(options, t, everyPage) {
   t.scene('Home');
+  checkShareTags(t, document, 'Home');
   let worst = Infinity;
   // The home page's own footer first, without leaving it.
   worst = await checkFooter(t, document, 'Home', worst);
@@ -200,6 +236,7 @@ async function products(options, t, everyPage) {
   doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
   t.scene('Products');
   t.add('pagesOpened');
+  checkShareTags(t, doc, 'Products');
   await checkProducts(t, doc);
   t.progress(0.5);
   worst = await checkFooter(t, doc, 'Products', worst);
@@ -211,6 +248,7 @@ async function products(options, t, everyPage) {
       doc = await clickLink(t, doc, `footer nav a[href="${p.href}"]`, `${p.name} (footer)`);
       t.scene(p.name);
       t.add('pagesOpened');
+      if (SHARE_URLS[p.name]) checkShareTags(t, doc, p.name);
       worst = await checkFooter(t, doc, p.name, worst);
       t.progress(0.6 + (0.35 * (i + 1)) / (PAGES.length + 1));
     }
@@ -229,13 +267,13 @@ async function products(options, t, everyPage) {
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
-    { id: 'smoke', title: 'Home footer, Products through the nav, every thumbnail, the Products footer', seconds: 25, tags: ['smoke'] },
+    { id: 'smoke', title: 'Home link-preview tags and footer, Products through the nav and its link-preview tags, every thumbnail, the Products footer', seconds: 25, tags: ['smoke'] },
     {
       id: 'products',
-      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads on every page',
+      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads on every page; every page with link-preview tags has them right',
       seconds: 45,
       tags: ['full'],
-      description: 'Clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer and measures the footer line contrast (404 loaded directly).',
+      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, and measures the footer line contrast (404 loaded directly).',
     },
   ],
   isReady: () => document.readyState === 'complete',
