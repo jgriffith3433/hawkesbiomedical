@@ -1,0 +1,17 @@
+{
+  "product": "hawkesbiomedical",
+  "name": "Hawkes Biomedical",
+  "current": "1.0.0",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "date": "2026-10-16",
+      "build": "fe1f15b",
+      "title": "The product line, on the record",
+      "notes": [
+        "The full Hawkes Biomedical product line, each with its indication.",
+        "Company, leadership and investor contact, in one place."
+      ]
+    }
+  ]
+}

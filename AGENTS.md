@@ -41,3 +41,16 @@ the API and AWS keys and runs the shared GPU fleet. This project never holds tho
 - **Code:** copy `hawkesgen/clients/js/hawkesgen.mjs` into `tools/` and use `new HawkesGen({ project: 'hawkesbiomedical' })`.
 - The brand rules above apply to generated images too: daylight low-poly, light page, never B3, the vat, the creature or the night city.
 - GPU tools cost money while a server runs. Ask J before starting servers or running big batches.
+
+## Versions and What's new
+
+Every go live is a release, made by Hawkes Studio (`hawkesstudio/src/releases.ts`): a semver version bumped at
+go live (minor when players get something new, patch for fixes) plus the build (the commit), shown as
+"1.4.0 (build ...)" and tagged `v<version>` in git. Studio adds the release to `releases.json` at the repo root (newest first) with the
+player-facing notes J approved in the go-live plan. `whatsnew.html` ("Notices") and the footer's "Site revision" read it through `hawkes-release.js` (a copy of
+`hawkesstudio/clients/web/hawkes-release.js`: `[data-hawkes-version]`, `[data-hawkes-releases]`). Don't bump versions
+by hand; a typo in old notes can be fixed in the file on beta.
+
+`products.html` shows each product's current version as its "Formulation x.y.z · revised <date>" (`site/formulations.js`
+reads `https://<product domain>/releases.json`; GitHub Pages allows the cross-site read). A product whose live site has
+no releases.json yet shows nothing. The notes for this site stay in the fictional pharma framing: never games.
