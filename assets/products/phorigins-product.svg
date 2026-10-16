@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="PH Origins: a pH strip and beaker on a lab bench in daylight.">
+  <!-- Daylight sky through the lab window, faceted -->
+  <rect width="900" height="900" fill="#dcebf1"/>
+  <polygon points="0,0 360,0 180,220" fill="#e6f1f5"/>
+  <polygon points="360,0 720,0 520,180" fill="#d3e6ee"/>
+  <polygon points="720,0 900,0 900,240" fill="#e2eef3"/>
+  <polygon points="0,0 180,220 0,330" fill="#cfe3ec"/>
+  <polygon points="180,220 360,0 520,180" fill="#ddecf2"/>
+  <polygon points="520,180 720,0 900,240" fill="#d7e8ef"/>
+  <polygon points="0,330 180,220 400,360 0,520" fill="#e8f2f5"/>
+  <polygon points="180,220 520,180 400,360" fill="#e1eef3"/>
+  <polygon points="520,180 900,240 900,420 400,360" fill="#eaf3f6"/>
+  <polygon points="0,520 400,360 900,420 900,560 0,560" fill="#f1f6f7"/>
+
+  <!-- Window mullions -->
+  <g fill="#f6f3ec">
+    <rect x="290" y="0" width="22" height="560"/>
+    <rect x="600" y="0" width="22" height="560"/>
+    <rect x="0" y="270" width="900" height="16"/>
+  </g>
+
+  <!-- Bench, low-poly -->
+  <polygon points="0,560 900,560 900,600 0,600" fill="#e9e2d4"/>
+  <polygon points="0,600 900,600 900,900 0,900" fill="#d9d0bf"/>
+  <polygon points="0,600 420,600 0,780" fill="#e2dacb"/>
+  <polygon points="420,600 900,600 900,720" fill="#d1c7b4"/>
+  <polygon points="0,780 420,600 900,720 600,900 0,900" fill="#cfc5b1"/>
+  <polygon points="600,900 900,720 900,900" fill="#c4b9a4"/>
+
+  <!-- Beaker, faceted glass -->
+  <g transform="translate(560 340)">
+    <polygon points="-110,0 110,0 120,300 -120,300" fill="#ffffff" fill-opacity="0.55" stroke="#9fb8c0" stroke-width="5" stroke-linejoin="round"/>
+    <polygon points="-118,150 118,150 120,300 -120,300" fill="#9fd3c7"/>
+    <polygon points="-118,150 0,150 -60,300 -120,300" fill="#b6ded3"/>
+    <polygon points="0,150 118,150 120,300 60,300" fill="#88c6b9"/>
+    <polygon points="-60,300 0,150 60,300" fill="#a8d8cc"/>
+    <polygon points="-90,20 -60,20 -80,280 -104,280" fill="#ffffff" fill-opacity="0.7"/>
+    <polygon points="-126,-8 126,-8 110,0 -110,0" fill="#c9dbe0"/>
+  </g>
+
+  <!-- pH strip resting on the bench -->
+  <g transform="translate(150 700) rotate(-12)">
+    <polygon points="0,0 360,0 360,46 0,46" fill="#fbfaf6" stroke="#bdb39f" stroke-width="3"/>
+    <polygon points="200,6 236,6 236,40 200,40" fill="#e3a35a"/>
+    <polygon points="244,6 280,6 280,40 244,40" fill="#d8c75a"/>
+    <polygon points="288,6 324,6 324,40 288,40" fill="#6fb38f"/>
+  </g>
+
+  <!-- Soft daylight shadow under beaker -->
+  <polygon points="430,645 700,645 760,672 470,672" fill="#bfb49f" fill-opacity="0.6"/>
+</svg>
