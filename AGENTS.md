@@ -63,4 +63,4 @@ by hand; a typo in old notes can be fixed in the file on beta.
 
 `products.html` shows each product's current version as its "Formulation x.y.z · revised <date>" (`site/formulations.js`
 reads `https://<product domain>/releases.json`; GitHub Pages allows the cross-site read). The line links to that product's
-`whatsnew.html`. A product whose live site has no releases.json yet shows "Formulation pending" (no link). The notes for this site stay in the fictional pharma framing: never games.
+`whatsnew.html`. A product whose live site has no releases.json yet shows "Formulation pending" (no link). A row marked `data-unreleased` (The Place Department, Yooba Land, Dose Of Destruction today) skips the fetch, since the missing file would 404 in the console; remove the attribute when that product first goes live. The notes for this site stay in the fictional pharma framing: never games.
