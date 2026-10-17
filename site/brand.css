@@ -1008,3 +1008,9 @@ a {
 .legal .revision:hover { color: var(--gold); }
 .product p.formulation a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .product p.formulation { margin-top: 10px; color: var(--muted); font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* "Powered by HAWKES GEN" mark at the end of the footer line, on every page. */
+.legal .powered { float: right; margin-left: 18px; color: inherit; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; }
+.legal .powered strong { color: var(--text); font-weight: 600; }
+.legal .powered:hover, .legal .powered:hover strong { color: var(--gold); }
+@media (max-width: 600px) { .legal .powered { float: none; display: block; margin: 10px 0 0; } }

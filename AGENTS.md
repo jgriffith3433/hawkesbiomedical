@@ -11,7 +11,7 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 - Do not put the basement, B3, the vat, the creature, or gameplay on these pages.
 - Products are the public line: **PH Origins** (pH balance, phorigins.com), **Sick of It** (single-use fever shots, sickofitgame.com), **Imagine Live TV** (live medical education, imaginelivetv.com), **The Place Department** (HIPAA-compliant document storage, theplacedepartment.com), **Yooba Land** (hyporexia support, yoobalandgame.com), **I Can Be** (AI-assisted full-body assessment, icanbe.ai), and **Dose Of Destruction** (cytotoxic dose, doseofdestruction.com). The next product is another row on `products.html`. Do not call them games.
 - The public site is a light page, spare on purpose. Daylight low-poly photographs. Do not put the night city or a black page background back.
-- Footer keeps the line that the company is a work of fiction.
+- Footer keeps the line that the company is a work of fiction, followed by the small "Powered by HAWKES GEN" mark linking to https://hawkesgen.com (every page, `.legal .powered`).
 - Do not add a form that collects patient information. Contact is `mailto:` only.
 
 ## Layout
@@ -32,7 +32,7 @@ CNAME favicon.svg
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke` and
 `products`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
-line's contrast on every page (a bug under 4.5:1). It also checks the link-preview tags (Open Graph, Twitter card)
+line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.com (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
 have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
 
