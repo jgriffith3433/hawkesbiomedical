@@ -148,8 +148,27 @@ async function checkFooter(t, doc, page, worst) {
   t.add('footersChecked');
   if (ratio < MIN_CONTRAST) t.problem('bug', `${page}: footer line contrast ${ratio}:1 is under ${MIN_CONTRAST}:1 (hard to read)`);
   t.note(`${page} footer: ${ratio}:1`);
+  checkPoweredBy(t, doc, page);
   await t.wait(1500);
   return Math.min(worst, ratio);
+}
+
+/** The footer's "Powered by HAWKES GEN" mark: shown, and linking to hawkesgen.com. Not clicked: it leaves the site. */
+function checkPoweredBy(t, doc, page) {
+  const link = [...doc.querySelectorAll('footer a')].find((a) => /powered by\s+hawkes gen/i.test(a.textContent));
+  if (!link) {
+    t.problem('bug', `${page}: no "Powered by HAWKES GEN" link in the footer`);
+    return;
+  }
+  const text = link.innerText.replace(/\s+/g, ' ').trim();
+  const href = link.getAttribute('href');
+  const box = link.getBoundingClientRect();
+  const shown = box.width > 0 && box.height > 0 && doc.defaultView.getComputedStyle(link).visibility !== 'hidden';
+  t.event('powered-by', `${page}: "${text}" -> ${href}${shown ? '' : ' (not visible)'}`);
+  t.add('poweredByChecked');
+  if (!/^https:\/\/hawkesgen\.com\/?$/.test(href || '')) t.problem('bug', `${page}: "Powered by HAWKES GEN" links to ${href}, not https://hawkesgen.com`);
+  if (!shown) t.problem('bug', `${page}: "Powered by HAWKES GEN" isn't visible`);
+  if (text !== 'POWERED BY HAWKES GEN') t.problem('warning', `${page}: the mark reads "${text}"`);
 }
 
 /** The link-preview tags: og:title and og:description match the page's own title and description. */
@@ -267,13 +286,13 @@ async function products(options, t, everyPage) {
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
-    { id: 'smoke', title: 'Home link-preview tags and footer, Products through the nav and its link-preview tags, every thumbnail, the Products footer', seconds: 25, tags: ['smoke'] },
+    { id: 'smoke', title: 'Home link-preview tags and footer, Products through the nav and its link-preview tags, every thumbnail, the Products footer (fiction line, Powered by HAWKES GEN)', seconds: 25, tags: ['smoke'] },
     {
       id: 'products',
-      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads on every page; every page with link-preview tags has them right',
+      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads and Powered by HAWKES GEN links to hawkesgen.com on every page; every page with link-preview tags has them right',
       seconds: 45,
       tags: ['full'],
-      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, and measures the footer line contrast (404 loaded directly).',
+      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.com (404 loaded directly).',
     },
   ],
   isReady: () => document.readyState === 'complete',
