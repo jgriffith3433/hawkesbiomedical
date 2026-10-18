@@ -11,12 +11,8 @@ for (const el of document.querySelectorAll('[data-releases-from]')) {
     el.textContent = 'Formulation pending';
     el.hidden = false;
   };
-  // data-unreleased: the product's site has no releases.json yet (it would 404 and log a console error), so skip the
-  // fetch. Remove the attribute from the row once the product has had its first go live.
-  if (el.dataset.unreleased !== undefined) {
-    pending();
-    continue;
-  }
+  // A product that hasn't gone live since releases began has no releases.json yet: the fetch 404s (one expected console
+  // line) and the row shows "Formulation pending" until its first go live writes the file. No flag to keep up to date.
   fetch(el.dataset.releasesFrom, { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
