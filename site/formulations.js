@@ -1,4 +1,4 @@
-// The product line: each product's current formulation (its version) and the date it was last revised, read from the
+// The product line: each product's current formulation (its version), its lot (build) and the date it was last revised, read from the
 // releases.json on the product's own site (written there by Hawkes Studio at each release). The line links to that
 // product's What's new page. A product whose site has none yet shows "Formulation pending".
 const date = (d) => {
@@ -21,7 +21,8 @@ for (const el of document.querySelectorAll('[data-releases-from]')) {
       const link = document.createElement('a');
       link.href = new URL('whatsnew.html', el.dataset.releasesFrom).href;
       link.target = '_blank';
-      link.textContent = `Formulation ${top.version}${top.date ? ` \u00b7 revised ${date(top.date)}` : ''}`;
+      // The build is the lot: the Unity build number (Game/v<n>) or the short commit of a web product.
+      link.textContent = `Formulation ${top.version}${top.build ? ` \u00b7 lot ${top.build}` : ''}${top.date ? ` \u00b7 revised ${date(top.date)}` : ''}`;
       el.replaceChildren(link);
       el.hidden = false;
     })
