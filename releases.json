@@ -1,8 +1,21 @@
 {
   "product": "hawkesbiomedical",
   "name": "Hawkes Biomedical",
-  "current": "1.0.0",
+  "current": "1.1.0",
   "releases": [
+    {
+      "version": "1.1.0",
+      "date": "2026-10-18",
+      "build": "93f3d31",
+      "title": "New in this update",
+      "notes": [
+        "Products: the formulation line shows each product's lot (its latest build) with the version and date",
+        "Products: every product's formulation line reads its live releases.json (drop the hand-kept unreleased flag; DoD now shows its version)",
+        "Products: add Hawkes Gen (laboratory services)",
+        "Fixed: Products page fetches releases.json from three product domains that return 404",
+        "Add Powered by Hawkes Gen to the corporate site"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2026-10-16",
