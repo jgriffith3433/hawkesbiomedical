@@ -7,13 +7,12 @@
       "version": "1.1.0",
       "date": "2026-10-18",
       "build": "93f3d31",
-      "title": "New in this update",
+      "title": "Every lot, on the record",
       "notes": [
-        "Products: the formulation line shows each product's lot (its latest build) with the version and date",
-        "Products: every product's formulation line reads its live releases.json (drop the hand-kept unreleased flag; DoD now shows its version)",
-        "Products: add Hawkes Gen (laboratory services)",
-        "Fixed: Products page fetches releases.json from three product domains that return 404",
-        "Add Powered by Hawkes Gen to the corporate site"
+        "Products: each formulation line now shows its current lot, version and revision date.",
+        "Products: every product in the line now shows its current formulation.",
+        "Hawkes Gen (laboratory services) joins the product line.",
+        "Every page now carries the Hawkes Gen laboratory mark in the footer."
       ]
     },
     {
