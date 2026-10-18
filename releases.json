@@ -1,8 +1,17 @@
 {
   "product": "hawkesbiomedical",
   "name": "Hawkes Biomedical",
-  "current": "1.1.0",
+  "current": "1.1.1",
   "releases": [
+    {
+      "version": "1.1.1",
+      "date": "2026-10-18",
+      "build": "718690a",
+      "title": "Fixes and polish",
+      "notes": [
+        "Fixed: What's new v1.1.0 notes are raw dev changelog text, breaking the pharma framing"
+      ]
+    },
     {
       "version": "1.1.0",
       "date": "2026-10-18",
