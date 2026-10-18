@@ -9,7 +9,7 @@
       "build": "718690a",
       "title": "Fixes and polish",
       "notes": [
-        "Fixed: What's new v1.1.0 notes are raw dev changelog text, breaking the pharma framing"
+        "Notices: release notes now follow the standard laboratory notice format."
       ]
     },
     {
