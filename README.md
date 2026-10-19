@@ -32,4 +32,6 @@ npm run preview    # serve the build on port 4174
 
 Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
 
+Every page loads Hawkes Analytics (Hawkes Gen's SDK, product `hawkesbiomedical`) and `site/analytics.js`: anonymous site statistics, no cookies, no personal data, as the footer says. See `AGENTS.md` "Analytics".
+
 Do not invent first names for Hale, Voss, or Lang. Do not put the basement, the vat, or the rest of the plot on these pages. The public line is category ownership, not a cure. Products are PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, Dose Of Destruction, and Hawkes Gen (laboratory services), written as the line, with links out to their sites.

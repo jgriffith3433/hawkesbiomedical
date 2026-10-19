@@ -237,6 +237,109 @@ async function checkProducts(t, doc) {
   await t.wait(4000);
 }
 
+/* ---------------- analytics ---------------- */
+
+// Words the corporate site never shows (AGENTS.md "Hard constraints").
+const OFF_BRAND = /\b(B3|vat|creature|basement|games?|gameplay|play(?:er|ers)?)\b/i;
+
+/** The page's Hawkes Analytics, once the deferred SDK has run (null if it never loads). */
+async function analyticsOf(t, win, page) {
+  const ok = await t.until(() => win.hawkesAnalytics && typeof win.hawkesAnalytics.config === 'function', 10000, `${page}: the analytics SDK`).then(
+    () => true,
+    () => false
+  );
+  if (!ok) {
+    t.problem('bug', `${page}: Hawkes Analytics didn't load (https://gen.hawkesgen.com/sdk/analytics@1.js)`);
+    return null;
+  }
+  const a = win.hawkesAnalytics;
+  if (!a.config().debug) a.init({ debug: true }); // the playtest reads what goes out from debugLog
+  return a;
+}
+
+const described = (e) =>
+  `${e.name}${e.props ? ' ' + JSON.stringify(e.props) : ''}${e.ctx && Object.keys(e.ctx).length ? ' ctx ' + JSON.stringify(e.ctx) : ''}`;
+
+/** Waits for an event in the page's debug log, then for its batch to go out. Logs it on the timeline. */
+async function sentEvent(t, a, page, what, match) {
+  let e = null;
+  try {
+    await t.until(() => (e = a.debugLog.find(match)), 10000, `${page}: ${what}`);
+  } catch {
+    t.problem('bug', `${page}: no ${what} event`);
+    return null;
+  }
+  a.flush();
+  await t.until(() => e.sent, 10000, `${page}: ${what} sent`).catch(() => {});
+  const c = a.config();
+  t.event('analytics', `${page}: ${described(e)} -> ${e.sent ? 'sent' : 'NOT sent'} (env ${c.env}, product ${c.product}, build ${JSON.stringify(c.build || null)})`);
+  t.add('analyticsSent');
+  if (!e.sent) t.problem('bug', `${page}: the ${what} event never went out`);
+  return e;
+}
+
+async function analytics(options, t) {
+  // Pages opened in the frame are this tab's too: the SDK reads this and runs in debug mode there (site/analytics.js).
+  sessionStorage.setItem('hawkes.playtest', '1');
+  t.scene('Home');
+  const home = await analyticsOf(t, window, 'Home');
+  if (home) {
+    const c = home.config();
+    t.event('analytics', `Home: SDK ${home.version}, product ${c.product}, env ${c.env}, build ${JSON.stringify(c.build || null)}, flags ${JSON.stringify(c.flags)}`);
+    t.metric('analyticsEnv', c.env);
+    if (c.product !== 'hawkesbiomedical') t.problem('bug', `Home: analytics product is "${c.product}", not hawkesbiomedical`);
+    if (/\.hawkesgen\.com$/.test(location.hostname) && !/^\/c\//.test(location.pathname) && c.env !== 'beta') t.problem('bug', `Home: env is "${c.env}" on the beta site`);
+  }
+  t.progress(0.1);
+
+  // Products, through the nav.
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
+  t.scene('Products');
+  const win = doc.defaultView;
+  const a = await analyticsOf(t, win, 'Products');
+  if (!a) return;
+  await sentEvent(t, a, 'Products', 'page_view', (e) => e.name === 'page_view');
+  t.progress(0.3);
+
+  // Read the line, row by row, to the footer: read depth goes out as progress.
+  for (const row of doc.querySelectorAll('.products .product')) {
+    smoothTo(row);
+    await t.wait(900);
+  }
+  const legal = doc.querySelector('footer .legal');
+  legal.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  await t.wait(1500);
+  await sentEvent(t, a, 'Products', 'read depth 100%', (e) => e.name === 'progress' && e.props && e.props.step === 100);
+  t.metric('readDepthMarks', a.debugLog.filter((e) => e.name === 'progress').map((e) => e.props.step).join(','));
+  t.progress(0.6);
+
+  // The new footer line: anonymous statistics, in the company's voice, after the fiction line.
+  const stats = legal.querySelector('.stats');
+  const line = legal.textContent.replace(/\s+/g, ' ').trim();
+  t.event('footer', `Products: "${line}"`);
+  if (!stats) t.problem('bug', 'Products: no site statistics line in the footer');
+  if (!/work of fiction/i.test(line)) t.problem('bug', "Products: the footer line doesn't say the company is fiction");
+  if (OFF_BRAND.test(line)) t.problem('bug', `Products: the footer line breaks the brand rules ("${line}")`);
+
+  // Click through to a product, as a visitor does. The click is real; the new tab is held back so the run stays here.
+  t.scene('Products: PH Origins');
+  const link = doc.querySelector('#ph-origins a.text-link');
+  if (!link) throw new Error('Products has no PH Origins link');
+  smoothTo(link);
+  await t.wait(1200);
+  doc.addEventListener('click', (e) => e.preventDefault(), { once: true });
+  link.click();
+  t.event('click', `PH Origins (${link.getAttribute('href')})`);
+  const out = await sentEvent(t, a, 'Products', 'outbound click to PH Origins', (e) => e.name === 'outbound' && e.ctx && e.ctx.product === 'PH Origins');
+  if (out && !/^phorigins\.com\/?$/.test(out.props?.url || '')) t.problem('bug', `Products: the outbound event's url is "${out.props?.url}"`);
+  t.progress(0.9);
+  await t.wait(2500);
+  closeFrame();
+  t.progress(1);
+}
+
 /* ---------------- scenarios ---------------- */
 
 async function products(options, t, everyPage) {
@@ -294,11 +397,19 @@ installPlaytest({
       tags: ['full'],
       description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.com (404 loaded directly).',
     },
+    {
+      id: 'analytics',
+      title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
+      seconds: 40,
+      tags: ['analytics'],
+      description: 'Reads the SDK config on Home (product, env, build), clicks Products in the nav, waits for its page_view to go out, scrolls every product row to the footer (progress 25/50/75/100), checks the footer line (fiction, anonymous statistics, no off-brand words), then clicks the phorigins.com link (the new tab is held back) and waits for the outbound event with ctx.product "PH Origins" to go out.',
+    },
   ],
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
-      await products(options, t, id === 'products');
+      if (id === 'analytics') await analytics(options, t);
+      else await products(options, t, id === 'products');
     } finally {
       closeFrame();
     }

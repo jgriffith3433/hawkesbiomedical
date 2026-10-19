@@ -1014,3 +1014,5 @@ a {
 .legal .powered strong { color: var(--text); font-weight: 600; }
 .legal .powered:hover, .legal .powered:hover strong { color: var(--gold); }
 @media (max-width: 600px) { .legal .powered { float: none; display: block; margin: 10px 0 0; } }
+.legal .stats { margin-left: 8px; }
+@media (max-width: 600px) { .legal .stats { display: block; margin: 8px 0 0; } }

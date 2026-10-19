@@ -19,6 +19,7 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 ```
 index.html company.html products.html leadership.html contact.html 404.html
 site/brand.css site/brand.js
+site/analytics.js  Hawkes Analytics additions (after the SDK tag in every page head)
 assets/brand/     Tower and board photography
 public/           favicon, CNAME, robots (copied into dist/)
 CNAME favicon.svg
@@ -29,14 +30,37 @@ CNAME favicon.svg
 ## Playtest
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
-`site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke` and
-`products`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
+`products` and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.com (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
 have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
+The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
+the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
+"PH Origins", each with the env (`beta` on corporate.hawkesgen.com). It sets `sessionStorage['hawkes.playtest']` so the
+pages opened in the frame run the SDK in debug mode too.
 
 When you change the board, the floor, or these constraints, update this file and `README.md`.
+
+## Analytics
+
+Hawkes Analytics is the only analytics here (Hawkes Gen's SDK, contract in `hawkesgen/docs/analytics.md`). Never add
+another tracker. Every page's head ends with the SDK tag (`https://gen.hawkesgen.com/sdk/analytics@1.js`,
+`data-product="hawkesbiomedical"`, deferred) followed by `site/analytics.js` (not deferred: it must run before the SDK).
+A new page gets both lines.
+
+- **Automatic (the SDK):** page views, sessions, referrers, UTM, device, place, load times, errors, `outbound` clicks.
+- **The build:** there is no build step (Pages serves the repo), so `site/analytics.js` sets `window.HAWKES_BUILD`
+  from the current release in `releases.json` (version, its `build` commit, its date). Beta reports the last release's
+  build; its env (`beta`) tells it apart.
+- **Outbound, by product:** a click to a product site (the host map `PRODUCTS` in `site/analytics.js`; add the next
+  product there too) puts `ctx.product` (its name as on `products.html`) on the SDK's own `outbound` event.
+- **Read depth:** `progress` with `step` 25/50/75/100 (`of` 100) and the last heading reached (`section`) on Home,
+  Company, Products, Leadership and Contact.
+- **No feedback prompt** (`ask`) on this site.
+- **The footer** says, after the fiction line, "We keep anonymous site statistics. No cookies. No personal data."
+  (`.legal .stats`). Any privacy wording stays in the company's voice: never games, B3, the vat or the creature.
 
 ## Generative AI: Hawkes Gen
 
