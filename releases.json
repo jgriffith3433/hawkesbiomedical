@@ -1,8 +1,17 @@
 {
   "product": "hawkesbiomedical",
   "name": "Hawkes Biomedical",
-  "current": "1.1.1",
+  "current": "1.2.0",
   "releases": [
+    {
+      "version": "1.2.0",
+      "date": "2026-10-19",
+      "build": "e885612",
+      "title": "Site updates",
+      "notes": [
+        "Improvements and corrections."
+      ]
+    },
     {
       "version": "1.1.1",
       "date": "2026-10-18",
