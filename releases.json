@@ -7,18 +7,18 @@
       "version": "1.2.0",
       "date": "2026-10-19",
       "build": "e885612",
-      "title": "Site updates",
+      "title": "Anonymous site statistics, on the record",
       "notes": [
-        "Improvements and corrections."
+        "Anonymous site statistics are now kept across the public record, with no cookies and no personal data collected."
       ]
     },
     {
       "version": "1.1.1",
       "date": "2026-10-18",
       "build": "718690a",
-      "title": "Fixes and polish",
+      "title": "Laboratory notice format",
       "notes": [
-        "Notices: release notes now follow the standard laboratory notice format."
+        "Public notices now follow the standard Hawkes Biomedical laboratory record format."
       ]
     },
     {
@@ -27,10 +27,10 @@
       "build": "93f3d31",
       "title": "Every lot, on the record",
       "notes": [
-        "Products: each formulation line now shows its current lot, version and revision date.",
-        "Products: every product in the line now shows its current formulation.",
-        "Hawkes Gen (laboratory services) joins the product line.",
-        "Every page now carries the Hawkes Gen laboratory mark in the footer."
+        "Each product dossier now lists its current formulation, active lot and revision date.",
+        "Every product in the Hawkes Biomedical line now publishes its current formulation status.",
+        "Hawkes Gen (laboratory services: on-demand synthesis) joins the public product line.",
+        "All public records now carry the Hawkes Gen laboratory synthesis mark."
       ]
     },
     {
@@ -39,8 +39,8 @@
       "build": "4a7f172",
       "title": "The product line, on the record",
       "notes": [
-        "The full Hawkes Biomedical product line, each with its indication.",
-        "Company, leadership and investor contact, in one place."
+        "The full Hawkes Biomedical product line, each with its clinical indication.",
+        "Corporate charter, board leadership and Zurich capital desk contact, on the public record."
       ]
     }
   ]
