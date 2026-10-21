@@ -198,9 +198,14 @@ function checkShareTags(t, doc, page) {
   t.add('shareTagsChecked');
 }
 
-/** Every product row: its thumbnail loads and reads as a daylight image. Holds on PH Origins. */
+/** Every product row: its thumbnail loads and reads as a daylight image, and its formulation line stays on one line. Holds on PH Origins. */
 async function checkProducts(t, doc) {
   await t.until(() => imagesLoaded(doc), 15000, 'the product images');
+  await t.until(
+    () => [...doc.querySelectorAll('.products .product p.formulation')].every((p) => !p.hidden),
+    6000,
+    'the product formulations'
+  ).catch(() => {});
   const rows = [...doc.querySelectorAll('.products .product')];
   t.metric('products', rows.length);
   if (!rows.length) throw new Error('Products lists no products');
@@ -218,6 +223,18 @@ async function checkProducts(t, doc) {
     t.add('thumbnailsChecked');
     if (mean < MIN_LIGHTNESS || darkShare > MAX_DARK_SHARE) {
       t.problem('warning', `Products: ${name} thumbnail (${fileOf(img.src)}) is dark (mean lightness ${fixed2(mean)}, near-black ${Math.round(darkShare * 100)}%); the brand wants daylight images`);
+    }
+    const form = row.querySelector('p.formulation');
+    if (form && !form.hidden) {
+      const target = form.querySelector('a') || form;
+      const rects = target.getClientRects();
+      const text = form.textContent.replace(/\s+/g, ' ').trim();
+      const style = doc.defaultView.getComputedStyle(form);
+      t.event('formulation', `${name}: "${text}" (${rects.length} line${rects.length === 1 ? '' : 's'}, white-space: ${style.whiteSpace})`);
+      t.add('formulationsChecked');
+      if (rects.length > 1) {
+        t.problem('bug', `Products: ${name} formulation wraps across ${rects.length} lines ("${text}")`);
+      }
     }
   }
 
@@ -239,8 +256,45 @@ async function checkProducts(t, doc) {
 
 /* ---------------- analytics ---------------- */
 
-// Words the corporate site never shows (AGENTS.md "Hard constraints").
+// Words the corporate site never shows (AGENTS.md "Hard constraints") and developer changelog terms banned from notices.
 const OFF_BRAND = /\b(B3|vat|creature|basement|games?|gameplay|play(?:er|ers)?)\b/i;
+const CHANGELOG_WORDS = /\b(changelog|commit|deploy|fix(?:ed|es)?|polish|bug|repo|git|merge|pull request|site updates|improvements and corrections|release notes|footer|header)\b/i;
+
+/** Checks What's new notices: corporate/laboratory framing, left-aligned dates under headings, and body list typography. */
+async function checkNotices(t, doc) {
+  await t.until(() => doc.querySelectorAll('[data-hawkes-releases] .hawkes-release').length > 0, 8000, "What's new: notices");
+  const container = doc.querySelector('[data-hawkes-releases]');
+  smoothTo(container);
+  await t.wait(2000);
+  const entries = [...doc.querySelectorAll('[data-hawkes-releases] .hawkes-release')];
+  t.metric('noticesChecked', entries.length);
+  for (const sec of entries) {
+    const h3 = sec.querySelector('h3');
+    const ver = (sec.querySelector('.hawkes-release-version')?.textContent || '').trim();
+    const title = (sec.querySelector('.hawkes-release-title')?.textContent || '').trim();
+    const dateEl = sec.querySelector('.hawkes-release-date');
+    const ul = sec.querySelector('ul');
+    const notes = [...sec.querySelectorAll('ul li')].map((li) => li.textContent.trim());
+    const fullText = [title, ...notes].join(' ');
+    if (OFF_BRAND.test(fullText) || CHANGELOG_WORDS.test(fullText)) {
+      t.problem('bug', `What's new (${ver}): notice uses developer changelog or off-brand wording ("${fullText}")`);
+    }
+    if (h3 && dateEl) {
+      const h3Rect = h3.getBoundingClientRect();
+      const dateRect = dateEl.getBoundingClientRect();
+      const deltaLeft = Math.abs(dateRect.left - h3Rect.left);
+      const dateLines = dateEl.getClientRects().length;
+      const ulFont = ul ? doc.defaultView.getComputedStyle(ul).fontSize : '';
+      t.event(
+        'notice',
+        `${ver} "${title}" (${dateEl.textContent.trim()}, left delta ${fixed2(deltaLeft)}px, ${dateLines} line, list ${ulFont}): ${notes.join(' | ')}`
+      );
+      if (deltaLeft > 4 || dateLines > 1) {
+        t.problem('bug', `What's new (${ver}): release date isn't cleanly left-aligned under the heading (left delta ${fixed2(deltaLeft)}px, lines ${dateLines})`);
+      }
+    }
+  }
+}
 
 /** The page's Hawkes Analytics, once the deferred SDK has run (null if it never loads). */
 async function analyticsOf(t, win, page) {
@@ -371,6 +425,7 @@ async function products(options, t, everyPage) {
       t.scene(p.name);
       t.add('pagesOpened');
       if (SHARE_URLS[p.name]) checkShareTags(t, doc, p.name);
+      if (p.name === "What's new") await checkNotices(t, doc);
       worst = await checkFooter(t, doc, p.name, worst);
       t.progress(0.6 + (0.35 * (i + 1)) / (PAGES.length + 1));
     }
