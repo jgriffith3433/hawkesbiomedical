@@ -28,6 +28,11 @@ npm run preview    # serve the build on port 4174
 | `company.html` | The company |
 | `products.html` | PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, Dose Of Destruction, Hawkes Gen |
 | `leadership.html` | Pierce Hawkes, Hale, Voss, Lang |
+| `newsroom.html` | Dated statements: Hale, Lang, Voss, the Chairman |
+| `investors.html` | Mission, our position, selected figures, Zurich capital desk |
+| `compliance.html` | Compliance statement |
+| `privacy.html`, `terms.html` | Short legal pages |
+| `whatsnew.html` | Release log |
 | `contact.html` | Tower office and the Zurich desk |
 
 Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
