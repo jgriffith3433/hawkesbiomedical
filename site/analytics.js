@@ -23,7 +23,7 @@
     'hawkesgen.com': 'Hawkes Gen',
   };
   // Pages measured for read depth (body data-page).
-  var READ_PAGES = { home: 1, company: 1, products: 1, leadership: 1, contact: 1 };
+  var READ_PAGES = { home: 1, company: 1, products: 1, leadership: 1, contact: 1, newsroom: 1, investors: 1, compliance: 1 };
   var MARKS = [25, 50, 75, 100];
   var BUILD_RE = /^[0-9a-f]{4,40}$/i;
   // releases.json sits at the site root, one folder up from this file (404.html is served at any path).

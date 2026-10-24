@@ -9,6 +9,11 @@ const PAGES = [
   // Footer links, in the order the footer lists them. 404 has no link: it is loaded directly (setup).
   { name: 'Company', href: './company.html' },
   { name: 'Leadership', href: './leadership.html' },
+  { name: 'Newsroom', href: './newsroom.html' },
+  { name: 'Investors', href: './investors.html' },
+  { name: 'Compliance', href: './compliance.html' },
+  { name: 'Privacy', href: './privacy.html' },
+  { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
@@ -20,6 +25,11 @@ const SHARE_URLS = {
   Company: 'https://hawkesbiomedical.com/company.html',
   Leadership: 'https://hawkesbiomedical.com/leadership.html',
   Contact: 'https://hawkesbiomedical.com/contact.html',
+  Newsroom: 'https://hawkesbiomedical.com/newsroom.html',
+  Investors: 'https://hawkesbiomedical.com/investors.html',
+  Compliance: 'https://hawkesbiomedical.com/compliance.html',
+  Privacy: 'https://hawkesbiomedical.com/privacy.html',
+  Terms: 'https://hawkesbiomedical.com/terms.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -399,6 +409,10 @@ async function analytics(options, t) {
 async function products(options, t, everyPage) {
   t.scene('Home');
   checkShareTags(t, document, 'Home');
+  const position = document.querySelector('.hero-copy .position')?.textContent.replace(/\s+/g, ' ').trim();
+  t.event('category-line', `Home: "${position || '(missing)'}"`);
+  if (position !== 'We do not pitch a cure. We own the category.') t.problem('bug', 'Home: the category-ownership line is missing');
+  for (const img of document.querySelectorAll('header img, footer img')) if (!img.getAttribute('alt')) t.problem('bug', 'Home: a logo image has no alt text');
   let worst = Infinity;
   // The home page's own footer first, without leaving it.
   worst = await checkFooter(t, document, 'Home', worst);
@@ -425,6 +439,7 @@ async function products(options, t, everyPage) {
       t.scene(p.name);
       t.add('pagesOpened');
       if (SHARE_URLS[p.name]) checkShareTags(t, doc, p.name);
+      if (OFF_BRAND.test(doc.body.innerText)) t.problem('bug', `${p.name}: visible text breaks the brand rules`);
       if (p.name === "What's new") await checkNotices(t, doc);
       worst = await checkFooter(t, doc, p.name, worst);
       t.progress(0.6 + (0.35 * (i + 1)) / (PAGES.length + 1));

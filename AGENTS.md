@@ -14,10 +14,22 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 - Footer keeps the line that the company is a work of fiction, followed by the small "Powered by HAWKES GEN" mark linking to https://hawkesgen.com (every page, `.legal .powered`).
 - Do not add a form that collects patient information. Contact is `mailto:` only.
 
+## Register
+
+Deadpan pharma megacorp, never winking: plain regulatory language (indications and usage, formulation and lot per product).
+Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan. Newsroom holds dated statements
+(Hale, Voss, Lang, Pierce as Chairman); Investors holds mission, "Our position" and the fictional figures (71% category share,
+17 years in market since 2009, 8 products). Tenure on Leadership: Pierce 2009, Hale 2014, Voss 2011, Lang 2016. Header nav:
+Company, Products, Leadership, Newsroom, Contact, plus the Investors button; the footer lists every page incl. Compliance,
+Privacy, Terms. Logos carry alt text. The fiction line is the first sentence of the footer, small and formal (`.legal`).
+New pages are generated from the same head/header/footer: copy one and keep the SDK tag, `site/analytics.js` and the
+`SHARE_URLS` entry in `site/playtest.js`.
+
 ## Layout
 
 ```
-index.html company.html products.html leadership.html contact.html 404.html
+index.html company.html products.html leadership.html newsroom.html investors.html contact.html
+compliance.html privacy.html terms.html whatsnew.html 404.html
 site/brand.css site/brand.js
 site/analytics.js  Hawkes Analytics additions (after the SDK tag in every page head)
 assets/brand/     Tower and board photography
@@ -34,7 +46,7 @@ CNAME favicon.svg
 `products` and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.com (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
-on Home, Products, Company, Leadership and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
+on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
 have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
 The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
 the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
@@ -57,7 +69,7 @@ A new page gets both lines.
 - **Outbound, by product:** a click to a product site (the host map `PRODUCTS` in `site/analytics.js`; add the next
   product there too) puts `ctx.product` (its name as on `products.html`) on the SDK's own `outbound` event.
 - **Read depth:** `progress` with `step` 25/50/75/100 (`of` 100) and the last heading reached (`section`) on Home,
-  Company, Products, Leadership and Contact.
+  Company, Products, Leadership, Newsroom, Investors, Compliance and Contact.
 - **No feedback prompt** (`ask`) on this site.
 - **The footer** says, after the fiction line, "We keep anonymous site statistics. No cookies. No personal data."
   (`.legal .stats`). Any privacy wording stays in the company's voice: never games, B3, the vat or the creature.

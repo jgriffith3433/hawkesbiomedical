@@ -1,12 +1,13 @@
 :root {
   --bg: #f3f0ea;
-  --bg-raise: #fffcf8;
-  --text: #1c1b19;
-  --muted: #5e5a54;
+  --bg-raise: #faf7f1;
+  --text: #24231f;
+  --muted: #55514b;
+  --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --accent: #1c1b19;
   --gold: #6f5b3e;
   --ink: #f3f0ea;
-  --line: rgba(28, 27, 25, 0.12);
+  --line: rgba(36, 35, 31, 0.14);
   --nav-h: 76px;
   color-scheme: light;
 }
@@ -87,7 +88,7 @@ a {
 .eyebrow {
   margin: 0 0 12px;
   color: var(--gold);
-  letter-spacing: 0.38em;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 700;
@@ -101,9 +102,9 @@ a {
 .beat h3,
 .office h3 {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 0.95;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.05;
 }
 
 .display {
@@ -129,10 +130,11 @@ a {
 .closing p {
   margin: 0;
   color: var(--muted);
-  font-size: 20px;
+  font-family: var(--serif);
+  font-size: 22px;
   font-weight: 500;
-  letter-spacing: 0.03em;
-  line-height: 1.5;
+  letter-spacing: 0;
+  line-height: 1.6;
 }
 
 .lede {
@@ -262,13 +264,13 @@ a {
 .nav-cta {
   height: 42px;
   padding: 0 18px;
-  border-radius: 999px;
+  border-radius: 2px;
   font-size: 12px;
 }
 
 .btn {
   padding: 16px 28px;
-  border-radius: 999px;
+  border-radius: 2px;
   font-size: 13px;
   letter-spacing: 0.22em;
 }
@@ -360,7 +362,7 @@ a {
 }
 
 .band {
-  padding: 88px 0;
+  padding: 104px 0;
 }
 
 .band-tight {
@@ -815,6 +817,7 @@ a {
 
 .site-footer {
   display: flex;
+  margin-top: 40px;
   justify-content: space-between;
   gap: 18px;
   flex-wrap: wrap;
@@ -861,11 +864,16 @@ a {
 }
 
 .legal {
-  padding: 0 0 36px;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 18px 0 40px;
+  border-top: 1px solid var(--line);
   color: var(--muted);
-  letter-spacing: 0.08em;
-  font-size: 14px;
+  font-family: var(--serif);
+  letter-spacing: 0.01em;
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.6;
 }
 
 .chapter,
@@ -1027,3 +1035,24 @@ a {
 @media (max-width: 600px) { .legal .powered { float: none; display: block; margin: 10px 0 0; } }
 .legal .stats { margin-left: 8px; }
 @media (max-width: 600px) { .legal .stats { display: block; margin: 8px 0 0; } }
+
+/* Document-style pages: serious register, serif headlines, generous spacing. */
+.position { margin: 0 0 22px; max-width: 30ch; font-family: var(--serif); font-size: clamp(28px, 3.4vw, 40px); font-weight: 500; line-height: 1.2; color: var(--text); }
+.section-note { max-width: 60ch; margin-top: 18px; }
+.usage { margin-top: 10px !important; }
+.product p.usage { font-size: 18px; }
+.role, .tenure { margin: 0 0 8px; }
+.tenure { color: var(--gold); font-family: "Barlow Condensed", sans-serif; font-size: 13px !important; letter-spacing: 0.2em !important; text-transform: uppercase; }
+.board-card p { margin-bottom: 10px; }
+.board-card .role { color: var(--text); font-size: 20px; }
+.dossier .prose { margin: 14px 0 22px; }
+.sub { margin: 28px 0 0; font-family: var(--serif); font-size: clamp(26px, 3vw, 34px); font-weight: 600; line-height: 1.15; }
+.prose a, .fine a, .notes a { color: var(--text); text-underline-offset: 3px; }
+.fine { margin: 28px 0 0; max-width: 68ch; color: var(--muted); font-family: var(--serif); font-size: 16px; line-height: 1.5; }
+.notes { display: grid; margin-top: 40px; }
+.release-note { padding: 34px 0; border-top: 1px solid var(--line); max-width: 68ch; }
+.release-note h2 { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(28px, 3.4vw, 38px); font-weight: 600; line-height: 1.1; }
+.release-note p:not(.kicker) { margin: 0; color: var(--muted); font-family: var(--serif); font-size: 21px; line-height: 1.6; }
+.facts { margin: 32px 0 0; }
+.facts dd { font-weight: 500; }
+@media (max-width: 900px) { .band { padding: 72px 0; } }
