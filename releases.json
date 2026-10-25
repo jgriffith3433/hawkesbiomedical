@@ -1,8 +1,19 @@
 {
   "product": "hawkesbiomedical",
   "name": "Hawkes Biomedical",
-  "current": "1.3.1",
+  "current": "1.4.0",
   "releases": [
+    {
+      "version": "1.4.0",
+      "date": "2026-10-25",
+      "build": "bbed7d8",
+      "title": "Corporate site copy updated",
+      "notes": [
+        "Company: the Hawkes Biomedical site now uses a more formal, measured tone from the home page through to the laboratory notices.",
+        "Notices: company announcements are now written in a plainer, more exact register, with fewer embellishments.",
+        "Products: each product page now describes its formulation in the company's standard clinical format."
+      ]
+    },
     {
       "version": "1.3.1",
       "date": "2026-10-21",
