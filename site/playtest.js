@@ -163,7 +163,7 @@ async function checkFooter(t, doc, page, worst) {
   return Math.min(worst, ratio);
 }
 
-/** The footer's "Powered by HAWKES GEN" mark: shown, and linking to hawkesgen.com. Not clicked: it leaves the site. */
+/** The footer's "Powered by HAWKES GEN" mark: shown, and linking to hawkesgen.ai. Not clicked: it leaves the site. */
 function checkPoweredBy(t, doc, page) {
   const link = [...doc.querySelectorAll('footer a')].find((a) => /powered by\s+hawkes gen/i.test(a.textContent));
   if (!link) {
@@ -176,7 +176,7 @@ function checkPoweredBy(t, doc, page) {
   const shown = box.width > 0 && box.height > 0 && doc.defaultView.getComputedStyle(link).visibility !== 'hidden';
   t.event('powered-by', `${page}: "${text}" -> ${href}${shown ? '' : ' (not visible)'}`);
   t.add('poweredByChecked');
-  if (!/^https:\/\/hawkesgen\.com\/?$/.test(href || '')) t.problem('bug', `${page}: "Powered by HAWKES GEN" links to ${href}, not https://hawkesgen.com`);
+  if (!/^https:\/\/hawkesgen\.ai\/?$/.test(href || '')) t.problem('bug', `${page}: "Powered by HAWKES GEN" links to ${href}, not https://hawkesgen.ai`);
   if (!shown) t.problem('bug', `${page}: "Powered by HAWKES GEN" isn't visible`);
   if (text !== 'POWERED BY HAWKES GEN') t.problem('warning', `${page}: the mark reads "${text}"`);
 }
@@ -313,7 +313,7 @@ async function analyticsOf(t, win, page) {
     () => false
   );
   if (!ok) {
-    t.problem('bug', `${page}: Hawkes Analytics didn't load (https://gen.hawkesgen.com/sdk/analytics@1.js)`);
+    t.problem('bug', `${page}: Hawkes Analytics didn't load (https://gen.hawkesgen.ai/sdk/analytics@1.js)`);
     return null;
   }
   const a = win.hawkesAnalytics;
@@ -352,7 +352,7 @@ async function analytics(options, t) {
     t.event('analytics', `Home: SDK ${home.version}, product ${c.product}, env ${c.env}, build ${JSON.stringify(c.build || null)}, flags ${JSON.stringify(c.flags)}`);
     t.metric('analyticsEnv', c.env);
     if (c.product !== 'hawkesbiomedical') t.problem('bug', `Home: analytics product is "${c.product}", not hawkesbiomedical`);
-    if (/\.hawkesgen\.com$/.test(location.hostname) && !/^\/c\//.test(location.pathname) && c.env !== 'beta') t.problem('bug', `Home: env is "${c.env}" on the beta site`);
+    if (/\.hawkesgen\.ai$/.test(location.hostname) && !/^\/c\//.test(location.pathname) && c.env !== 'beta') t.problem('bug', `Home: env is "${c.env}" on the beta site`);
   }
   t.progress(0.1);
 
@@ -462,10 +462,10 @@ installPlaytest({
     { id: 'smoke', title: 'Home link-preview tags and footer, Products through the nav and its link-preview tags, every thumbnail, the Products footer (fiction line, Powered by HAWKES GEN)', seconds: 25, tags: ['smoke'] },
     {
       id: 'products',
-      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads and Powered by HAWKES GEN links to hawkesgen.com on every page; every page with link-preview tags has them right',
+      title: 'Products: every thumbnail is a daylight image, hold on PH Origins; the fiction line reads and Powered by HAWKES GEN links to hawkesgen.ai on every page; every page with link-preview tags has them right',
       seconds: 45,
       tags: ['full'],
-      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.com (404 loaded directly).',
+      description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.ai (404 loaded directly).',
     },
     {
       id: 'analytics',

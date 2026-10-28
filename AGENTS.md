@@ -9,9 +9,9 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 - Headquarters is **Hawkes Tower, 58th floor**. Capital desk is **Zurich**.
 - The public pitch is **category ownership**, not a cure. Pierce sells dominance. Hale watches the quarter. Voss keeps the charter. Lang keeps the date.
 - Do not put the basement, B3, the vat, the creature, or gameplay on these pages.
-- Products are the public line: **PH Origins** (pH balance, phorigins.com), **Sick of It** (single-use fever shots, sickofitgame.com), **Imagine Live TV** (live medical education, imaginelivetv.com), **The Place Department** (HIPAA-compliant document storage, theplacedepartment.com), **Yooba Land** (hyporexia support, yoobalandgame.com), **I Can Be** (AI-assisted full-body assessment, icanbe.ai), **Dose Of Destruction** (cytotoxic dose, doseofdestruction.com), and **Hawkes Gen** (laboratory services: on-demand synthesis, hawkesgen.com; the real generative-AI service, so its card has no release line). The next product is another row on `products.html`. Do not call them games.
+- Products are the public line: **PH Origins** (pH balance, phorigins.com), **Sick of It** (single-use fever shots, sickofitgame.com), **Imagine Live TV** (live medical education, imaginelivetv.com), **The Place Department** (HIPAA-compliant document storage, theplacedepartment.com), **Yooba Land** (hyporexia support, yoobalandgame.com), **I Can Be** (AI-assisted full-body assessment, icanbe.ai), **Dose Of Destruction** (cytotoxic dose, doseofdestruction.com), and **Hawkes Gen** (laboratory services: on-demand synthesis, hawkesgen.ai; the real generative-AI service, so its card has no release line). The next product is another row on `products.html`. Do not call them games.
 - The public site is a light page, spare on purpose. Daylight low-poly photographs. Do not put the night city or a black page background back.
-- Footer keeps the line that the company is a work of fiction, followed by the small "Powered by HAWKES GEN" mark linking to https://hawkesgen.com (every page, `.legal .powered`).
+- Footer keeps the line that the company is a work of fiction, followed by the small "Powered by HAWKES GEN" mark linking to https://hawkesgen.ai (every page, `.legal .powered`).
 - Do not add a form that collects patient information. Contact is `mailto:` only.
 
 ## Register
@@ -45,12 +45,12 @@ CNAME favicon.svg
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
 `products` and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
-line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.com (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
+line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
 have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
 The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
 the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
-"PH Origins", each with the env (`beta` on corporate.hawkesgen.com). It sets `sessionStorage['hawkes.playtest']` so the
+"PH Origins", each with the env (`beta` on corporate.hawkesgen.ai). It sets `sessionStorage['hawkes.playtest']` so the
 pages opened in the frame run the SDK in debug mode too.
 
 When you change the board, the floor, or these constraints, update this file and `README.md`.
@@ -58,7 +58,7 @@ When you change the board, the floor, or these constraints, update this file and
 ## Analytics
 
 Hawkes Analytics is the only analytics here (Hawkes Gen's SDK, contract in `hawkesgen/docs/analytics.md`). Never add
-another tracker. Every page's head ends with the SDK tag (`https://gen.hawkesgen.com/sdk/analytics@1.js`,
+another tracker. Every page's head ends with the SDK tag (`https://gen.hawkesgen.ai/sdk/analytics@1.js`,
 `data-product="hawkesbiomedical"`, deferred) followed by `site/analytics.js` (not deferred: it must run before the SDK).
 A new page gets both lines.
 
