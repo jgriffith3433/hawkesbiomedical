@@ -1,5 +1,7 @@
 # Hawkes Biomedical — agent notes
 
+**Lanes, local dev and deploys:** `LANES.md` (branches dev -> beta -> main; `dev.bat`, `deploy-beta.bat`, `deploy-prod.bat`, `status.bat`, `links.bat`, `sync.bat`; beta and live links).
+
 Fictional corporate site for the brand. Static HTML, Vite for preview only. No game, no play link, no Babylon.
 
 ## Hard constraints
