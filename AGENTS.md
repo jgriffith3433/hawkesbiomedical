@@ -60,7 +60,7 @@ When you change the board, the floor, or these constraints, update this file and
 ## Analytics
 
 Hawkes Analytics is the only analytics here (Hawkes Gen's SDK, contract in `hawkesgen/docs/analytics.md`). Never add
-another tracker. Every page's head ends with the SDK tag (`https://gen.hawkesgen.ai/sdk/analytics@1.js`,
+another tracker. Every page's head ends with the SDK tag (`https://hawkesgen.ai/sdk/analytics@1.js`,
 `data-product="hawkesbiomedical"`, deferred) followed by `site/analytics.js` (not deferred: it must run before the SDK).
 A new page gets both lines.
 

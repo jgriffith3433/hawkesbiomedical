@@ -1,5 +1,5 @@
 /* Hawkes Analytics on the corporate site (AGENTS.md "Analytics"; the contract is hawkesgen/docs/analytics.md).
-   Every page loads Gen's SDK from https://gen.hawkesgen.ai/sdk/analytics@1.js (deferred) and then this file, right
+   Every page loads Gen's SDK from https://hawkesgen.ai/sdk/analytics@1.js (deferred) and then this file, right
    after it. The SDK sends page views, referrers, UTM tags, the device and the place by itself. This file adds:
    - the build: the site has no build step (Pages serves the repo), so it is the current release in releases.json
      (version, its commit, its date), set on window.HAWKES_BUILD before the first batch goes out;

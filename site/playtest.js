@@ -313,7 +313,7 @@ async function analyticsOf(t, win, page) {
     () => false
   );
   if (!ok) {
-    t.problem('bug', `${page}: Hawkes Analytics didn't load (https://gen.hawkesgen.ai/sdk/analytics@1.js)`);
+    t.problem('bug', `${page}: Hawkes Analytics didn't load (https://hawkesgen.ai/sdk/analytics@1.js)`);
     return null;
   }
   const a = win.hawkesAnalytics;
