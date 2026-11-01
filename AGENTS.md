@@ -52,7 +52,7 @@ on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy
 have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
 The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
 the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
-"PH Origins", each with the env (`beta` on corporate.hawkesgen.ai). It sets `sessionStorage['hawkes.playtest']` so the
+"PH Origins", each with the env (`beta` on the Studio beta site, sites.hawkesgen.ai/o/j-studio-4f12/hawkes-biomedical/). It sets `sessionStorage['hawkes.playtest']` so the
 pages opened in the frame run the SDK in debug mode too.
 
 When you change the board, the floor, or these constraints, update this file and `README.md`.

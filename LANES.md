@@ -9,11 +9,11 @@ Agents' fixes land on `beta` (pull requests Studio merges); `sync.bat` brings th
 | | Address |
 |---|---|
 | Local | [http://localhost:5174/](http://localhost:5174/) |
-| Beta | [https://corporate.hawkesgen.ai/](https://corporate.hawkesgen.ai/) |
+| Beta | [https://sites.hawkesgen.ai/o/j-studio-4f12/hawkes-biomedical/](https://sites.hawkesgen.ai/o/j-studio-4f12/hawkes-biomedical/) |
 | Live | [https://hawkesbiomedical.com/](https://hawkesbiomedical.com/) |
 | Deploys (GitHub Actions) | [github.com/jgriffith3433/hawkesbiomedical/actions](https://github.com/jgriffith3433/hawkesbiomedical/actions) |
 
-**How it deploys:** Push beta: Studio publishes the beta site. Push main: GitHub Pages publishes it live.
+**How it deploys:** Push beta: Studio builds it (`npm ci && npm run build`) and publishes `dist/` as the beta site. Push main: GitHub Pages publishes it live.
 
 | Command (double-click, or run in a terminal here) | What it does |
 |---|---|
