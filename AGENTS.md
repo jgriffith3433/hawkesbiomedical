@@ -19,7 +19,7 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 ## Register
 
 Deadpan pharma megacorp, never winking: plain regulatory language (indications and usage, formulation and lot per product).
-Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan. Newsroom holds dated statements
+Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
 (Hale, Voss, Lang, Pierce as Chairman); Investors holds mission, "Our position" and the fictional figures (71% category share,
 17 years in market since 2009, 8 products). Tenure on Leadership: Pierce 2009, Hale 2014, Voss 2011, Lang 2016. Header nav:
 Company, Products, Leadership, Newsroom, Contact, plus the Investors button; the footer lists every page incl. Compliance,
