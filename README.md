@@ -35,7 +35,7 @@ npm run preview    # serve the build on port 4174
 | `whatsnew.html` | Release log |
 | `contact.html` | Tower office and the Zurich desk |
 
-Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
+Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/` (tower and board) and `assets/medical/` (lab, product line, cleanroom); product thumbnails are `assets/products/*-rx.jpg`.
 
 Every page loads Hawkes Analytics (Hawkes Gen's SDK, product `hawkesbiomedical`) and `site/analytics.js`: anonymous site statistics, no cookies, no personal data, as the footer says. See `AGENTS.md` "Analytics".
 
