@@ -1090,5 +1090,3 @@ a {
   .line-grid strong { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { .line-grid img { transition: none; } }
-.line-intro-text { grid-template-columns: 1fr; }
-.line-intro-text .section-note { max-width: 62ch; }

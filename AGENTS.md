@@ -12,14 +12,14 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 - The public pitch is **category ownership**, not a cure. Pierce sells dominance. Hale watches the quarter. Voss keeps the charter. Lang keeps the date.
 - Do not put the basement, B3, the vat, the creature, or gameplay on these pages.
 - Products are the public line: **PH Origins** (pH balance, phorigins.com), **Sick of It** (single-use fever shots, sickofitgame.com), **Imagine Live TV** (live medical education, imaginelivetv.com), **The Place Department** (HIPAA-compliant document storage, theplacedepartment.com), **Yooba Land** (hyporexia support, yoobalandgame.com), **I Can Be** (AI-assisted full-body assessment, icanbe.ai), **Dose Of Destruction** (cytotoxic dose, doseofdestruction.com), and **Hawkes Gen** (laboratory services: on-demand synthesis, hawkesgen.ai; the real generative-AI service, so its card has no release line). The next product is another row on `products.html`. Do not call them games.
-- The public site is a light page, spare on purpose. Daylight low-poly photographs. Do not put the night city or a black page background back.
+- The public site is a light page, spare on purpose. Daylight low-poly photographs, clinical where they show the work: `assets/medical/` (lab hero, the product line, the cleanroom) and the product thumbnails `assets/products/*-rx.jpg` (packaging and equipment, no lettering) were made in Hawkes Gen on 2026-11-01. Do not put the night city or a black page background back.
 - Footer keeps the line that the company is a work of fiction, followed by the small "Powered by HAWKES GEN" mark linking to https://hawkesgen.ai (every page, `.legal .powered`).
 - Do not add a form that collects patient information. Contact is `mailto:` only.
 
 ## Register
 
 Deadpan pharma megacorp, never winking: plain regulatory language (indications and usage, formulation and lot per product).
-Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
+Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house) and the eight-product strip (`.line-grid`, linking to each row on Products). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
 (Hale, Voss, Lang, Pierce as Chairman); Investors holds mission, "Our position" and the fictional figures (71% category share,
 17 years in market since 2009, 8 products). Tenure on Leadership: Pierce 2009, Hale 2014, Voss 2011, Lang 2016. Header nav:
 Company, Products, Leadership, Newsroom, Contact, plus the Investors button; the footer lists every page incl. Compliance,
