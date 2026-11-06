@@ -454,6 +454,46 @@ async function story(options, t) {
 }
 
 
+/** Performance and access on Home: every image has alt text and its size, every control shows a focus ring, images are light, layout does not shift. */
+async function access(options, t) {
+  t.scene('Home: images');
+  await t.until(() => document.readyState === 'complete', 10000, 'load').catch(() => {});
+  const imgs = [...document.querySelectorAll('img')];
+  for (const img of imgs) {
+    const name = fileOf(img.src);
+    if (!img.hasAttribute('alt')) t.problem('bug', `Home: ${name} has no alt attribute`);
+    else if (!img.getAttribute('alt').trim()) t.problem('bug', `Home: ${name} has empty alt text`);
+    if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
+  }
+  t.metric('images', imgs.length);
+  t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
+  const heavy = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img' && r.encodedBodySize > 150 * 1024);
+  for (const r of heavy) t.problem('bug', `Home: image ${fileOf(r.name)} is ${Math.round(r.encodedBodySize / 1024)} KB`);
+  let cls = 0;
+  try {
+    for (const e of performance.getEntriesByType('layout-shift')) if (!e.hadRecentInput) cls += e.value;
+  } catch {}
+  t.metric('layoutShift', fixed2(cls));
+  if (cls > 0.1) t.problem('bug', `Home: layout shift ${fixed2(cls)} (over 0.1)`);
+  t.progress(0.4);
+  t.scene('Home: keyboard focus');
+  const controls = [...document.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter((e) => e.getClientRects().length);
+  let seen = 0;
+  for (const el of controls) {
+    el.focus({ preventScroll: true });
+    if (document.activeElement !== el) continue;
+    const cs = getComputedStyle(el);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    const label = (el.textContent || el.getAttribute('aria-label') || el.getAttribute('href') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!ring) t.problem('bug', `Home: "${label}" shows no focus ring (outline ${cs.outlineStyle} ${cs.outlineWidth})`);
+    seen++;
+  }
+  document.activeElement?.blur?.();
+  t.metric('controlsFocused', seen);
+  t.event('focus', `${seen} of ${controls.length} controls take focus with a visible ring`);
+  t.progress(1);
+}
+
 /** Leadership: each person has a portrait and a role; the founding story is at least 150 words. */
 async function people(options, t) {
   t.scene('Leadership');
@@ -642,6 +682,13 @@ installPlaytest({
       description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
     },
     {
+      id: 'access',
+      title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
+      seconds: 15,
+      tags: ['full'],
+      description: 'Checks each image on Home for alt text and width/height, flags heavy images and layout shift, then moves focus to every link and button and checks that a visible outline appears.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -652,7 +699,8 @@ installPlaytest({
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
-      if (id === 'analytics') await analytics(options, t);
+      if (id === 'access') await access(options, t);
+      else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'story') await story(options, t);
