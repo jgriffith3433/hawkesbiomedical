@@ -46,11 +46,11 @@ CNAME favicon.svg
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
-`products`, `story` (the narrative home), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`products`, `story` (the narrative home), `access` (Home images: alt text, width/height, under 150 KB, no layout shift; a visible focus ring on every control), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
-have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
+have them and their `og:url`). Product thumbnails are square crops (640x640 on disk now; images are kept under ~100 KB and every `<img>` has `alt` plus `width`/`height`).
 The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
 the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
 "PH Origins", each with the env (`beta` on the Studio beta site, sites.hawkesgen.ai/o/j-studio-4f12/hawkes-biomedical/). It sets `sessionStorage['hawkes.playtest']` so the
