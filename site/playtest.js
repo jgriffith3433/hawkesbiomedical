@@ -406,6 +406,52 @@ async function analytics(options, t) {
 
 /* ---------------- scenarios ---------------- */
 
+/** The narrative home page: a one-sentence mission in the hero, then four chapters, each with a headline and a visual; scroll motion respects prefers-reduced-motion. */
+async function story(options, t) {
+  t.scene('Home: hero');
+  const mission = document.querySelector('.hero-copy .mission')?.textContent.replace(/\s+/g, ' ').trim() || '';
+  const sentences = mission.split(/(?<=[.!?])\s+/).filter(Boolean);
+  t.event('mission', `Hero: "${mission || '(missing)'}" (${sentences.length} sentence${sentences.length === 1 ? '' : 's'})`);
+  if (!mission) t.problem('bug', 'Home: the hero states no mission');
+  else if (sentences.length !== 1) t.problem('bug', `Home: the hero mission is ${sentences.length} sentences, not one`);
+  await t.wait(1500);
+  const chapters = [...document.querySelectorAll('main .story')];
+  t.metric('chapters', chapters.length);
+  if (chapters.length < 4) t.problem('bug', `Home: ${chapters.length} narrative sections, at least 4 wanted`);
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  t.event('motion', `prefers-reduced-motion: ${calm ? 'reduce' : 'no-preference'}; reveal ${document.documentElement.classList.contains('reveal-on') ? 'on' : 'off'}`);
+  if (calm && document.documentElement.classList.contains('reveal-on')) t.problem('bug', 'Home: scroll reveal is on although the visitor asked for reduced motion');
+  let rule = false;
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) if (r.conditionText && /prefers-reduced-motion:\s*reduce/.test(r.conditionText) && /data-reveal/.test(r.cssText)) rule = true;
+    } catch {}
+  }
+  t.event('motion-rule', `reduced-motion rule for the chapters: ${rule ? 'present' : 'missing'}`);
+  if (!rule) t.problem('bug', 'Home: no prefers-reduced-motion rule for the scroll reveal');
+  for (const sec of chapters) {
+    const name = sec.querySelector('h2')?.textContent.trim() || sec.id;
+    t.scene(`Home: ${name}`);
+    smoothTo(sec);
+    await t.wait(1600);
+    const img = sec.querySelector('img');
+    await t.until(() => !img || img.complete, 8000, `${name} image`).catch(() => {});
+    const h = sec.querySelector('h2');
+    const box = sec.querySelector('[data-reveal]');
+    const opacity = box ? Number(getComputedStyle(box).opacity) : 1;
+    t.event('chapter', `${sec.querySelector('.eyebrow')?.textContent.trim() || ''}: "${name}", visual ${img && img.naturalWidth ? fileOf(img.src) : '(none)'}, opacity ${fixed2(opacity)}`);
+    t.add('chaptersChecked');
+    if (!h) t.problem('bug', `Home: chapter ${sec.id} has no headline`);
+    if (!img || !img.naturalWidth) t.problem('bug', `Home: chapter "${name}" has no visual that loads`);
+    if (opacity < 0.95) t.problem('bug', `Home: chapter "${name}" is still hidden after scrolling to it (opacity ${fixed2(opacity)})`);
+    await t.wait(800);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  await t.wait(800);
+  t.progress(1);
+}
+
+
 async function products(options, t, everyPage) {
   t.scene('Home');
   checkShareTags(t, document, 'Home');
@@ -468,6 +514,13 @@ installPlaytest({
       description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.ai (404 loaded directly).',
     },
     {
+      id: 'story',
+      title: 'Narrative home: the hero states the mission in one sentence; four story chapters (problem, mission, work, people) each with a headline and a visual; scroll reveal respects reduced motion',
+      seconds: 25,
+      tags: ['full'],
+      description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -479,6 +532,7 @@ installPlaytest({
   async start(id, options, t) {
     try {
       if (id === 'analytics') await analytics(options, t);
+      else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
       closeFrame();

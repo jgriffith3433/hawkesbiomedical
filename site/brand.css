@@ -1090,3 +1090,32 @@ a {
   .line-grid strong { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { .line-grid img { transition: none; } }
+
+/* Narrative home: four chapters (problem, mission, work, people), each with a headline and a visual. */
+.mission { margin: 0 0 18px; max-width: 34ch; font-family: var(--serif); font-size: clamp(30px, 3.8vw, 46px); font-weight: 600; line-height: 1.15; color: var(--text); }
+.story + .story { border-top: 1px solid var(--line); }
+.story-alt { background: var(--bg-raise); }
+.chapter-story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.story-copy .lede { margin-top: 18px; max-width: 52ch; }
+.story-copy .section-title { margin-top: 6px; }
+.story-copy blockquote { margin: 24px 0 4px; font-family: var(--serif); font-size: clamp(26px, 3vw, 34px); font-style: italic; line-height: 1.2; }
+.story-visual { margin: 0; }
+.story-visual img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--line); }
+.story-visual figcaption { margin-top: 8px; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; font-size: 11px; font-weight: 600; }
+.story .pillars { margin-top: 48px; }
+.story .section-head { margin-bottom: 0; }
+@media (max-width: 900px) { .chapter-story { grid-template-columns: 1fr; gap: 28px; } }
+
+/* Scroll reveal: only when the visitor has not asked for reduced motion (brand.js adds .reveal-on to <html>). */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-on [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal-on [data-reveal].is-in { opacity: 1; transform: none; }
+  .reveal-on [data-reveal-stagger] li { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal-on [data-reveal].is-in [data-reveal-stagger] li { opacity: 1; transform: none; }
+  .reveal-on [data-reveal-stagger] li:nth-child(4n+2) { transition-delay: 0.08s; }
+  .reveal-on [data-reveal-stagger] li:nth-child(4n+3) { transition-delay: 0.16s; }
+  .reveal-on [data-reveal-stagger] li:nth-child(4n+4) { transition-delay: 0.24s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], [data-reveal-stagger] li { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
