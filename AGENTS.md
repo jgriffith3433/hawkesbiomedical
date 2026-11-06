@@ -42,6 +42,10 @@ CNAME favicon.svg
 
 `npm run dev` serves port **5174**. `npm run build` writes `dist/`.
 
+## Product pages
+
+Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`.
+
 ## Playtest
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
