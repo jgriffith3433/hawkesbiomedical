@@ -33,6 +33,7 @@ npm run preview    # serve the build on port 4174
 | `compliance.html` | Compliance statement |
 | `privacy.html`, `terms.html` | Short legal pages |
 | `whatsnew.html` | Release log |
+| `styleguide.html` | The design tokens: colour, type scale, spacing, buttons, cards |
 | `contact.html` | Tower office and the Zurich desk |
 
 Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/` (tower and board) and `assets/medical/` (lab, product line, cleanroom); product thumbnails are `assets/products/*-rx.jpg`.

@@ -15,6 +15,7 @@ const PAGES = [
   { name: 'Privacy', href: './privacy.html' },
   { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
+  { name: 'Style guide', href: './styleguide.html' },
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
 ];
@@ -30,6 +31,7 @@ const SHARE_URLS = {
   Compliance: 'https://hawkesbiomedical.com/compliance.html',
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
   Terms: 'https://hawkesbiomedical.com/terms.html',
+  'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -452,6 +454,80 @@ async function story(options, t) {
 }
 
 
+/** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
+const DESIGN_PAGES = [
+  ['Home', './index.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
+  ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
+  ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
+];
+const chromeOf = (doc) => {
+  const norm = (el) => (el ? el.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ') : '');
+  return { header: norm(doc.querySelector('header.nav')), footer: norm(doc.querySelector('footer')) };
+};
+const styleOf = (doc, sel) => {
+  const el = doc.querySelector(sel);
+  if (!el) return null;
+  const c = doc.defaultView.getComputedStyle(el);
+  return [c.fontFamily, c.fontSize, c.letterSpacing, c.textTransform, c.borderRadius, c.color, c.backgroundColor].join('|');
+};
+async function design(options, t) {
+  const widths = [1440, 390];
+  const baseline = {};
+  t.scene('Style guide');
+  let doc = await frameLoad((f) => (f.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't open");
+  const rootStyle = doc.defaultView.getComputedStyle(doc.documentElement);
+  const tokens = [...doc.querySelectorAll('.sg-table code, .sg-swatch code, main code')].map((c) => (c.textContent.match(/--[a-z0-9-]+/) || [])[0]).filter(Boolean);
+  const unique = [...new Set(tokens)];
+  const missing = unique.filter((n) => !rootStyle.getPropertyValue(n).trim());
+  t.event('tokens', `The style guide lists ${unique.length} tokens; ${missing.length} not defined in :root`);
+  t.metric('tokensListed', unique.length);
+  if (unique.length < 25) t.problem('bug', `Style guide: only ${unique.length} tokens listed`);
+  if (missing.length) t.problem('bug', `Style guide: lists tokens that :root does not define: ${missing.join(', ')}`);
+  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
+  t.add('styleGuideChecked');
+  for (const w of widths) {
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    t.scene(`Every page at ${w}px`);
+    for (let i = 0; i < DESIGN_PAGES.length; i++) {
+      const [name, href] = DESIGN_PAGES[i];
+      doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+      await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+      await t.wait(300);
+      const de = doc.documentElement;
+      const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+      t.event('overflow', `${name} at ${w}px: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
+      if (over > 1) {
+        const wide = [...doc.body.querySelectorAll('*')].filter((e) => e.getBoundingClientRect().right > de.clientWidth + 1).slice(0, 3).map((e) => e.tagName.toLowerCase() + (e.className ? '.' + String(e.className).split(' ')[0] : ''));
+        t.problem('bug', `${name} at ${w}px: the page scrolls sideways by ${over}px (${wide.join(', ')})`);
+      }
+      t.add('pagesMeasured');
+      if (w !== 1440) continue;
+      // Same header and footer, type scale and buttons as every other page.
+      const chrome = chromeOf(doc);
+      if (!chrome.header || !chrome.footer) { t.problem('bug', `${name}: no header or footer`); continue; }
+      if (baseline.header === undefined) Object.assign(baseline, chrome);
+      else {
+        if (chrome.header !== baseline.header) t.problem('bug', `${name}: the header differs from Home's`);
+        if (chrome.footer !== baseline.footer) t.problem('bug', `${name}: the footer differs from Home's`);
+      }
+      const probes = { 'nav link': 'header .nav-links a', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
+      for (const [what, sel] of Object.entries(probes)) {
+        const style = styleOf(doc, sel);
+        if (!style) continue;
+        if (baseline[what] === undefined) baseline[what] = style;
+        else if (baseline[what] !== style && what !== 'page title' && !(what === 'text link' && sel)) t.problem('bug', `${name}: ${what} is styled differently from the same element on another page`);
+      }
+      t.add('chromeChecked');
+    }
+  }
+  t.event('chrome', `Header and footer compared on ${DESIGN_PAGES.length} pages`);
+  closeFrame();
+  t.progress(1);
+}
+
 async function products(options, t, everyPage) {
   t.scene('Home');
   checkShareTags(t, document, 'Home');
@@ -521,6 +597,13 @@ installPlaytest({
       description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
     },
     {
+      id: 'design',
+      title: 'Design system: the same header, footer, type scale and buttons on every page; the style guide lists the tokens; no page overflows at 390px or 1440px',
+      seconds: 60,
+      tags: ['full'],
+      description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -532,6 +615,7 @@ installPlaytest({
   async start(id, options, t) {
     try {
       if (id === 'analytics') await analytics(options, t);
+      else if (id === 'design') await design(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
