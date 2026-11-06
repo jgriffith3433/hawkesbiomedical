@@ -1205,3 +1205,22 @@ a {
 
 .board-card .portrait { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3, 16px); border: 1px solid var(--line); }
 .founding { max-width: 70ch; }
+
+/* Product pages: overview, how it works, one diagram. Tokens only. */
+.product-file { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-5); align-items: start; margin-top: var(--space-6); }
+.product-file .product-shot { margin: 0; }
+.product-file .sub { margin-top: 0; }
+.how { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--line); }
+.how .sub { margin-top: 0; }
+.diagram { margin: var(--space-5) 0 0; padding: var(--space-4); border: 1px solid var(--line); background: var(--bg-raise); }
+.diagram-svg { display: block; width: 100%; height: auto; }
+.diagram .fine { margin-top: var(--space-3); }
+.d-box { fill: var(--bg); stroke: var(--gold-line); stroke-width: 1.5; }
+.d-arrow { fill: none; stroke: var(--gold); stroke-width: 2; }
+.d-num { fill: var(--gold); font-family: var(--sans); font-size: var(--fs-label); font-weight: 700; letter-spacing: var(--ls-label); }
+.d-title { fill: var(--text); font-family: var(--serif); font-size: var(--fs-h4); font-weight: 600; }
+.steps { margin: var(--space-5) 0 0; padding-left: var(--space-4); max-width: 68ch; color: var(--muted); font-size: var(--fs-body); line-height: var(--lh-body); }
+.steps li + li { margin-top: var(--space-2); }
+.steps strong { color: var(--text); }
+.eyebrow a { color: inherit; }
+@media (max-width: 900px) { .product-file { grid-template-columns: minmax(0, 1fr); } .product-file .product-shot { max-width: 220px; } }

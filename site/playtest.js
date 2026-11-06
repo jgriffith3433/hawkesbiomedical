@@ -32,6 +32,14 @@ const SHARE_URLS = {
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
   Terms: 'https://hawkesbiomedical.com/terms.html',
   'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
+  'PH Origins': 'https://hawkesbiomedical.com/product-ph-origins.html',
+  'Sick of It': 'https://hawkesbiomedical.com/product-sick-of-it.html',
+  'Imagine Live TV': 'https://hawkesbiomedical.com/product-imagine-live-tv.html',
+  'The Place Department': 'https://hawkesbiomedical.com/product-the-place-department.html',
+  'Yooba Land': 'https://hawkesbiomedical.com/product-yooba-land.html',
+  'I Can Be': 'https://hawkesbiomedical.com/product-i-can-be.html',
+  'Dose Of Destruction': 'https://hawkesbiomedical.com/product-dose-of-destruction.html',
+  'Hawkes Gen': 'https://hawkesbiomedical.com/product-hawkes-gen.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -528,7 +536,7 @@ async function people(options, t) {
 
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
-  ['Home', './index.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
+  ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
   ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
@@ -596,6 +604,54 @@ async function design(options, t) {
     }
   }
   t.event('chrome', `Header and footer compared on ${DESIGN_PAGES.length} pages`);
+  closeFrame();
+  t.progress(1);
+}
+
+/** Product pages: reached from Products by a real click; each has an overview, how it works and one diagram; no figure or clinical result stated; same chrome as Products. */
+async function productPages(options, t) {
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
+  t.scene('Products');
+  const links = [...doc.querySelectorAll('.products .product a[href^="./product-"]')].map((a) => a.getAttribute('href'));
+  t.metric('productFileLinks', links.length);
+  if (links.length < 8) t.problem('bug', `Products: ${links.length} product file links, 8 wanted`);
+  const baseline = chromeOf(doc);
+  for (const href of links) {
+    doc = await frameLoad((f) => (f.src = './products.html'));
+    doc = await clickLink(t, doc, `.products a[href="${href}"]`, `Product file ${href}`);
+    const name = doc.querySelector('h1')?.textContent.trim() || href;
+    t.scene(`Product: ${name}`);
+    await t.until(() => imagesLoaded(doc), 10000, `${name} images`).catch(() => {});
+    const overview = doc.querySelector('#overview');
+    const how = doc.querySelector('#how');
+    const diagrams = doc.querySelectorAll('main svg.diagram-svg');
+    if (!overview || !overview.parentElement.querySelector('.lede')?.textContent.trim()) t.problem('bug', `${name}: no overview`);
+    if (!how || !how.parentElement.querySelector('.steps li')) t.problem('bug', `${name}: no "how it works" section`);
+    if (diagrams.length !== 1) t.problem('bug', `${name}: ${diagrams.length} diagrams, one wanted`);
+    const dg = diagrams[0];
+    if (dg && (!dg.getAttribute('aria-label') || dg.querySelectorAll('text').length < 6)) t.problem('bug', `${name}: the diagram has no label or text`);
+    for (const el of [overview, how, dg]) {
+      if (!el) continue;
+      smoothTo(el);
+      await t.wait(900);
+    }
+    const prose = [...doc.querySelectorAll('main .lede, main .steps, main .fine')].map((e) => e.textContent).join(' ');
+    const figures = prose.match(/\d+(?:[.,]\d+)?\s*(?:%|percent|mg|ml|mL|days?|hours?|patients?)/gi) || [];
+    t.event('product-page', `${name}: overview ${!!overview}, how it works ${!!how}, diagrams ${diagrams.length}, figures stated ${figures.length}, ${prose.split(/\s+/).length} words`);
+    t.add('productPagesChecked');
+    if (figures.length) t.problem('bug', `${name}: states figures that carry no source (${figures.join(', ')})`);
+    if (OFF_BRAND.test(doc.body.innerText)) t.problem('bug', `${name}: visible text breaks the brand rules`);
+    const img = doc.querySelector('.product-shot img');
+    if (!img || !img.naturalWidth || !img.alt.trim()) t.problem('bug', `${name}: product image missing or without alt text`);
+    checkShareTags(t, doc, name);
+    const chrome = chromeOf(doc);
+    if (chrome.header !== baseline.header || chrome.footer !== baseline.footer) t.problem('bug', `${name}: header or footer differs from Products`);
+    const de = doc.documentElement;
+    if (de.scrollWidth - de.clientWidth > 1) t.problem('bug', `${name}: the page scrolls sideways`);
+    await t.wait(800);
+  }
   closeFrame();
   t.progress(1);
 }
@@ -669,6 +725,13 @@ installPlaytest({
       description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
     },
     {
+      id: 'productpages',
+      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products',
+      seconds: 60,
+      tags: ['full'],
+      description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products.',
+    },
+    {
       id: 'people',
       title: 'Leadership: each person has a portrait and a role; the founding story is at least 150 words',
       seconds: 20,
@@ -703,6 +766,7 @@ installPlaytest({
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'people') await people(options, t);
+      else if (id === 'productpages') await productPages(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
