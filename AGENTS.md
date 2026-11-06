@@ -30,7 +30,7 @@ New pages are generated from the same head/header/footer: copy one and keep the 
 ## Layout
 
 ```
-index.html company.html products.html leadership.html newsroom.html investors.html contact.html
+index.html company.html products.html research.html leadership.html newsroom.html investors.html contact.html
 compliance.html privacy.html terms.html whatsnew.html 404.html
 styleguide.html (the design tokens, shown; in every footer)
 site/brand.css site/brand.js  (tokens in :root at the top of brand.css: colour, type scale --fs-*, spacing --space-*, --card-pad, --btn-h)
@@ -45,6 +45,8 @@ CNAME favicon.svg
 ## Product pages
 
 Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`.
+
+`research.html` (footer link, not in the header nav; `data-page="products"`) shows how a product is made (one `.diagram-svg`), the indication table (`.spec`) and the figures (`.facts[data-sourced]`). Every figure there must carry an `a.source` link to the page that already states it (Investors, Products): never add a figure with no source here. The `productpages` scenario checks it.
 
 ## Playtest
 

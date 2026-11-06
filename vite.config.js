@@ -30,6 +30,7 @@ export default defineConfig({
         'company.html',
         'products.html',
         'product-ph-origins.html',
+        'research.html',
         'product-sick-of-it.html',
         'product-imagine-live-tv.html',
         'product-the-place-department.html',

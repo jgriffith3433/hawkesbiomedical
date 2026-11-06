@@ -32,6 +32,7 @@ const SHARE_URLS = {
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
   Terms: 'https://hawkesbiomedical.com/terms.html',
   'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
+  Research: 'https://hawkesbiomedical.com/research.html',
   'PH Origins': 'https://hawkesbiomedical.com/product-ph-origins.html',
   'Sick of It': 'https://hawkesbiomedical.com/product-sick-of-it.html',
   'Imagine Live TV': 'https://hawkesbiomedical.com/product-imagine-live-tv.html',
@@ -536,7 +537,7 @@ async function people(options, t) {
 
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
-  ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
+  ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
   ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
@@ -652,6 +653,33 @@ async function productPages(options, t) {
     if (de.scrollWidth - de.clientWidth > 1) t.problem('bug', `${name}: the page scrolls sideways`);
     await t.wait(800);
   }
+  // Research: reached from the footer; one diagram, an indication table, and every figure names its source.
+  doc = await frameLoad((f) => (f.src = './products.html'));
+  doc = await clickLink(t, doc, 'footer a[href="./research.html"]', 'Research (footer)');
+  t.scene('Research');
+  await t.until(() => imagesLoaded(doc), 10000, 'Research images').catch(() => {});
+  const rDiagrams = doc.querySelectorAll('main svg.diagram-svg');
+  if (rDiagrams.length !== 1) t.problem('bug', `Research: ${rDiagrams.length} diagrams, one wanted`);
+  if (!doc.querySelector('#overview') || !doc.querySelector('#how .steps li')) t.problem('bug', 'Research: overview or "how a product is made" is missing');
+  const rows = doc.querySelectorAll('.spec tbody tr').length;
+  if (rows < 8) t.problem('bug', `Research: the indication table has ${rows} rows, 8 wanted`);
+  const figs = [...doc.querySelectorAll('.facts > div')];
+  const unsourced = figs.filter((d) => !d.querySelector('a.source[href]'));
+  for (const el of [doc.querySelector('#overview'), doc.querySelector('.diagram'), doc.querySelector('.spec'), doc.querySelector('#figures')]) {
+    if (!el) continue;
+    smoothTo(el);
+    await t.wait(900);
+  }
+  t.metric('researchFigures', figs.length);
+  t.event('research-page', `Research: diagrams ${rDiagrams.length}, table rows ${rows}, figures ${figs.length}, without a source ${unsourced.length}`);
+  if (!figs.length) t.problem('bug', 'Research: no figures shown');
+  if (unsourced.length) t.problem('bug', `Research: ${unsourced.length} figure(s) with no source link`);
+  if (OFF_BRAND.test(doc.body.innerText)) t.problem('bug', 'Research: visible text breaks the brand rules');
+  checkShareTags(t, doc, 'Research');
+  const rChrome = chromeOf(doc);
+  if (rChrome.header !== baseline.header || rChrome.footer !== baseline.footer) t.problem('bug', 'Research: header or footer differs from Products');
+  const rde = doc.documentElement;
+  if (rde.scrollWidth - rde.clientWidth > 1) t.problem('bug', 'Research: the page scrolls sideways');
   closeFrame();
   t.progress(1);
 }
@@ -726,10 +754,10 @@ installPlaytest({
     },
     {
       id: 'productpages',
-      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products',
+      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
       seconds: 60,
       tags: ['full'],
-      description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products.',
+      description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products. Then opens Research from the footer and checks its diagram, indication table and that every figure links its source.',
     },
     {
       id: 'people',
