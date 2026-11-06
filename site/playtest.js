@@ -454,6 +454,38 @@ async function story(options, t) {
 }
 
 
+/** Leadership: each person has a portrait and a role; the founding story is at least 150 words. */
+async function people(options, t) {
+  t.scene('Leadership');
+  const doc = await frameLoad((f) => (f.src = './leadership.html'));
+  if (!doc) throw new Error("leadership.html didn't open");
+  const cards = [['Pierce Hawkes', doc.querySelector('.dossier')], ...['hale', 'voss', 'lang'].map((id) => [id, doc.getElementById(id)])];
+  for (const [name, el] of cards) {
+    if (!el) { t.problem('bug', `Leadership: no entry for ${name}`); continue; }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const img = el.querySelector('img');
+    if (img) await t.until(() => img.complete, 8000, `${name} portrait`).catch(() => {});
+    const role = (el.querySelector('.role, .kicker')?.textContent || '').trim();
+    t.event('person', `${name}: portrait ${img && img.naturalWidth ? fileOf(img.src) : '(none)'}, role "${role}"`);
+    if (!img || !img.naturalWidth) t.problem('bug', `Leadership: ${name} has no portrait that loads`);
+    if (!role) t.problem('bug', `Leadership: ${name} has no role`);
+    t.add('peopleChecked');
+    await t.wait(700);
+  }
+  const story = doc.getElementById('founding');
+  if (!story) t.problem('bug', 'Leadership: no founding story');
+  else {
+    story.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const words = story.querySelector('.prose').textContent.trim().split(/\s+/).length;
+    t.event('founding', `Founding story: ${words} words`);
+    t.metric('foundingWords', words);
+    if (words < 150) t.problem('bug', `Leadership: founding story is ${words} words, at least 150 wanted`);
+    await t.wait(1500);
+  }
+  closeFrame();
+  t.progress(1);
+}
+
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
@@ -597,6 +629,12 @@ installPlaytest({
       description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
     },
     {
+      id: 'people',
+      title: 'Leadership: each person has a portrait and a role; the founding story is at least 150 words',
+      seconds: 20,
+      tags: ['full'],
+    },
+    {
       id: 'design',
       title: 'Design system: the same header, footer, type scale and buttons on every page; the style guide lists the tokens; no page overflows at 390px or 1440px',
       seconds: 60,
@@ -616,6 +654,7 @@ installPlaytest({
     try {
       if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
+      else if (id === 'people') await people(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
