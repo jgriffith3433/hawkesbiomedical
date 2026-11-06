@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f0ea" />
+    <meta
+      name="description"
+      content="The Hawkes Biomedical style guide: the colour, type, spacing, button and card tokens every page of the site draws from."
+    />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <title>Style guide — Hawkes Biomedical</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Hawkes Biomedical" />
+    <meta property="og:title" content="Style guide — Hawkes Biomedical" />
+    <meta
+      property="og:description"
+      content="The Hawkes Biomedical style guide: the colour, type, spacing, button and card tokens every page of the site draws from."
+    />
+    <meta property="og:url" content="https://hawkesbiomedical.com/styleguide.html" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./site/brand.css" />
+    <!-- Hawkes Analytics: anonymous site statistics (AGENTS.md "Analytics"). site/analytics.js must follow the SDK tag. -->
+    <script src="https://hawkesgen.ai/sdk/analytics@1.js" data-product="hawkesbiomedical" defer></script>
+    <script src="./site/analytics.js"></script>
+  </head>
+  <body data-page="styleguide">
+    <a class="skip" href="#content">Skip to content</a>
+
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="./index.html">
+          <img src="./assets/brand/logo.png" alt="Hawkes Biomedical logo" width="160" height="160" />
+          <span class="brand-name">Hawkes<span>Biomedical</span></span>
+        </a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="nav-links">
+          Menu
+        </button>
+        <nav class="nav-links" id="nav-links" aria-label="Primary">
+          <a href="./styleguide.html" data-nav="company">Company</a>
+          <a href="./products.html" data-nav="products">Products</a>
+          <a href="./leadership.html" data-nav="leadership">Leadership</a>
+          <a href="./newsroom.html" data-nav="newsroom">Newsroom</a>
+          <a href="./contact.html" data-nav="contact">Contact</a>
+        </nav>
+        <div class="nav-tools">
+          <a class="nav-cta" href="./investors.html" data-nav="investors">Investors</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="content">
+      <section class="page-hero page-hero-plain">
+        <div class="wrap">
+          <p class="eyebrow">Hawkes Tower</p>
+          <h1 class="page-title">Style guide</h1>
+          <p class="lede lede-top">One set of tokens, applied to every page of this site. They live at the top of <code>site/brand.css</code>.</p>
+        </div>
+      </section>
+
+      <section class="band band-tight">
+        <div class="wrap">
+          <div class="sg-section" id="colour">
+            <h2 class="section-title">Colour</h2>
+            <div class="sg-grid">
+            <figure class="sg-swatch"><div class="chip" style="background: var(--bg)"></div><figcaption>Paper<code>--bg · #f3f0ea</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--bg-raise)"></div><figcaption>Raised paper<code>--bg-raise · #faf7f1</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--text)"></div><figcaption>Ink<code>--text · #24231f</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--muted)"></div><figcaption>Muted ink<code>--muted · #55514b</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--gold)"></div><figcaption>Gold<code>--gold · #6f5b3e</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--line)"></div><figcaption>Rule<code>--line · ink at 14%</code></figcaption></figure>
+            <figure class="sg-swatch"><div class="chip" style="background: var(--btn-hover)"></div><figcaption>Button hover<code>--btn-hover · #3a3834</code></figcaption></figure>
+            </div>
+          </div>
+
+          <div class="sg-section" id="type">
+            <h2 class="section-title">Type scale</h2>
+            <p class="lede section-note">Headlines are Cormorant Garamond. Labels, navigation and buttons are Barlow Condensed, set in capitals.</p>
+            <div class="sg-table-wrap"><table class="sg-table">
+              <caption class="visually-hidden">Headline sizes</caption>
+              <tbody>
+              <tr><th scope="row">Display</th><td><span class="sample serif" style="font-size: var(--fs-display)">Category ownership</span><code>--fs-display · clamp(64px, 9vw, 112px)</code></td></tr>
+              <tr><th scope="row">Page title</th><td><span class="sample serif" style="font-size: var(--fs-title)">Category ownership</span><code>--fs-title · clamp(52px, 7vw, 88px)</code></td></tr>
+              <tr><th scope="row">Section title</th><td><span class="sample serif" style="font-size: var(--fs-h2)">Category ownership</span><code>--fs-h2 · clamp(36px, 5vw, 56px)</code></td></tr>
+              <tr><th scope="row">Card title</th><td><span class="sample serif" style="font-size: var(--fs-h3)">Category ownership</span><code>--fs-h3 · clamp(30px, 3.4vw, 40px)</code></td></tr>
+              <tr><th scope="row">Small title</th><td><span class="sample serif" style="font-size: var(--fs-h4)">Category ownership</span><code>--fs-h4 · clamp(24px, 2.4vw, 30px)</code></td></tr>
+              <tr><th scope="row">Statement</th><td><span class="sample serif" style="font-size: var(--fs-statement)">Category ownership</span><code>--fs-statement · clamp(30px, 3.8vw, 46px)</code></td></tr>
+              <tr><th scope="row">Quote</th><td><span class="sample serif" style="font-size: var(--fs-quote)">Category ownership</span><code>--fs-quote · clamp(26px, 3vw, 34px)</code></td></tr>
+              </tbody>
+            </table></div>
+            <div class="sg-table-wrap" style="margin-top: var(--space-5)"><table class="sg-table">
+              <caption class="visually-hidden">Text sizes</caption>
+              <tbody>
+              <tr><th scope="row">Lede</th><td><span class="sample" style="font-size: var(--fs-lede)">We do not pitch a cure. We own the category.</span><code>--fs-lede · 22px</code></td></tr>
+              <tr><th scope="row">Body</th><td><span class="sample" style="font-size: var(--fs-body)">We do not pitch a cure. We own the category.</span><code>--fs-body · 20px</code></td></tr>
+              <tr><th scope="row">Body, small</th><td><span class="sample" style="font-size: var(--fs-body-sm)">We do not pitch a cure. We own the category.</span><code>--fs-body-sm · 18px</code></td></tr>
+              <tr><th scope="row">Fine print</th><td><span class="sample" style="font-size: var(--fs-fine)">We do not pitch a cure. We own the category.</span><code>--fs-fine · 16px</code></td></tr>
+              <tr><th scope="row">Interface</th><td><span class="sample" style="font-size: var(--fs-ui)">We do not pitch a cure. We own the category.</span><code>--fs-ui · 13px</code></td></tr>
+              <tr><th scope="row">Label</th><td><span class="sample" style="font-size: var(--fs-label)">We do not pitch a cure. We own the category.</span><code>--fs-label · 12px</code></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          <div class="sg-section" id="spacing">
+            <h2 class="section-title">Spacing</h2>
+            <div class="sg-table-wrap"><table class="sg-table">
+              <caption class="visually-hidden">Spacing steps</caption>
+              <tbody>
+              <tr><th scope="row">Space 1</th><td><span class="sg-space" style="width: var(--space-1)"></span><code>--space-1 · 8px</code></td></tr>
+              <tr><th scope="row">Space 2</th><td><span class="sg-space" style="width: var(--space-2)"></span><code>--space-2 · 12px</code></td></tr>
+              <tr><th scope="row">Space 3</th><td><span class="sg-space" style="width: var(--space-3)"></span><code>--space-3 · 16px</code></td></tr>
+              <tr><th scope="row">Space 4</th><td><span class="sg-space" style="width: var(--space-4)"></span><code>--space-4 · 24px</code></td></tr>
+              <tr><th scope="row">Space 5</th><td><span class="sg-space" style="width: var(--space-5)"></span><code>--space-5 · 32px</code></td></tr>
+              <tr><th scope="row">Space 6</th><td><span class="sg-space" style="width: var(--space-6)"></span><code>--space-6 · 48px</code></td></tr>
+              <tr><th scope="row">Space 7</th><td><span class="sg-space" style="width: var(--space-7)"></span><code>--space-7 · 64px</code></td></tr>
+              <tr><th scope="row">Space 8, between sections</th><td><span class="sg-space" style="width: var(--space-8)"></span><code>--space-8 · 104px</code></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          <div class="sg-section" id="buttons">
+            <h2 class="section-title">Buttons</h2>
+            <div class="actions">
+              <a class="btn" href="#buttons">Primary</a>
+              <a class="btn btn-outline" href="#buttons">Secondary</a>
+              <a class="text-link" href="#buttons">Text link</a>
+            </div>
+            <p class="fine">Radius <code>--radius</code> 2px. Buttons set in Barlow Condensed at <code>--fs-ui</code>, tracked <code>--ls-ui</code>. The header button is the same button at <code>--btn-h</code> 42px.</p>
+          </div>
+
+          <div class="sg-section" id="cards">
+            <h2 class="section-title">Cards</h2>
+            <div class="desks">
+              <article class="desk">
+                <p class="kicker">Indication</p>
+                <h3>Card title</h3>
+                <p>Raised paper, a one-pixel rule and the card padding <code>--card-pad</code>. Every card on the site, from the board to the offices, is this card.</p>
+              </article>
+              <article class="desk">
+                <p class="kicker">Formulation</p>
+                <h3>Card title</h3>
+                <p>A kicker in gold above a serif title, then body copy in muted ink.</p>
+              </article>
+              <article class="desk">
+                <p class="kicker">Continuity</p>
+                <h3>Card title</h3>
+                <p>The hover edge is <code>--gold-line</code>.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap-wide site-footer">
+        <div>
+          <span class="footer-brand"><img src="./assets/brand/logo.png" alt="Hawkes Biomedical logo" width="160" height="160" />Hawkes Biomedical</span>
+          <span>Hawkes Tower, 58th Floor</span>
+          <span>Capital desk, Zurich</span>
+        </div>
+        <nav aria-label="Footer">
+          <a href="./index.html">Home</a>
+          <a href="./company.html">Company</a>
+          <a href="./products.html">Products</a>
+          <a href="./research.html">Research</a>
+          <a href="./leadership.html">Leadership</a>
+          <a href="./newsroom.html">Newsroom</a>
+          <a href="./investors.html">Investors</a>
+          <a href="./contact.html">Contact</a>
+          <a href="./whatsnew.html">What&rsquo;s new</a>
+          <a href="./compliance.html">Compliance</a>
+          <a href="./privacy.html">Privacy</a>
+          <a href="./terms.html">Terms</a>
+          <a href="./styleguide.html">Style guide</a>
+        </nav>
+      </div>
+      <p class="wrap-wide legal">Hawkes Biomedical is a work of fiction. <span class="stats">We keep anonymous site statistics. No cookies. No personal data.</span> <a class="revision" href="./whatsnew.html" data-hawkes-version data-prefix="Site revision " hidden></a> <a class="powered" href="https://hawkesgen.ai">Powered by <strong>HAWKES GEN</strong></a></p>
+    </footer>
+
+    <script type="module" src="./site/brand.js"></script>
+    <script src="./site/hawkes-release.js" data-releases="./releases.json" defer></script>
+  </body>
+</html>

@@ -19,7 +19,7 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 ## Register
 
 Deadpan pharma megacorp, never winking: plain regulatory language (indications and usage, formulation and lot per product).
-Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house) and the eight-product strip (`.line-grid`, linking to each row on Products). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
+Home is a story in four chapters (I. problem, II. mission, III. work, IV. people; `.story`, each with a headline and a visual from existing daylight images, fading in on scroll via `[data-reveal]`, off under reduced motion). The hero states the mission in one sentence (`.mission`). Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house) and the eight-product strip (`.line-grid`, linking to each row on Products). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
 (Hale, Voss, Lang, Pierce as Chairman); Investors holds mission, "Our position" and the fictional figures (71% category share,
 17 years in market since 2009, 8 products). Tenure on Leadership: Pierce 2009, Hale 2014, Voss 2011, Lang 2016. Header nav:
 Company, Products, Leadership, Newsroom, Contact, plus the Investors button; the footer lists every page incl. Compliance,
@@ -30,9 +30,10 @@ New pages are generated from the same head/header/footer: copy one and keep the 
 ## Layout
 
 ```
-index.html company.html products.html leadership.html newsroom.html investors.html contact.html
+index.html company.html products.html research.html leadership.html newsroom.html investors.html contact.html
 compliance.html privacy.html terms.html whatsnew.html 404.html
-site/brand.css site/brand.js
+styleguide.html (the design tokens, shown; in every footer)
+site/brand.css site/brand.js  (tokens in :root at the top of brand.css: colour, type scale --fs-*, spacing --space-*, --card-pad, --btn-h)
 site/analytics.js  Hawkes Analytics additions (after the SDK tag in every page head)
 assets/brand/     Tower and board photography
 public/           favicon, CNAME, robots (copied into dist/)
@@ -41,15 +42,21 @@ CNAME favicon.svg
 
 `npm run dev` serves port **5174**. `npm run build` writes `dist/`.
 
+## Product pages
+
+Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`.
+
+`research.html` (footer link, not in the header nav; `data-page="products"`) shows how a product is made (one `.diagram-svg`), the indication table (`.spec`) and the figures (`.facts[data-sourced]`). Every figure there must carry an `a.source` link to the page that already states it (Investors, Products): never add a figure with no source here. The `productpages` scenario checks it.
+
 ## Playtest
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
-`products` and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`products`, `story` (the narrative home), `access` (Home images: alt text, width/height, under 150 KB, no layout shift; a visible focus ring on every control), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
-have them and their `og:url`). Product thumbnails are square crops: draw new ones at 900x900.
+have them and their `og:url`). Product thumbnails are square crops (640x640 on disk now; images are kept under ~100 KB and every `<img>` has `alt` plus `width`/`height`).
 The `analytics` scenario reads what Hawkes Analytics sends (the SDK's `debugLog`): Products' `page_view`, read depth to
 the footer, and a real click on phorigins.com (its new tab held back) whose `outbound` event carries ctx.product
 "PH Origins", each with the env (`beta` on the Studio beta site, sites.hawkesgen.ai/o/j-studio-4f12/hawkes-biomedical/). It sets `sessionStorage['hawkes.playtest']` so the
@@ -102,3 +109,7 @@ by hand; a typo in old notes can be fixed in the file on beta.
 `products.html` shows each product's current version as its "Formulation x.y.z · revised <date>" (`site/formulations.js`
 reads `https://<product domain>/releases.json`; GitHub Pages allows the cross-site read). The line links to that product's
 `whatsnew.html`. A product whose live site has no releases.json yet shows "Formulation pending" (no link). Every row fetches; nothing to update by hand. Until a product's first go live writes its releases.json (The Place Department and Yooba Land today), that fetch 404s in the console: expected, not a bug. The notes for this site stay in the fictional pharma framing: never games.
+
+## Design system
+
+One set of tokens in `:root` at the top of `site/brand.css`, listed on `styleguide.html`. Use a `var(--fs-*)`, `var(--space-*)`, `var(--card-pad)` or colour token in a rule, never a new literal size; add a token (and its row on the style guide) if a new value is truly needed. Header and footer markup is identical on every page (the only per-page difference is `aria-current`, set by `brand.js`); a new page copies them and gets the `styleguide.html` footer link. Buttons: `.btn`, `.btn.btn-outline`, `.text-link`, and the header's `.nav-cta`. Cards: `.desk`, `.beat`, `.board-card`, `.address`, `.office` share `--card-pad`.

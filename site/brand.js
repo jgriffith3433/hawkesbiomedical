@@ -103,3 +103,24 @@ if (shotA && shotB) {
 
   runCycle();
 }
+
+// Scroll-led chapters (home): fade in as they enter view. Skipped entirely under prefers-reduced-motion.
+const chapters = document.querySelectorAll('[data-reveal]');
+if (chapters.length) {
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (calm || !('IntersectionObserver' in window)) {
+    chapters.forEach((el) => el.classList.add('is-in'));
+  } else {
+    document.documentElement.classList.add('reveal-on');
+    const seen = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-in');
+          seen.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.15 }
+    );
+    chapters.forEach((el) => seen.observe(el));
+  }
+}

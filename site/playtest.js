@@ -15,6 +15,7 @@ const PAGES = [
   { name: 'Privacy', href: './privacy.html' },
   { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
+  { name: 'Style guide', href: './styleguide.html' },
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
 ];
@@ -30,6 +31,16 @@ const SHARE_URLS = {
   Compliance: 'https://hawkesbiomedical.com/compliance.html',
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
   Terms: 'https://hawkesbiomedical.com/terms.html',
+  'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
+  Research: 'https://hawkesbiomedical.com/research.html',
+  'PH Origins': 'https://hawkesbiomedical.com/product-ph-origins.html',
+  'Sick of It': 'https://hawkesbiomedical.com/product-sick-of-it.html',
+  'Imagine Live TV': 'https://hawkesbiomedical.com/product-imagine-live-tv.html',
+  'The Place Department': 'https://hawkesbiomedical.com/product-the-place-department.html',
+  'Yooba Land': 'https://hawkesbiomedical.com/product-yooba-land.html',
+  'I Can Be': 'https://hawkesbiomedical.com/product-i-can-be.html',
+  'Dose Of Destruction': 'https://hawkesbiomedical.com/product-dose-of-destruction.html',
+  'Hawkes Gen': 'https://hawkesbiomedical.com/product-hawkes-gen.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -406,6 +417,273 @@ async function analytics(options, t) {
 
 /* ---------------- scenarios ---------------- */
 
+/** The narrative home page: a one-sentence mission in the hero, then four chapters, each with a headline and a visual; scroll motion respects prefers-reduced-motion. */
+async function story(options, t) {
+  t.scene('Home: hero');
+  const mission = document.querySelector('.hero-copy .mission')?.textContent.replace(/\s+/g, ' ').trim() || '';
+  const sentences = mission.split(/(?<=[.!?])\s+/).filter(Boolean);
+  t.event('mission', `Hero: "${mission || '(missing)'}" (${sentences.length} sentence${sentences.length === 1 ? '' : 's'})`);
+  if (!mission) t.problem('bug', 'Home: the hero states no mission');
+  else if (sentences.length !== 1) t.problem('bug', `Home: the hero mission is ${sentences.length} sentences, not one`);
+  await t.wait(1500);
+  const chapters = [...document.querySelectorAll('main .story')];
+  t.metric('chapters', chapters.length);
+  if (chapters.length < 4) t.problem('bug', `Home: ${chapters.length} narrative sections, at least 4 wanted`);
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  t.event('motion', `prefers-reduced-motion: ${calm ? 'reduce' : 'no-preference'}; reveal ${document.documentElement.classList.contains('reveal-on') ? 'on' : 'off'}`);
+  if (calm && document.documentElement.classList.contains('reveal-on')) t.problem('bug', 'Home: scroll reveal is on although the visitor asked for reduced motion');
+  let rule = false;
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) if (r.conditionText && /prefers-reduced-motion:\s*reduce/.test(r.conditionText) && /data-reveal/.test(r.cssText)) rule = true;
+    } catch {}
+  }
+  t.event('motion-rule', `reduced-motion rule for the chapters: ${rule ? 'present' : 'missing'}`);
+  if (!rule) t.problem('bug', 'Home: no prefers-reduced-motion rule for the scroll reveal');
+  for (const sec of chapters) {
+    const name = sec.querySelector('h2')?.textContent.trim() || sec.id;
+    t.scene(`Home: ${name}`);
+    smoothTo(sec);
+    await t.wait(1600);
+    const img = sec.querySelector('img');
+    await t.until(() => !img || img.complete, 8000, `${name} image`).catch(() => {});
+    const h = sec.querySelector('h2');
+    const box = sec.querySelector('[data-reveal]');
+    const opacity = box ? Number(getComputedStyle(box).opacity) : 1;
+    t.event('chapter', `${sec.querySelector('.eyebrow')?.textContent.trim() || ''}: "${name}", visual ${img && img.naturalWidth ? fileOf(img.src) : '(none)'}, opacity ${fixed2(opacity)}`);
+    t.add('chaptersChecked');
+    if (!h) t.problem('bug', `Home: chapter ${sec.id} has no headline`);
+    if (!img || !img.naturalWidth) t.problem('bug', `Home: chapter "${name}" has no visual that loads`);
+    if (opacity < 0.95) t.problem('bug', `Home: chapter "${name}" is still hidden after scrolling to it (opacity ${fixed2(opacity)})`);
+    await t.wait(800);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  await t.wait(800);
+  t.progress(1);
+}
+
+
+/** Performance and access on Home: every image has alt text and its size, every control shows a focus ring, images are light, layout does not shift. */
+async function access(options, t) {
+  t.scene('Home: images');
+  await t.until(() => document.readyState === 'complete', 10000, 'load').catch(() => {});
+  const imgs = [...document.querySelectorAll('img')];
+  for (const img of imgs) {
+    const name = fileOf(img.src);
+    if (!img.hasAttribute('alt')) t.problem('bug', `Home: ${name} has no alt attribute`);
+    else if (!img.getAttribute('alt').trim()) t.problem('bug', `Home: ${name} has empty alt text`);
+    if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
+  }
+  t.metric('images', imgs.length);
+  t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
+  const heavy = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img' && r.encodedBodySize > 150 * 1024);
+  for (const r of heavy) t.problem('bug', `Home: image ${fileOf(r.name)} is ${Math.round(r.encodedBodySize / 1024)} KB`);
+  let cls = 0;
+  try {
+    for (const e of performance.getEntriesByType('layout-shift')) if (!e.hadRecentInput) cls += e.value;
+  } catch {}
+  t.metric('layoutShift', fixed2(cls));
+  if (cls > 0.1) t.problem('bug', `Home: layout shift ${fixed2(cls)} (over 0.1)`);
+  t.progress(0.4);
+  t.scene('Home: keyboard focus');
+  const controls = [...document.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter((e) => e.getClientRects().length);
+  let seen = 0;
+  for (const el of controls) {
+    el.focus({ preventScroll: true });
+    if (document.activeElement !== el) continue;
+    const cs = getComputedStyle(el);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    const label = (el.textContent || el.getAttribute('aria-label') || el.getAttribute('href') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!ring) t.problem('bug', `Home: "${label}" shows no focus ring (outline ${cs.outlineStyle} ${cs.outlineWidth})`);
+    seen++;
+  }
+  document.activeElement?.blur?.();
+  t.metric('controlsFocused', seen);
+  t.event('focus', `${seen} of ${controls.length} controls take focus with a visible ring`);
+  t.progress(1);
+}
+
+/** Leadership: each person has a portrait and a role; the founding story is at least 150 words. */
+async function people(options, t) {
+  t.scene('Leadership');
+  const doc = await frameLoad((f) => (f.src = './leadership.html'));
+  if (!doc) throw new Error("leadership.html didn't open");
+  const cards = [['Pierce Hawkes', doc.querySelector('.dossier')], ...['hale', 'voss', 'lang'].map((id) => [id, doc.getElementById(id)])];
+  for (const [name, el] of cards) {
+    if (!el) { t.problem('bug', `Leadership: no entry for ${name}`); continue; }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const img = el.querySelector('img');
+    if (img) await t.until(() => img.complete, 8000, `${name} portrait`).catch(() => {});
+    const role = (el.querySelector('.role, .kicker')?.textContent || '').trim();
+    t.event('person', `${name}: portrait ${img && img.naturalWidth ? fileOf(img.src) : '(none)'}, role "${role}"`);
+    if (!img || !img.naturalWidth) t.problem('bug', `Leadership: ${name} has no portrait that loads`);
+    if (!role) t.problem('bug', `Leadership: ${name} has no role`);
+    t.add('peopleChecked');
+    await t.wait(700);
+  }
+  const story = doc.getElementById('founding');
+  if (!story) t.problem('bug', 'Leadership: no founding story');
+  else {
+    story.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const words = story.querySelector('.prose').textContent.trim().split(/\s+/).length;
+    t.event('founding', `Founding story: ${words} words`);
+    t.metric('foundingWords', words);
+    if (words < 150) t.problem('bug', `Leadership: founding story is ${words} words, at least 150 wanted`);
+    await t.wait(1500);
+  }
+  closeFrame();
+  t.progress(1);
+}
+
+/** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
+const DESIGN_PAGES = [
+  ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
+  ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
+  ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
+];
+const chromeOf = (doc) => {
+  const norm = (el) => (el ? el.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ') : '');
+  return { header: norm(doc.querySelector('header.nav')), footer: norm(doc.querySelector('footer')) };
+};
+const styleOf = (doc, sel) => {
+  const el = doc.querySelector(sel);
+  if (!el) return null;
+  const c = doc.defaultView.getComputedStyle(el);
+  return [c.fontFamily, c.fontSize, c.letterSpacing, c.textTransform, c.borderRadius, c.color, c.backgroundColor].join('|');
+};
+async function design(options, t) {
+  const widths = [1440, 390];
+  const baseline = {};
+  t.scene('Style guide');
+  let doc = await frameLoad((f) => (f.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't open");
+  const rootStyle = doc.defaultView.getComputedStyle(doc.documentElement);
+  const tokens = [...doc.querySelectorAll('.sg-table code, .sg-swatch code, main code')].map((c) => (c.textContent.match(/--[a-z0-9-]+/) || [])[0]).filter(Boolean);
+  const unique = [...new Set(tokens)];
+  const missing = unique.filter((n) => !rootStyle.getPropertyValue(n).trim());
+  t.event('tokens', `The style guide lists ${unique.length} tokens; ${missing.length} not defined in :root`);
+  t.metric('tokensListed', unique.length);
+  if (unique.length < 25) t.problem('bug', `Style guide: only ${unique.length} tokens listed`);
+  if (missing.length) t.problem('bug', `Style guide: lists tokens that :root does not define: ${missing.join(', ')}`);
+  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
+  t.add('styleGuideChecked');
+  for (const w of widths) {
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    t.scene(`Every page at ${w}px`);
+    for (let i = 0; i < DESIGN_PAGES.length; i++) {
+      const [name, href] = DESIGN_PAGES[i];
+      doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+      await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+      await t.wait(300);
+      const de = doc.documentElement;
+      const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+      t.event('overflow', `${name} at ${w}px: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
+      if (over > 1) {
+        const wide = [...doc.body.querySelectorAll('*')].filter((e) => e.getBoundingClientRect().right > de.clientWidth + 1).slice(0, 3).map((e) => e.tagName.toLowerCase() + (e.className ? '.' + String(e.className).split(' ')[0] : ''));
+        t.problem('bug', `${name} at ${w}px: the page scrolls sideways by ${over}px (${wide.join(', ')})`);
+      }
+      t.add('pagesMeasured');
+      if (w !== 1440) continue;
+      // Same header and footer, type scale and buttons as every other page.
+      const chrome = chromeOf(doc);
+      if (!chrome.header || !chrome.footer) { t.problem('bug', `${name}: no header or footer`); continue; }
+      if (baseline.header === undefined) Object.assign(baseline, chrome);
+      else {
+        if (chrome.header !== baseline.header) t.problem('bug', `${name}: the header differs from Home's`);
+        if (chrome.footer !== baseline.footer) t.problem('bug', `${name}: the footer differs from Home's`);
+      }
+      const probes = { 'nav link': 'header .nav-links a', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
+      for (const [what, sel] of Object.entries(probes)) {
+        const style = styleOf(doc, sel);
+        if (!style) continue;
+        if (baseline[what] === undefined) baseline[what] = style;
+        else if (baseline[what] !== style && what !== 'page title' && !(what === 'text link' && sel)) t.problem('bug', `${name}: ${what} is styled differently from the same element on another page`);
+      }
+      t.add('chromeChecked');
+    }
+  }
+  t.event('chrome', `Header and footer compared on ${DESIGN_PAGES.length} pages`);
+  closeFrame();
+  t.progress(1);
+}
+
+/** Product pages: reached from Products by a real click; each has an overview, how it works and one diagram; no figure or clinical result stated; same chrome as Products. */
+async function productPages(options, t) {
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
+  t.scene('Products');
+  const links = [...doc.querySelectorAll('.products .product a[href^="./product-"]')].map((a) => a.getAttribute('href'));
+  t.metric('productFileLinks', links.length);
+  if (links.length < 8) t.problem('bug', `Products: ${links.length} product file links, 8 wanted`);
+  const baseline = chromeOf(doc);
+  for (const href of links) {
+    doc = await frameLoad((f) => (f.src = './products.html'));
+    doc = await clickLink(t, doc, `.products a[href="${href}"]`, `Product file ${href}`);
+    const name = doc.querySelector('h1')?.textContent.trim() || href;
+    t.scene(`Product: ${name}`);
+    await t.until(() => imagesLoaded(doc), 10000, `${name} images`).catch(() => {});
+    const overview = doc.querySelector('#overview');
+    const how = doc.querySelector('#how');
+    const diagrams = doc.querySelectorAll('main svg.diagram-svg');
+    if (!overview || !overview.parentElement.querySelector('.lede')?.textContent.trim()) t.problem('bug', `${name}: no overview`);
+    if (!how || !how.parentElement.querySelector('.steps li')) t.problem('bug', `${name}: no "how it works" section`);
+    if (diagrams.length !== 1) t.problem('bug', `${name}: ${diagrams.length} diagrams, one wanted`);
+    const dg = diagrams[0];
+    if (dg && (!dg.getAttribute('aria-label') || dg.querySelectorAll('text').length < 6)) t.problem('bug', `${name}: the diagram has no label or text`);
+    for (const el of [overview, how, dg]) {
+      if (!el) continue;
+      smoothTo(el);
+      await t.wait(900);
+    }
+    const prose = [...doc.querySelectorAll('main .lede, main .steps, main .fine')].map((e) => e.textContent).join(' ');
+    const figures = prose.match(/\d+(?:[.,]\d+)?\s*(?:%|percent|mg|ml|mL|days?|hours?|patients?)/gi) || [];
+    t.event('product-page', `${name}: overview ${!!overview}, how it works ${!!how}, diagrams ${diagrams.length}, figures stated ${figures.length}, ${prose.split(/\s+/).length} words`);
+    t.add('productPagesChecked');
+    if (figures.length) t.problem('bug', `${name}: states figures that carry no source (${figures.join(', ')})`);
+    if (OFF_BRAND.test(doc.body.innerText)) t.problem('bug', `${name}: visible text breaks the brand rules`);
+    const img = doc.querySelector('.product-shot img');
+    if (!img || !img.naturalWidth || !img.alt.trim()) t.problem('bug', `${name}: product image missing or without alt text`);
+    checkShareTags(t, doc, name);
+    const chrome = chromeOf(doc);
+    if (chrome.header !== baseline.header || chrome.footer !== baseline.footer) t.problem('bug', `${name}: header or footer differs from Products`);
+    const de = doc.documentElement;
+    if (de.scrollWidth - de.clientWidth > 1) t.problem('bug', `${name}: the page scrolls sideways`);
+    await t.wait(800);
+  }
+  // Research: reached from the footer; one diagram, an indication table, and every figure names its source.
+  doc = await frameLoad((f) => (f.src = './products.html'));
+  doc = await clickLink(t, doc, 'footer a[href="./research.html"]', 'Research (footer)');
+  t.scene('Research');
+  await t.until(() => imagesLoaded(doc), 10000, 'Research images').catch(() => {});
+  const rDiagrams = doc.querySelectorAll('main svg.diagram-svg');
+  if (rDiagrams.length !== 1) t.problem('bug', `Research: ${rDiagrams.length} diagrams, one wanted`);
+  if (!doc.querySelector('#overview') || !doc.querySelector('#how .steps li')) t.problem('bug', 'Research: overview or "how a product is made" is missing');
+  const rows = doc.querySelectorAll('.spec tbody tr').length;
+  if (rows < 8) t.problem('bug', `Research: the indication table has ${rows} rows, 8 wanted`);
+  const figs = [...doc.querySelectorAll('.facts > div')];
+  const unsourced = figs.filter((d) => !d.querySelector('a.source[href]'));
+  for (const el of [doc.querySelector('#overview'), doc.querySelector('.diagram'), doc.querySelector('.spec'), doc.querySelector('#figures')]) {
+    if (!el) continue;
+    smoothTo(el);
+    await t.wait(900);
+  }
+  t.metric('researchFigures', figs.length);
+  t.event('research-page', `Research: diagrams ${rDiagrams.length}, table rows ${rows}, figures ${figs.length}, without a source ${unsourced.length}`);
+  if (!figs.length) t.problem('bug', 'Research: no figures shown');
+  if (unsourced.length) t.problem('bug', `Research: ${unsourced.length} figure(s) with no source link`);
+  if (OFF_BRAND.test(doc.body.innerText)) t.problem('bug', 'Research: visible text breaks the brand rules');
+  checkShareTags(t, doc, 'Research');
+  const rChrome = chromeOf(doc);
+  if (rChrome.header !== baseline.header || rChrome.footer !== baseline.footer) t.problem('bug', 'Research: header or footer differs from Products');
+  const rde = doc.documentElement;
+  if (rde.scrollWidth - rde.clientWidth > 1) t.problem('bug', 'Research: the page scrolls sideways');
+  closeFrame();
+  t.progress(1);
+}
+
 async function products(options, t, everyPage) {
   t.scene('Home');
   checkShareTags(t, document, 'Home');
@@ -468,6 +746,40 @@ installPlaytest({
       description: 'Checks the link-preview (Open Graph, Twitter card) tags on Home and Products, clicks Products in the nav, scrolls each product row and measures its thumbnail, holds on PH Origins, then opens every page from the footer, checks the link-preview tags on Company, Leadership and Contact, measures the footer line contrast and checks the Powered by HAWKES GEN link to https://hawkesgen.ai (404 loaded directly).',
     },
     {
+      id: 'story',
+      title: 'Narrative home: the hero states the mission in one sentence; four story chapters (problem, mission, work, people) each with a headline and a visual; scroll reveal respects reduced motion',
+      seconds: 25,
+      tags: ['full'],
+      description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
+    },
+    {
+      id: 'productpages',
+      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
+      seconds: 60,
+      tags: ['full'],
+      description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products. Then opens Research from the footer and checks its diagram, indication table and that every figure links its source.',
+    },
+    {
+      id: 'people',
+      title: 'Leadership: each person has a portrait and a role; the founding story is at least 150 words',
+      seconds: 20,
+      tags: ['full'],
+    },
+    {
+      id: 'design',
+      title: 'Design system: the same header, footer, type scale and buttons on every page; the style guide lists the tokens; no page overflows at 390px or 1440px',
+      seconds: 60,
+      tags: ['full'],
+      description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
+    },
+    {
+      id: 'access',
+      title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
+      seconds: 15,
+      tags: ['full'],
+      description: 'Checks each image on Home for alt text and width/height, flags heavy images and layout shift, then moves focus to every link and button and checks that a visible outline appears.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -478,7 +790,12 @@ installPlaytest({
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
-      if (id === 'analytics') await analytics(options, t);
+      if (id === 'access') await access(options, t);
+      else if (id === 'analytics') await analytics(options, t);
+      else if (id === 'design') await design(options, t);
+      else if (id === 'people') await people(options, t);
+      else if (id === 'productpages') await productPages(options, t);
+      else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
       closeFrame();
