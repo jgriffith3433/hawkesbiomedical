@@ -19,7 +19,7 @@ Fictional corporate site for the brand. Static HTML, Vite for preview only. No g
 ## Register
 
 Deadpan pharma megacorp, never winking: plain regulatory language (indications and usage, formulation and lot per product).
-Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house) and the eight-product strip (`.line-grid`, linking to each row on Products). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
+Home is a story in four chapters (I. problem, II. mission, III. work, IV. people; `.story`, each with a headline and a visual from existing daylight images, fading in on scroll via `[data-reveal]`, off under reduced motion). The hero states the mission in one sentence (`.mission`). Home carries "We do not pitch a cure. We own the category." (`.position`) beside the slogan, then "The Hawkes line" (what the name on the label means: four pillars, one standard, category leadership, continuity, one house) and the eight-product strip (`.line-grid`, linking to each row on Products). Company sets out the Hawkes standard (indication, category, formulation, continuity); Compliance and Investors repeat it in their own voice. Newsroom holds dated statements
 (Hale, Voss, Lang, Pierce as Chairman); Investors holds mission, "Our position" and the fictional figures (71% category share,
 17 years in market since 2009, 8 products). Tenure on Leadership: Pierce 2009, Hale 2014, Voss 2011, Lang 2016. Header nav:
 Company, Products, Leadership, Newsroom, Contact, plus the Investors button; the footer lists every page incl. Compliance,
@@ -45,7 +45,7 @@ CNAME favicon.svg
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
-`products` and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`products`, `story` (the narrative home) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
