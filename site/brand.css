@@ -161,6 +161,9 @@ a {
   font-size: var(--fs-display);
 }
 
+.slogan { max-width: 14ch; margin: 0 0 var(--space-4); font-size: var(--fs-title); }
+.slogan-line { display: block; }
+.slogan-line + .slogan-line { color: var(--gold); }
 .lockup {
   display: block;
   width: min(520px, 100%);
@@ -1203,7 +1206,7 @@ a {
 .lede code, .fine code, .desk code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; color: var(--text); overflow-wrap: anywhere; }
 .sg-table .serif { font-family: var(--serif); font-weight: 600; overflow-wrap: anywhere; }
 
-.board-card .portrait { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3, 16px); border: 1px solid var(--line); }
+.board-card .portrait { display: block; background: var(--bg-raise); width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3, 16px); border: 1px solid var(--line); }
 .founding { max-width: 70ch; }
 
 /* Product pages: overview, how it works, one diagram. Tokens only. */
@@ -1217,7 +1220,10 @@ a {
 .diagram .fine { margin-top: var(--space-3); }
 .d-box { fill: var(--bg); stroke: var(--gold-line); stroke-width: 1.5; }
 .d-arrow { fill: none; stroke: var(--gold); stroke-width: 2; }
-.d-num { fill: var(--gold); font-family: var(--sans); font-size: var(--fs-label); font-weight: 700; letter-spacing: var(--ls-label); }
+.d-num { fill: var(--gold); font-family: var(--sans); font-size: var(--fs-fine); font-weight: 700; letter-spacing: var(--ls-label); }
+.d-rule { fill: none; stroke: var(--gold); stroke-width: 4; }
+.d-narrow { display: none; }
+@media (max-width: 700px) { .d-wide { display: none; } .d-narrow { display: block; max-width: 420px; margin: 0 auto; } }
 .d-title { fill: var(--text); font-family: var(--serif); font-size: var(--fs-h4); font-weight: 600; }
 .steps { margin: var(--space-5) 0 0; padding-left: var(--space-4); max-width: 68ch; color: var(--muted); font-size: var(--fs-body); line-height: var(--lh-body); }
 .steps li + li { margin-top: var(--space-2); }
