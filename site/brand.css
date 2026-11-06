@@ -1224,3 +1224,14 @@ a {
 .steps strong { color: var(--text); }
 .eyebrow a { color: inherit; }
 @media (max-width: 900px) { .product-file { grid-template-columns: minmax(0, 1fr); } .product-file .product-shot { max-width: 220px; } }
+
+/* Research page: five-stage diagram, indication table, sourced figures. Tokens only. */
+.d-sm { font-size: var(--fs-body-sm); }
+.d-note { fill: var(--muted); font-family: var(--serif); font-size: var(--fs-fine); }
+.table-wrap { margin-top: var(--space-4); overflow-x: auto; }
+.spec { width: 100%; border-collapse: collapse; font-family: var(--serif); font-size: var(--fs-body-sm); line-height: var(--lh-body); }
+.spec caption { text-align: left; margin-bottom: var(--space-3); }
+.spec th, .spec td { padding: var(--space-3) var(--space-3) var(--space-3) 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; color: var(--muted); }
+.spec thead th { color: var(--gold); font-family: var(--sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; }
+.spec tbody th { color: var(--text); font-weight: 600; }
+.facts .source { display: block; margin-top: var(--space-2); font-size: var(--fs-fine); }
