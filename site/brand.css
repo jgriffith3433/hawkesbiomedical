@@ -1201,3 +1201,6 @@ a {
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .lede code, .fine code, .desk code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; color: var(--text); overflow-wrap: anywhere; }
 .sg-table .serif { font-family: var(--serif); font-weight: 600; overflow-wrap: anywhere; }
+
+.board-card .portrait { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3, 16px); border: 1px solid var(--line); }
+.founding { max-width: 70ch; }
