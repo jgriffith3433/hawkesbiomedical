@@ -37,6 +37,7 @@ export default defineConfig({
         'privacy.html',
         'terms.html',
         'whatsnew.html',
+        'styleguide.html',
         '404.html',
       ],
     },

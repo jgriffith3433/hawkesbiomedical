@@ -32,7 +32,8 @@ New pages are generated from the same head/header/footer: copy one and keep the 
 ```
 index.html company.html products.html leadership.html newsroom.html investors.html contact.html
 compliance.html privacy.html terms.html whatsnew.html 404.html
-site/brand.css site/brand.js
+styleguide.html (the design tokens, shown; in every footer)
+site/brand.css site/brand.js  (tokens in :root at the top of brand.css: colour, type scale --fs-*, spacing --space-*, --card-pad, --btn-h)
 site/analytics.js  Hawkes Analytics additions (after the SDK tag in every page head)
 assets/brand/     Tower and board photography
 public/           favicon, CNAME, robots (copied into dist/)
@@ -45,7 +46,7 @@ CNAME favicon.svg
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
-`products`, `story` (the narrative home) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`products`, `story` (the narrative home), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that
@@ -102,3 +103,7 @@ by hand; a typo in old notes can be fixed in the file on beta.
 `products.html` shows each product's current version as its "Formulation x.y.z · revised <date>" (`site/formulations.js`
 reads `https://<product domain>/releases.json`; GitHub Pages allows the cross-site read). The line links to that product's
 `whatsnew.html`. A product whose live site has no releases.json yet shows "Formulation pending" (no link). Every row fetches; nothing to update by hand. Until a product's first go live writes its releases.json (The Place Department and Yooba Land today), that fetch 404s in the console: expected, not a bug. The notes for this site stay in the fictional pharma framing: never games.
+
+## Design system
+
+One set of tokens in `:root` at the top of `site/brand.css`, listed on `styleguide.html`. Use a `var(--fs-*)`, `var(--space-*)`, `var(--card-pad)` or colour token in a rule, never a new literal size; add a token (and its row on the style guide) if a new value is truly needed. Header and footer markup is identical on every page (the only per-page difference is `aria-current`, set by `brand.js`); a new page copies them and gets the `styleguide.html` footer link. Buttons: `.btn`, `.btn.btn-outline`, `.text-link`, and the header's `.nav-cta`. Cards: `.desk`, `.beat`, `.board-card`, `.address`, `.office` share `--card-pad`.
