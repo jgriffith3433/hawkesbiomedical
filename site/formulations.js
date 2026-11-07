@@ -22,7 +22,14 @@ for (const el of document.querySelectorAll('[data-releases-from]')) {
       link.href = new URL('whatsnew.html', el.dataset.releasesFrom).href;
       link.target = '_blank';
       // The build is the lot: the Unity build number (Game/v<n>) or the short commit of a web product.
-      link.textContent = `Formulation ${top.version}${top.build ? ` \u00b7 lot ${top.build}` : ''}${top.date ? ` \u00b7 revised ${date(top.date)}` : ''}`;
+      link.append(`Formulation ${top.version}${top.build ? ` \u00b7 lot ${top.build}` : ''}`);
+      if (top.date) {
+        // Its own span: on a phone the date drops to a second line on purpose (see .formulation-date).
+        const when = document.createElement('span');
+        when.className = 'formulation-date';
+        when.textContent = `revised ${date(top.date)}`;
+        link.append(when);
+      }
       el.replaceChildren(link);
       el.hidden = false;
     })
