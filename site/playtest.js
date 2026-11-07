@@ -542,7 +542,14 @@ const DESIGN_PAGES = [
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
 const chromeOf = (doc) => {
-  const norm = (el) => (el ? el.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ') : '');
+  // The site revision link is filled in by hawkes-release.js after its fetch: its text, title and hidden state depend on
+  // when that fetch lands (a browser serialises a set boolean as hidden=""), not on the markup. Compare the markup only.
+  const norm = (el) => {
+    if (!el) return '';
+    const copy = el.cloneNode(true);
+    copy.querySelectorAll('[data-hawkes-version]').forEach((r) => { r.removeAttribute('hidden'); r.removeAttribute('title'); r.textContent = 'Site revision'; });
+    return copy.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ');
+  };
   return { header: norm(doc.querySelector('header.nav')), footer: norm(doc.querySelector('footer')) };
 };
 const styleOf = (doc, sel) => {
