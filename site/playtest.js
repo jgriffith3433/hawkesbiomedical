@@ -594,7 +594,7 @@ async function design(options, t) {
         if (chrome.header !== baseline.header) t.problem('bug', `${name}: the header differs from Home's`);
         if (chrome.footer !== baseline.footer) t.problem('bug', `${name}: the footer differs from Home's`);
       }
-      const probes = { 'nav link': 'header .nav-links a', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
+      const probes = { 'nav link': 'header .nav-links a:not([aria-current])', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
       for (const [what, sel] of Object.entries(probes)) {
         const style = styleOf(doc, sel);
         if (!style) continue;
