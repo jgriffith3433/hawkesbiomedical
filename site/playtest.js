@@ -474,6 +474,20 @@ async function access(options, t) {
     else if (!img.getAttribute('alt').trim()) t.problem('bug', `Home: ${name} has empty alt text`);
     if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
   }
+  // Responsive images: a WebP variant is chosen from the srcset (a phone gets the 800w), every one keeps a JPEG fallback and lazy below the fold.
+  const pics = [...document.querySelectorAll('picture')];
+  for (const pic of pics) {
+    const img = pic.querySelector('img');
+    const name = fileOf(img.src);
+    const src = pic.querySelector('source[type="image/webp"]');
+    if (!src || !/\.jpg$/i.test(img.getAttribute('src') || '')) t.problem('bug', `Home: ${name} has no WebP source with a JPEG fallback`);
+    const cur = img.currentSrc || img.src;
+    const below = img.getBoundingClientRect().top > innerHeight;
+    if (!/\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)}, not a WebP`);
+    else if (innerWidth <= 700 && !/-800\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)} on a ${innerWidth}px screen, wanted the 800w`);
+    if (below && img.getAttribute('loading') !== 'lazy') t.problem('bug', `Home: ${name} is below the fold and not lazy`);
+  }
+  t.event('picture', `${pics.length} pictures: ${pics.map((p) => fileOf((p.querySelector('img').currentSrc || ''))).join(', ')} at ${innerWidth}px`);
   t.metric('images', imgs.length);
   t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
   const heavy = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img' && r.encodedBodySize > 150 * 1024);

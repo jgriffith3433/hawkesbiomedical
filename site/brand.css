@@ -1243,3 +1243,6 @@ a {
 .spec thead th { color: var(--gold); font-family: var(--sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; }
 .spec tbody th { color: var(--text); font-weight: 600; }
 .facts .source { display: block; margin-top: var(--space-2); font-size: var(--fs-fine); }
+
+/* <picture> wraps the responsive images without changing their layout */
+picture { display: contents; }
