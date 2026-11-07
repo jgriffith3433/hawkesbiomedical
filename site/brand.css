@@ -1090,6 +1090,8 @@ a {
 .legal .revision:hover { color: var(--gold); }
 .product p.formulation a { color: inherit; text-decoration: underline; text-underline-offset: 3px; white-space: normal; overflow-wrap: anywhere; }
 .product p.formulation { margin-top: 10px; max-width: none; white-space: normal; overflow-wrap: anywhere; color: var(--muted); font-size: var(--fs-ui); letter-spacing: var(--ls-ui); text-transform: uppercase; }
+.product p.formulation .formulation-date::before { content: ' \00b7 '; white-space: pre; }
+@media (max-width: 480px) { .product p.formulation { font-size: var(--fs-label); letter-spacing: 0.04em; } .product p.formulation .formulation-date { display: block; margin-top: 4px; } .product p.formulation .formulation-date::before { content: none; } }
 
 /* "Powered by HAWKES GEN" mark at the end of the footer line, on every page. */
 .legal .powered { float: right; margin-left: 18px; color: inherit; font-size: var(--fs-label); letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; }
