@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 // Plain (non-module) scripts and data the pages load by path. Vite leaves them out of dist/, so copy them in:
@@ -17,9 +17,29 @@ const copyPlainFiles = () => ({
   },
 });
 
+// Fails the build when a page in dist/ links a local file that isn't there (a script, image, page or releases.json),
+// so Studio's beta build never publishes a page with a 404 in it.
+const checkDistLinks = () => ({
+  name: 'check-dist-links',
+  apply: 'build',
+  enforce: 'post',
+  closeBundle() {
+    const missing = [];
+    for (const page of readdirSync('dist').filter((f) => f.endsWith('.html'))) {
+      const html = readFileSync(resolve('dist', page), 'utf8');
+      for (const [, ref] of html.matchAll(/(?:src|href)="([^"#?]+)/g)) {
+        if (/^(?:[a-z]+:|\/\/)/i.test(ref)) continue;
+        if (!existsSync(resolve('dist', ref))) missing.push(`${page} -> ${ref}`);
+      }
+    }
+    for (const file of PLAIN_FILES) if (!existsSync(resolve('dist', file))) missing.push(`(plain file) ${file}`);
+    if (missing.length) throw new Error(`dist/ links files that are not in it:\n${missing.join('\n')}`);
+  },
+});
+
 export default defineConfig({
   base: './',
-  plugins: [copyPlainFiles()],
+  plugins: [copyPlainFiles(), checkDistLinks()],
   appType: 'mpa',
   build: {
     outDir: 'dist',
