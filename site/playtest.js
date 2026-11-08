@@ -755,6 +755,121 @@ async function products(options, t, everyPage) {
   t.progress(1);
 }
 
+/** Phone (390x844): the menu by tap and Escape with focus handling, the product strip, the hero above the fold, 44px tap targets, no sideways scroll. */
+async function phone(options, t) {
+  const W = 390, H = 844, MIN_TAP = 44;
+  const f = openFrame();
+  f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  t.scene('Home at 390x844');
+  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const win = doc.defaultView;
+  const de = doc.documentElement;
+
+  // Hero: headline and button inside the first screen.
+  const hero = (what, sel) => {
+    const el = doc.querySelector(sel);
+    const r = el && el.getBoundingClientRect();
+    if (!r) return t.problem('bug', `Hero: no ${what}`);
+    t.event('hero', `${what}: top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+    if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero at ${W}x${H}: the ${what} is not on the first screen (bottom ${Math.round(r.bottom)})`);
+  };
+  hero('headline', '.hero h1');
+  hero('button', '.hero .btn');
+  t.add('heroChecked');
+
+  // Menu: tap to open (focus goes in), Escape to close (focus returns), tap again, tap to close.
+  t.scene('Menu');
+  const toggle = doc.getElementById('navToggle');
+  const links = doc.getElementById('nav-links');
+  const expanded = () => toggle.getAttribute('aria-expanded');
+  const key = (k) => doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  if (win.getComputedStyle(toggle).display === 'none') t.problem('bug', `The menu toggle is not shown at ${W}px`);
+  const open = async (how) => {
+    toggle.click();
+    await t.wait(150);
+    const visible = links.getClientRects().length > 0;
+    const inside = links.contains(doc.activeElement);
+    t.event('menu-open', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus in menu ${inside}`);
+    if (expanded() !== 'true' || !visible) t.problem('bug', 'Menu: a tap on the toggle does not open it');
+    if (!inside) t.problem('bug', 'Menu: focus does not move into the menu on open');
+  };
+  const closed = (how) => {
+    const visible = links.getClientRects().length > 0;
+    const back = doc.activeElement === toggle;
+    t.event('menu-close', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus on toggle ${back}`);
+    if (expanded() !== 'false' || visible) t.problem('bug', `Menu: ${how} does not close it`);
+    if (!back) t.problem('bug', `Menu: focus does not return to the toggle after ${how}`);
+  };
+  await open('tap');
+  key('Escape');
+  await t.wait(150);
+  closed('Escape');
+  await open('tap again');
+  toggle.click();
+  await t.wait(150);
+  closed('a tap on the toggle');
+  t.add('menuChecked');
+
+  // The eight-product strip: every card inside the width, none clipped, no overlap of a card's image.
+  t.scene('Product strip');
+  const strip = doc.querySelector('.line-grid');
+  strip.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  const cards = [...strip.querySelectorAll('li')];
+  t.metric('productCards', cards.length);
+  if (cards.length !== 8) t.problem('bug', `Product strip: ${cards.length} cards, expected 8`);
+  const clipped = cards.filter((c) => {
+    const r = c.getBoundingClientRect();
+    const a = c.querySelector('a').getBoundingClientRect();
+    return r.left < -1 || r.right > de.clientWidth + 1 || a.width < 100 || c.scrollWidth > c.clientWidth + 1;
+  });
+  t.event('strip', `${cards.length} cards, ${clipped.length} clipped; columns ${win.getComputedStyle(strip).gridTemplateColumns.split(' ').length}`);
+  if (clipped.length) t.problem('bug', `Product strip: ${clipped.length} card(s) clipped at ${W}px`);
+  t.add('stripChecked');
+
+  // Tap targets, on Home and the pages a visitor reaches next.
+  const small = (d, name) => {
+    const bad = [];
+    for (const el of d.querySelectorAll('a[href], button')) {
+      if (el.classList.contains('skip')) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width && !r.height) continue; // hidden (the closed menu)
+      if (r.height < MIN_TAP - 0.5) bad.push(`${(el.textContent || el.getAttribute('alt') || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
+    }
+    t.event('tap-targets', `${name}: ${bad.length} under ${MIN_TAP}px`);
+    if (bad.length) t.problem('bug', `${name} at ${W}px: ${bad.length} link(s) or button(s) under ${MIN_TAP}px tall (${bad.slice(0, 4).join(', ')})`);
+  };
+  small(doc, 'Home');
+  // The closed menu is hidden; check its links with the menu open.
+  toggle.click();
+  await t.wait(150);
+  small(doc, 'Home with the menu open');
+  toggle.click();
+  for (const [name, href] of [['Products', './products.html'], ['Company', './company.html'], ['Contact', './contact.html'], ['Investors', './investors.html']]) {
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+    await t.wait(400);
+    small(doc, name);
+    const d = doc.documentElement;
+    const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
+    if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px`);
+    t.add('pagesMeasured');
+  }
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (doc) {
+    await t.wait(300);
+    const d = doc.documentElement;
+    const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
+    t.event('overflow', `Home at ${W}px: scrollWidth ${d.scrollWidth}, width ${d.clientWidth}`);
+    if (over > 1) t.problem('bug', `Home at ${W}px: the page scrolls sideways by ${over}px`);
+  }
+  closeFrame();
+  t.progress(1);
+}
+
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
@@ -794,6 +909,13 @@ installPlaytest({
       description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
     },
     {
+      id: 'phone',
+      title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
+      seconds: 30,
+      tags: ['full'],
+      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too), Products, Company, Contact and Investors, and checks for sideways overflow.',
+    },
+    {
       id: 'access',
       title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
       seconds: 15,
@@ -814,6 +936,7 @@ installPlaytest({
       if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
+      else if (id === 'phone') await phone(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
       else if (id === 'story') await story(options, t);
