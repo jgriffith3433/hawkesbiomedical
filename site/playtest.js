@@ -585,6 +585,131 @@ async function people(options, t) {
   t.progress(1);
 }
 
+/** Visual polish: hero above the fold, even heading space, product domains as their own links, Leadership and Contact on the shared container, light portrait borders. */
+async function polish(options, t) {
+  const f = openFrame();
+  const size = (w, h) => { f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`; };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true) && imagesLoaded(doc), 8000, 'fonts and images').catch(() => {});
+    await t.wait(400);
+  };
+  const box = (el) => el.getBoundingClientRect();
+
+  // 1. Hero: eyebrow, headline and button on the first screen at both sizes.
+  let doc;
+  for (const [W, H] of [[1280, 720], [390, 844]]) {
+    size(W, H);
+    t.scene(`Home at ${W}x${H}`);
+    doc = await frameLoad((fr) => (fr.src = './index.html'));
+    if (!doc) throw new Error("the home page didn't open in the frame");
+    await settle(doc);
+    for (const [what, sel] of [['eyebrow', '.hero .eyebrow'], ['headline', '.hero h1'], ['button', '.hero .btn']]) {
+      const el = doc.querySelector(sel);
+      if (!el) { t.problem('bug', `Hero: no ${what}`); continue; }
+      const r = box(el);
+      t.event('hero', `${W}x${H}: ${what} top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+      if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero at ${W}x${H}: the ${what} is not fully on the first screen (bottom ${Math.round(r.bottom)})`);
+    }
+    t.add('heroChecked');
+  }
+
+  // 3. Products: each row's domain is a link of its own, apart from the product-file label.
+  size(1440, 900);
+  t.scene('Products: domains');
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
+  await settle(doc);
+  const rows = [...doc.querySelectorAll('.products .product')];
+  t.metric('productRows', rows.length);
+  if (rows.length < 8) t.problem('bug', `Products: ${rows.length} rows, 8 wanted`);
+  for (const row of rows) {
+    const name = row.querySelector('h2')?.textContent.trim() || '(row)';
+    const label = row.querySelector('a[href^="./product-"]');
+    const domain = row.querySelector('a[href^="http"]');
+    if (!label || !domain) { t.problem('bug', `Products: ${name} has no product-file label or no domain link`); continue; }
+    smoothTo(row);
+    await t.wait(500);
+    const a = box(label), b = box(domain);
+    const apart = b.top >= a.bottom - 1 || b.left >= a.right + 8;
+    t.event('domain', `${name}: "${label.textContent.trim()}" then "${domain.textContent.trim()}" (${apart ? 'separate' : 'run together'})`);
+    if (!apart) t.problem('bug', `Products: the ${name} domain runs into the product-file label`);
+    if (label.textContent.toLowerCase().includes(domain.textContent.trim().toLowerCase())) t.problem('bug', `Products: the ${name} label contains the domain`);
+    t.add('domainsChecked');
+  }
+
+  // 2. Headings: a line-height that clears descenders, and an even 12-16px under each h2 (Privacy, Research, a product page).
+  for (const [name, href] of [['Privacy', './privacy.html'], ['Research', './research.html'], ['PH Origins', './product-ph-origins.html']]) {
+    t.scene(`Headings: ${name}`);
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) throw new Error(`${href} didn't open`);
+    await settle(doc);
+    const view = doc.defaultView;
+    const next = (el) => { let n = el.nextElementSibling; while (n && n.getClientRects().length === 0) n = n.nextElementSibling; return n; };
+    const h1 = doc.querySelector('main h1:not(.visually-hidden)');
+    if (h1) {
+      const cs = view.getComputedStyle(h1);
+      const lh = parseFloat(cs.lineHeight) / parseFloat(cs.fontSize);
+      const n = next(h1);
+      const gap = n ? box(n).top - box(h1).bottom : 0;
+      t.event('h1', `${name}: line-height ${fixed2(lh)}, ${Math.round(gap)}px to the next block`);
+      if (lh < 1.1) t.problem('bug', `${name}: the h1 line-height is ${fixed2(lh)}, descenders may touch the next line`);
+      if (gap < 12) t.problem('bug', `${name}: only ${Math.round(gap)}px under the h1`);
+    }
+    for (const h2 of doc.querySelectorAll('main h2.sub')) {
+      const cs = view.getComputedStyle(h2);
+      const n = next(h2);
+      if (!n) continue;
+      const gap = box(n).top - box(h2).bottom;
+      const lh = parseFloat(cs.lineHeight) / parseFloat(cs.fontSize);
+      smoothTo(h2);
+      await t.wait(300);
+      t.event('h2', `${name}: "${h2.textContent.trim()}" line-height ${fixed2(lh)}, ${fixed2(gap)}px below`);
+      if (gap < 11.5 || gap > 16.5) t.problem('bug', `${name}: "${h2.textContent.trim()}" has ${fixed2(gap)}px below it, 12-16px wanted`);
+      if (lh < 1.05) t.problem('bug', `${name}: an h2 line-height of ${fixed2(lh)} may touch the next line`);
+      t.add('headingsChecked');
+    }
+  }
+
+  // 4. Leadership and Contact: the same container as the other pages at desktop and phone width; light portrait borders.
+  const containers = {};
+  for (const [W, H] of [[1440, 900], [390, 844]]) {
+    size(W, H);
+    for (const [name, href] of [['Privacy', './privacy.html'], ['Company', './company.html'], ['Leadership', './leadership.html'], ['Contact', './contact.html']]) {
+      t.scene(`${name} at ${W}px`);
+      doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) throw new Error(`${href} didn't open`);
+      await settle(doc);
+      const wrap = [...doc.querySelectorAll('main .wrap')].map(box).find((r) => r.width > 0);
+      if (!wrap) { t.problem('bug', `${name}: no .wrap container`); continue; }
+      containers[`${name}@${W}`] = wrap;
+      t.event('container', `${name} at ${W}px: content ${Math.round(wrap.left)} to ${Math.round(wrap.right)} (${Math.round(wrap.width)} wide)`);
+      if (name === 'Leadership' || name === 'Contact') {
+        const ref = containers[`Privacy@${W}`];
+        if (ref && (Math.abs(ref.left - wrap.left) > 1 || Math.abs(ref.width - wrap.width) > 1)) t.problem('bug', `${name} at ${W}px: content ${Math.round(wrap.left)}/${Math.round(wrap.width)} does not line up with Privacy ${Math.round(ref.left)}/${Math.round(ref.width)}`);
+        t.add('containersChecked');
+      }
+      if (name === 'Leadership' && W === 1440) {
+        const view = doc.defaultView;
+        const bg = backgroundOf(doc.body);
+        for (const el of doc.querySelectorAll('.dossier-photo, .board-card .portrait')) {
+          el.scrollIntoView({ block: 'center' });
+          const cs = view.getComputedStyle(el);
+          const c = parseRgb(cs.borderTopColor);
+          const wide = parseFloat(cs.borderTopWidth);
+          const blended = c && { r: c.r * c.a + bg.r * (1 - c.a), g: c.g * c.a + bg.g * (1 - c.a), b: c.b * c.a + bg.b * (1 - c.a) };
+          const light = blended ? (0.299 * blended.r + 0.587 * blended.g + 0.114 * blended.b) / 255 : 0;
+          t.event('portrait', `${el.closest('[id]')?.id || el.className}: border ${wide}px ${cs.borderTopColor} (lightness ${fixed2(light)})`);
+          if (!(wide > 0) || light < 0.75) t.problem('bug', `Leadership: a portrait border is ${cs.borderTopColor}, not the light grey hairline`);
+          t.add('portraitsChecked');
+          await t.wait(500);
+        }
+      }
+    }
+  }
+  closeFrame();
+  t.progress(1);
+}
+
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
@@ -970,6 +1095,13 @@ installPlaytest({
       description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too) and on every other page (product page, Research, Company, Products, Leadership, Newsroom, Investors, Contact, Compliance, Privacy, Terms, Notices, Style guide, 404), and checks for sideways overflow.',
     },
     {
+      id: 'polish',
+      title: 'Visual polish: Home headline and button on the first screen at 1280x720 and 390x844; even space under headings; each product domain a link of its own; Leadership and Contact on the shared container; light grey portrait borders',
+      seconds: 60,
+      tags: ['full'],
+      description: "Loads Home in a 1280x720 then a 390x844 frame and checks the eyebrow, headline and button are fully on screen; clicks Products in the nav and checks each row's domain link sits apart from the product-file label; measures the h1 line-height and the 12-16px under each h2 on Privacy, Research and PH Origins; compares the container of Leadership and Contact with Privacy at 1440 and 390px; reads the Leadership portrait border colour.",
+    },
+    {
       id: 'access',
       title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
       seconds: 15,
@@ -991,6 +1123,7 @@ installPlaytest({
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
+      else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
       else if (id === 'story') await story(options, t);

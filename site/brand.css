@@ -571,7 +571,7 @@ a {
 
 .prose {
   display: grid;
-  gap: 18px;
+  gap: var(--space-3);
   max-width: 68ch;
 }
 
@@ -1113,7 +1113,7 @@ a {
 .board-card p { margin-bottom: 10px; }
 .board-card .role { color: var(--text); font-size: var(--fs-body); }
 .dossier .prose { margin: 14px 0 22px; }
-.sub { margin: 28px 0 0; font-family: var(--serif); font-size: var(--fs-quote); font-weight: 600; line-height: 1.15; }
+.sub { margin: 28px 0 var(--space-3); font-family: var(--serif); font-size: var(--fs-quote); font-weight: 600; line-height: 1.15; }
 .prose a, .fine a, .notes a { color: var(--text); text-underline-offset: 3px; }
 .fine { margin: 28px 0 0; max-width: 68ch; color: var(--muted); font-family: var(--serif); font-size: var(--fs-fine); line-height: 1.5; }
 .notes { display: grid; margin-top: 40px; }
@@ -1219,6 +1219,7 @@ a {
 .product-file .sub { margin-top: 0; }
 .how { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--line); }
 .how .sub { margin-top: 0; }
+.prose .sub { margin-bottom: 0; } /* the grid gap (--space-3) is the space below */
 .diagram { margin: var(--space-5) 0 0; padding: var(--space-4); border: 1px solid var(--line); background: var(--bg-raise); }
 .diagram-svg { display: block; width: 100%; height: auto; }
 .diagram .fine { margin-top: var(--space-3); }
@@ -1292,3 +1293,5 @@ h1, .page-title { margin-bottom: var(--space-3); line-height: 1.12; padding-bott
 .page-title { margin-bottom: var(--space-3); }
 main section h2, .product h2, .dossier h2, .section-title { margin-bottom: var(--space-3); line-height: 1.1; }
 .product .text-link + .text-link { display: block; width: fit-content; margin-top: var(--space-2); }
+/* The product domain is its own link, set apart from the product-file label: on its own line with an arrow for the new tab. */
+.product .text-link[target="_blank"]::after { content: " \2197"; }
