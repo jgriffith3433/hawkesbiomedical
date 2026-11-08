@@ -934,6 +934,17 @@ async function phone(options, t) {
   const win = doc.defaultView;
   const de = doc.documentElement;
 
+  // Name what sticks out past the right edge, so a sideways scroll is traceable to an element, not just a number.
+  const wide = (d) => {
+    const edge = d.documentElement.clientWidth;
+    const out = [];
+    for (const el of d.body.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.right > edge + 1) out.push(`${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/)[0] : ''} +${Math.round(r.right - edge)}px`);
+    }
+    return out.slice(0, 4).join(', ');
+  };
+
   // Hero: headline and button inside the first screen.
   const hero = (what, sel) => {
     const el = doc.querySelector(sel);
@@ -1009,6 +1020,13 @@ async function phone(options, t) {
   });
   t.event('strip', `${cards.length} cards, ${clipped.length} clipped; columns ${win.getComputedStyle(strip).gridTemplateColumns.split(' ').length}`);
   if (clipped.length) t.problem('bug', `Product strip: ${clipped.length} card(s) clipped at ${W}px`);
+  // Cards sit side by side without overlapping, and a title is never stacked a letter per line.
+  const boxes = cards.map((c) => c.getBoundingClientRect());
+  const overlaps = boxes.filter((r, i) => boxes.some((q, j) => j > i && r.left < q.right - 1 && q.left < r.right - 1 && r.top < q.bottom - 1 && q.top < r.bottom - 1)).length;
+  const stacked = cards.filter((c) => { const st = c.querySelector('strong'); return st && st.getBoundingClientRect().height > 3 * parseFloat(win.getComputedStyle(st).lineHeight || 24) * 1.5; }).length;
+  t.event('strip-layout', `${overlaps} overlapping, ${stacked} with stacked text`);
+  if (overlaps) t.problem('bug', `Product strip: ${overlaps} card(s) overlap at ${W}px`);
+  if (stacked) t.problem('bug', `Product strip: ${stacked} title(s) wrap to five or more lines at ${W}px`);
   t.add('stripChecked');
 
   // Tap targets, on Home and the pages a visitor reaches next.
@@ -1039,7 +1057,7 @@ async function phone(options, t) {
     small(doc, name);
     const d = doc.documentElement;
     const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
-    if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px`);
+    if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
     t.add('pagesMeasured');
   }
   doc = await frameLoad((fr) => (fr.src = './index.html'));
@@ -1048,7 +1066,7 @@ async function phone(options, t) {
     const d = doc.documentElement;
     const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
     t.event('overflow', `Home at ${W}px: scrollWidth ${d.scrollWidth}, width ${d.clientWidth}`);
-    if (over > 1) t.problem('bug', `Home at ${W}px: the page scrolls sideways by ${over}px`);
+    if (over > 1) t.problem('bug', `Home at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
   }
   closeFrame();
   t.progress(1);
