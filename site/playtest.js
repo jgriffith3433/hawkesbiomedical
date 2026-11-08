@@ -41,6 +41,7 @@ const SHARE_URLS = {
   'I Can Be': 'https://hawkesbiomedical.com/product-i-can-be.html',
   'Dose Of Destruction': 'https://hawkesbiomedical.com/product-dose-of-destruction.html',
   'Hawkes Gen': 'https://hawkesbiomedical.com/product-hawkes-gen.html',
+  "What's new": 'https://hawkesbiomedical.com/whatsnew.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -193,6 +194,16 @@ function checkPoweredBy(t, doc, page) {
 }
 
 /** The link-preview tags: og:title and og:description match the page's own title and description. */
+/** One h1, no skipped heading levels, and alt text on every image (empty only for decoration). */
+function checkStructure(t, doc, page) {
+  const hs = [...doc.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => +h.tagName[1]);
+  if (hs.filter((n) => n === 1).length !== 1) t.problem('bug', `${page}: ${hs.filter((n) => n === 1).length} h1 elements, expected one`);
+  hs.forEach((n, i) => { if (i && n > hs[i - 1] + 1) t.problem('bug', `${page}: heading jumps from h${hs[i - 1]} to h${n}`); });
+  const bad = [...doc.querySelectorAll('img')].filter((im) => !im.hasAttribute('alt') || (im.alt.trim() === '' && !im.closest('[aria-hidden="true"]')));
+  if (bad.length) t.problem('bug', `${page}: ${bad.length} image(s) without alt text`);
+  t.event('structure', `${page}: headings h${hs.join(' h')}; ${doc.images.length} images checked for alt`);
+}
+
 function checkShareTags(t, doc, page) {
   const meta = (attr, key) => doc.head.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content') ?? null;
   const og = (key) => meta('property', `og:${key}`);
@@ -205,11 +216,16 @@ function checkShareTags(t, doc, page) {
     'og:url': og('url'),
     'og:site_name': og('site_name'),
     'twitter:card': meta('name', 'twitter:card'),
+    'twitter:title': meta('name', 'twitter:title'),
+    'twitter:description': meta('name', 'twitter:description'),
   };
   t.event('share-tags', `${page}: ${Object.entries(tags).map(([k, v]) => `${k}="${v ?? '(missing)'}"`).join(', ')}`);
   for (const [k, v] of Object.entries(tags)) if (!v) t.problem('bug', `${page}: no ${k} tag (link previews)`);
   if (tags['og:title'] && tags['og:title'] !== title) t.problem('bug', `${page}: og:title "${tags['og:title']}" isn't the page title "${title}"`);
   if (tags['og:description'] && tags['og:description'] !== description) t.problem('bug', `${page}: og:description isn't the page's meta description`);
+  if (tags['twitter:title'] && tags['twitter:title'] !== title) t.problem('bug', `${page}: twitter:title isn't the page title`);
+  if (tags['twitter:description'] && tags['twitter:description'] !== description) t.problem('bug', `${page}: twitter:description isn't the page's meta description`);
+  checkStructure(t, doc, page);
   if (tags['og:type'] && tags['og:type'] !== 'website') t.problem('bug', `${page}: og:type is "${tags['og:type']}", not "website"`);
   if (tags['og:url'] && tags['og:url'] !== SHARE_URLS[page]) t.problem('bug', `${page}: og:url is "${tags['og:url']}", not ${SHARE_URLS[page]}`);
   if (tags['og:site_name'] && tags['og:site_name'] !== 'Hawkes Biomedical') t.problem('bug', `${page}: og:site_name is "${tags['og:site_name']}"`);
@@ -748,6 +764,9 @@ async function products(options, t, everyPage) {
     if (!doc) throw new Error("404.html didn't open");
     t.scene('Not found (404.html, loaded directly)');
     t.add('pagesOpened');
+    checkStructure(t, doc, '404');
+    for (const k of ['og:title', 'og:description']) if (!doc.head.querySelector(`meta[property="${k}"]`)?.content) t.problem('bug', `404: no ${k} tag`);
+    for (const k of ['twitter:title', 'twitter:description']) if (!doc.head.querySelector(`meta[name="${k}"]`)?.content) t.problem('bug', `404: no ${k} tag`);
     worst = await checkFooter(t, doc, '404', worst);
   }
   t.metric('footerContrastMin', fixed2(worst));
