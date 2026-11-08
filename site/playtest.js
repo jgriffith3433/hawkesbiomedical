@@ -840,6 +840,8 @@ async function phone(options, t) {
   const key = (k) => doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
   if (win.getComputedStyle(toggle).display === 'none') t.problem('bug', `The menu toggle is not shown at ${W}px`);
   const open = async (how) => {
+    // A real touch tap: pointer and touch events, then the click a phone sends.
+    for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new win.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
     toggle.click();
     await t.wait(150);
     const visible = links.getClientRects().length > 0;
@@ -900,7 +902,7 @@ async function phone(options, t) {
   await t.wait(150);
   small(doc, 'Home with the menu open');
   toggle.click();
-  for (const [name, href] of [['Products', './products.html'], ['Company', './company.html'], ['Contact', './contact.html'], ['Investors', './investors.html']]) {
+  for (const [name, href] of DESIGN_PAGES.filter(([n]) => n !== 'Home')) {
     doc = await frameLoad((fr) => (fr.src = href));
     if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
     await t.wait(400);
@@ -965,7 +967,7 @@ installPlaytest({
       title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
       seconds: 30,
       tags: ['full'],
-      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too), Products, Company, Contact and Investors, and checks for sideways overflow.',
+      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too) and on every other page (product page, Research, Company, Products, Leadership, Newsroom, Investors, Contact, Compliance, Privacy, Terms, Notices, Style guide, 404), and checks for sideways overflow.',
     },
     {
       id: 'access',
