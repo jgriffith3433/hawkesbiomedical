@@ -1277,6 +1277,9 @@ picture { display: contents; }
   .hero .position { font-size: var(--fs-lede); margin-bottom: 0; }
   .hero .actions { margin-top: var(--space-3); }
 
+  /* The strip's card links are plain <a>: undo the inline-flex tap box above, or image, label and title sit in one row. */
+  main .line-grid a:not([class]) { display: block; min-height: 0; }
+  .line-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .line-grid > li { min-width: 0; }
   .line-grid .kicker, .line-grid strong { overflow-wrap: anywhere; }
 }
