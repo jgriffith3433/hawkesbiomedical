@@ -1297,3 +1297,5 @@ main section h2, .product h2, .dossier h2, .section-title { margin-bottom: var(-
 .product .text-link + .text-link { display: block; width: fit-content; margin-top: var(--space-2); }
 /* The product domain is its own link, set apart from the product-file label: on its own line with an arrow for the new tab. */
 .product .text-link[target="_blank"]::after { content: " \2197"; }
+/* Even space under every h2.sub: the block that follows owns no top margin, so the gap is the h2's own --space-3 (16px) whatever follows (lede, note, table, figures). */
+main .sub + * { margin-top: 0; }
