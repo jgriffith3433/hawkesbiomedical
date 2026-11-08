@@ -9,15 +9,19 @@ const nav = document.querySelector('.nav');
 const navLinks = document.getElementById('nav-links');
 const navToggle = document.getElementById('navToggle');
 
-const setMenu = (open) => {
+const setMenu = (open, refocus = false) => {
   if (!navLinks || !navToggle) return;
+  const wasOpen = navLinks.classList.contains('is-open');
   navLinks.classList.toggle('is-open', open);
   navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   navToggle.textContent = open ? 'Close' : 'Menu';
+  // Focus moves into the menu on open, and back to the toggle when it closes.
+  if (open && !wasOpen) navLinks.querySelector('a')?.focus();
+  else if (!open && wasOpen && refocus) navToggle.focus();
 };
 
 navToggle?.addEventListener('click', () => {
-  setMenu(!navLinks.classList.contains('is-open'));
+  setMenu(!navLinks.classList.contains('is-open'), true);
 });
 
 navLinks?.querySelectorAll('a').forEach((link) => {
@@ -35,7 +39,7 @@ document.querySelectorAll('.product a[target="_blank"]').forEach((link) => {
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') setMenu(false);
+  if (event.key === 'Escape') setMenu(false, true);
 });
 
 const onScroll = () => {
