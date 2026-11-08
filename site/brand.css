@@ -77,6 +77,7 @@ body {
 
 body {
   min-height: 100dvh;
+  overflow-x: clip; /* a stray full-bleed element must never make the page scroll sideways */
 }
 
 img {
@@ -1144,13 +1145,13 @@ a {
 .line-grid a:hover strong { color: var(--gold); }
 .mast-caption { margin: 10px auto 0; width: min(1120px, calc(100% - 48px)); color: var(--muted); font-size: var(--fs-label); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 @media (max-width: 900px) {
-  .line-intro { grid-template-columns: 1fr; }
-  .pillars { grid-template-columns: 1fr 1fr; }
+  .line-intro { grid-template-columns: minmax(0, 1fr); }
+  .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pillar:nth-child(3) { padding-left: 0; border-left: 0; }
   .line-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
-  .pillars { grid-template-columns: 1fr; }
+  .pillars { grid-template-columns: minmax(0, 1fr); }
   .pillar, .pillar + .pillar { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
   .pillar:first-child { border-top: 0; }
   .line-grid { gap: 14px; }
