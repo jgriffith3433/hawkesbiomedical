@@ -15,6 +15,7 @@ const PAGES = [
   { name: 'Privacy', href: './privacy.html' },
   { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
+  { name: 'Research', href: './research.html' },
   { name: 'Style guide', href: './styleguide.html' },
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
@@ -33,6 +34,7 @@ const SHARE_URLS = {
   Terms: 'https://hawkesbiomedical.com/terms.html',
   'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
   Research: 'https://hawkesbiomedical.com/research.html',
+  '404': 'https://hawkesbiomedical.com/404.html',
   'PH Origins': 'https://hawkesbiomedical.com/product-ph-origins.html',
   'Sick of It': 'https://hawkesbiomedical.com/product-sick-of-it.html',
   'Imagine Live TV': 'https://hawkesbiomedical.com/product-imagine-live-tv.html',
@@ -219,6 +221,8 @@ function checkShareTags(t, doc, page) {
     'twitter:title': meta('name', 'twitter:title'),
     'twitter:description': meta('name', 'twitter:description'),
   };
+  t.event('meta-description', `${page}: title "${title}"; meta description "${description ?? '(missing)'}"`);
+  if (!title || !description) t.problem('bug', `${page}: missing title or meta description`);
   t.event('share-tags', `${page}: ${Object.entries(tags).map(([k, v]) => `${k}="${v ?? '(missing)'}"`).join(', ')}`);
   for (const [k, v] of Object.entries(tags)) if (!v) t.problem('bug', `${page}: no ${k} tag (link previews)`);
   if (tags['og:title'] && tags['og:title'] !== title) t.problem('bug', `${page}: og:title "${tags['og:title']}" isn't the page title "${title}"`);
@@ -909,9 +913,7 @@ async function products(options, t, everyPage) {
     if (!doc) throw new Error("404.html didn't open");
     t.scene('Not found (404.html, loaded directly)');
     t.add('pagesOpened');
-    checkStructure(t, doc, '404');
-    for (const k of ['og:title', 'og:description']) if (!doc.head.querySelector(`meta[property="${k}"]`)?.content) t.problem('bug', `404: no ${k} tag`);
-    for (const k of ['twitter:title', 'twitter:description']) if (!doc.head.querySelector(`meta[name="${k}"]`)?.content) t.problem('bug', `404: no ${k} tag`);
+    checkShareTags(t, doc, '404');
     worst = await checkFooter(t, doc, '404', worst);
   }
   t.metric('footerContrastMin', fixed2(worst));
