@@ -483,6 +483,88 @@ async function story(options, t) {
 }
 
 
+/** Layout shift of a document, read through an observer (getEntriesByType does not return layout-shift in Chrome). */
+function layoutShiftOf(win) {
+  let total = 0;
+  try {
+    const po = new win.PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value; });
+    po.observe({ type: 'layout-shift', buffered: true });
+    return () => { po.takeRecords().forEach((e) => { if (!e.hadRecentInput) total += e.value; }); po.disconnect(); return total; };
+  } catch {
+    return () => 0;
+  }
+}
+
+/**
+ * Every <picture> of a page, judged at that page's own width: the WebP source it chose (a phone gets the 800w), the JPEG fallback
+ * (it exists, decodes, is under 150 KB and has the same shape as the WebP), width/height on the img, lazy below the fold and eager
+ * with fetchpriority high on the first screen. Scrolls to each one (real scrolling) so the lazy ones choose and load. One `image` event per picture.
+ */
+async function checkPictures(t, doc, label) {
+  const win = doc.defaultView;
+  const W = win.innerWidth;
+  const dpr = win.devicePixelRatio || 1;
+  const shift = layoutShiftOf(win);
+  await t.until(() => doc.readyState === 'complete', 10000, `${label} load`).catch(() => {});
+  const pics = [...doc.querySelectorAll('picture')];
+  const sized = [];
+  for (const pic of pics) {
+    const img = pic.querySelector('img');
+    const name = fileOf(img.getAttribute('src') || img.src);
+    const where = `${label}: ${name}`;
+    const webp = pic.querySelector('source[type="image/webp"]');
+    const fallback = img.getAttribute('src') || '';
+    const wAttr = Number(img.getAttribute('width')), hAttr = Number(img.getAttribute('height'));
+    const loading = img.getAttribute('loading') || 'eager';
+    const priority = img.getAttribute('fetchpriority') || 'auto';
+    const candidates = ((webp && webp.getAttribute('srcset')) || '').split(',').map((c) => c.trim().split(/\s+/)).filter((c) => c[0]).map((c) => ({ file: fileOf(c[0]), w: parseInt(c[1], 10) || 0 }));
+    if (!webp || !candidates.length) t.problem('bug', `${where} has no WebP source`);
+    if (!/\.jpe?g$/i.test(fallback)) t.problem('bug', `${where} has no JPEG fallback (img src is "${fallback}")`);
+    if (!(wAttr > 0 && hAttr > 0)) t.problem('bug', `${where} has no width and height (layout shift)`);
+    const below = img.getBoundingClientRect().top + win.scrollY > win.innerHeight;
+    if (below && loading !== 'lazy') t.problem('bug', `${where} is below the fold and not lazy`);
+    if (!below && loading === 'lazy') t.problem('bug', `${where} is on the first screen and must load eagerly`);
+    if (!below && priority !== 'high') t.problem('bug', `${where} is the first image on screen and lacks fetchpriority="high"`);
+    smoothTo(img);
+    await t.until(() => img.complete && img.currentSrc && img.naturalWidth > 0, 8000, `${name} to load`).catch(() => {});
+    const cur = img.currentSrc;
+    if (!cur) { t.problem('bug', `${where} never chose a file`); continue; }
+    const file = fileOf(cur);
+    const slot = img.getBoundingClientRect().width * dpr;
+    const want = [...candidates].sort((x, y) => x.w - y.w).find((c) => c.w >= slot) || candidates[candidates.length - 1];
+    if (!/\.webp$/i.test(file)) t.problem('bug', `${where} loaded ${file}, not a WebP`);
+    else if (W <= 700) {
+      if (!/-800[-.]/.test(file) && slot <= 800) t.problem('bug', `${where} loaded ${file} on a ${W}px screen, wanted the 800w`);
+      else if (!/-800[-.]/.test(file)) t.event('note', `${where}: ${file} on a ${W}px screen at ${dpr}x needs ${Math.round(slot)}px, so the browser skipped the 800w`);
+    } else if (want && file !== want.file && slot <= 800 && /-800[-.]/.test(want.file)) t.problem('bug', `${where} loaded ${file} for a ${Math.round(slot)}px slot, ${want.file} was enough`);
+    // The chosen WebP: bytes, and a shape that matches width/height (no shift when it arrives).
+    const entry = win.performance.getEntriesByType('resource').find((r) => r.name === cur);
+    let kb = entry && (entry.encodedBodySize || entry.transferSize) ? entry.encodedBodySize / 1024 : 0;
+    if (!kb) { try { kb = (await (await fetch(cur)).blob()).size / 1024; } catch {} }
+    const shape = img.naturalWidth && hAttr ? (img.naturalWidth / img.naturalHeight) / (wAttr / hAttr) : 0;
+    if (shape && Math.abs(shape - 1) > 0.02) t.problem('bug', `${where}: ${file} is ${img.naturalWidth}x${img.naturalHeight} but width/height say ${wAttr}x${hAttr} (layout shift)`);
+    // The JPEG fallback, fetched and decoded on its own (what a browser without WebP would show).
+    let fb = '(not fetched)';
+    try {
+      const res = await fetch(new URL(fallback, doc.baseURI).href);
+      const blob = await res.blob();
+      const jkb = blob.size / 1024;
+      const bmp = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = URL.createObjectURL(blob); });
+      if (!res.ok || !bmp) t.problem('bug', `${where}: the JPEG fallback does not load`);
+      else {
+        if (Math.abs((bmp.naturalWidth / bmp.naturalHeight) / (wAttr / hAttr) - 1) > 0.02) t.problem('bug', `${where}: the JPEG fallback is ${bmp.naturalWidth}x${bmp.naturalHeight}, width/height say ${wAttr}x${hAttr}`);
+        if (jkb > 150) t.problem('bug', `${where}: the JPEG fallback is ${Math.round(jkb)} KB (over 150 KB)`);
+        fb = `${fileOf(fallback)} ${bmp.naturalWidth}x${bmp.naturalHeight} ${Math.round(jkb)} KB`;
+      }
+    } catch { t.problem('bug', `${where}: the JPEG fallback could not be fetched`); }
+    sized.push({ file, kb: Math.round(kb), w: img.naturalWidth });
+    t.event('image', `${label} ${W}px (${dpr}x): ${name} -> ${file} ${img.naturalWidth}px ${Math.round(kb)} KB of ${candidates.map((c) => `${c.file} ${c.w}w`).join(' / ')}; fallback ${fb}; width/height ${wAttr}x${hAttr}; ${loading}${priority === 'high' ? ', fetchpriority high' : ''}, ${below ? 'below' : 'on'} the first screen`);
+    t.add('picturesChecked');
+    await t.wait(300);
+  }
+  return { pics: pics.length, sized, cls: shift() };
+}
+
 /** Performance and access on Home: every image has alt text and its size, every control shows a focus ring, images are light, layout does not shift. */
 async function access(options, t) {
   t.scene('Home: images');
@@ -494,35 +576,30 @@ async function access(options, t) {
     else if (!img.getAttribute('alt').trim()) t.problem('bug', `Home: ${name} has empty alt text`);
     if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
   }
-  // Responsive images: a WebP variant is chosen from the srcset (a phone gets the 800w), every one keeps a JPEG fallback and lazy below the fold.
-  // Scroll to each picture first (real scrolling) so the lazy ones have chosen and loaded their file before it is judged.
-  const pics = [...document.querySelectorAll('picture')];
-  const sized = [];
-  for (const pic of pics) {
-    const img = pic.querySelector('img');
-    const name = fileOf(img.src);
-    const src = pic.querySelector('source[type="image/webp"]');
-    if (!src || !/\.jpg$/i.test(img.getAttribute('src') || '')) t.problem('bug', `Home: ${name} has no WebP source with a JPEG fallback`);
-    const below = img.getBoundingClientRect().top + scrollY > innerHeight;
-    if (below && img.getAttribute('loading') !== 'lazy') t.problem('bug', `Home: ${name} is below the fold and not lazy`);
-    if (!below && img.getAttribute('loading') === 'lazy') t.problem('bug', `Home: ${name} is the first screen and must load eagerly`);
+  // 1. The page as the bot has it.
+  const main = await checkPictures(t, document, 'Home');
+  // The other lazy images (product thumbnails): scroll to each so they load and count towards the weight.
+  for (const img of imgs.filter((i) => !i.closest('picture') && i.getAttribute('loading') === 'lazy')) {
     smoothTo(img);
-    await t.until(() => img.complete && img.currentSrc, 8000, `${name} to load`).catch(() => {});
-    const cur = img.currentSrc;
-    if (!cur) { t.problem('bug', `Home: ${name} never chose a file`); continue; }
-    const file = fileOf(cur);
-    if (!/\.webp$/i.test(file)) t.problem('bug', `Home: ${name} loaded ${file}, not a WebP`);
-    else if (innerWidth <= 700 && !/-800[-.]/.test(file)) t.problem('bug', `Home: ${name} loaded ${file} on a ${innerWidth}px screen, wanted the 800w`);
-    const entry = performance.getEntriesByType('resource').find((r) => r.name === cur);
-    let kb = entry && (entry.encodedBodySize || entry.transferSize) ? entry.encodedBodySize / 1024 : 0;
-    if (!kb) {
-      try { kb = (await (await fetch(cur)).blob()).size / 1024; } catch {}
-    }
-    sized.push({ file, kb: Math.round(kb), w: img.naturalWidth });
-    await t.wait(300);
+    await t.until(() => img.complete && img.naturalWidth > 0, 6000, `${fileOf(img.src)} to load`).catch(() => {});
+    await t.wait(150);
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  t.event('picture', `${pics.length} pictures at ${innerWidth}px: ${sized.map((x) => `${x.file} (${x.w}px wide, ${x.kb} KB)`).join(', ')}`);
+  // 2. The same pictures on a 390x844 phone, in a frame, whatever size the bot's window is: the 800w WebP must be the one that loads.
+  let phone = null;
+  if (innerWidth > 700) {
+    t.scene('Home: images at 390px');
+    const f = openFrame();
+    f.style.cssText = 'position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea';
+    const doc = await frameLoad((fr) => (fr.src = './index.html'));
+    if (!doc) throw new Error("the home page didn't open in the 390px frame");
+    phone = await checkPictures(t, doc, 'Home');
+    t.metric('phoneLargestPictureKB', Math.max(0, ...phone.sized.map((x) => x.kb)));
+    t.event('phone', `390px: ${phone.sized.map((x) => `${x.file} (${x.kb} KB)`).join(', ')}; ${phone.sized.every((x) => /-800[-.]/.test(x.file)) ? 'every picture loaded its 800w WebP' : 'not every picture loaded the 800w'}`);
+    closeFrame();
+  }
+  const sized = [...main.sized, ...(phone ? phone.sized : [])];
+  t.event('picture', `${main.pics} pictures at ${innerWidth}px: ${main.sized.map((x) => `${x.file} (${x.w}px wide, ${x.kb} KB)`).join(', ')}`);
   t.metric('images', imgs.length);
   t.metric('largestPictureKB', Math.max(0, ...sized.map((x) => x.kb)));
   t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
@@ -532,11 +609,9 @@ async function access(options, t) {
   for (const r of heavy) t.problem('bug', `Home: image ${fileOf(r.name)} is ${Math.round(r.encodedBodySize / 1024)} KB`);
   for (const x of sized) if (x.kb > 150) t.problem('bug', `Home: image ${x.file} is ${x.kb} KB`);
   t.event('weight', `${loaded.length} image files loaded, largest ${Math.round(Math.max(0, ...loaded.map((r) => r.encodedBodySize)) / 1024)} KB (limit 150 KB)`);
-  let cls = 0;
-  try {
-    for (const e of performance.getEntriesByType('layout-shift')) if (!e.hadRecentInput) cls += e.value;
-  } catch {}
+  const cls = Math.max(main.cls, phone ? phone.cls : 0);
   t.metric('layoutShift', fixed2(cls));
+  t.event('shift', `layout shift ${fixed2(main.cls)} at ${innerWidth}px${phone ? `, ${fixed2(phone.cls)} at 390px` : ''}`);
   if (cls > 0.1) t.problem('bug', `Home: layout shift ${fixed2(cls)} (over 0.1)`);
   t.progress(0.4);
   t.scene('Home: keyboard focus');
@@ -1224,10 +1299,10 @@ installPlaytest({
     },
     {
       id: 'access',
-      title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
+      title: 'Performance and access on Home: every picture has a WebP (800w on a 390px phone) and a JPEG fallback, width/height, lazy below the fold, no image over 150 KB, no layout shift, every control shows a focus ring; every page keeps alt text and body-copy contrast',
       seconds: 90,
       tags: ['full'],
-      description: 'Checks each image on Home for alt text and width/height, flags heavy images and layout shift, then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
+      description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
       id: 'analytics',
