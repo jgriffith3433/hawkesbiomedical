@@ -497,10 +497,11 @@ async function access(options, t) {
     const name = fileOf(img.src);
     const src = pic.querySelector('source[type="image/webp"]');
     if (!src || !/\.jpg$/i.test(img.getAttribute('src') || '')) t.problem('bug', `Home: ${name} has no WebP source with a JPEG fallback`);
-    const cur = img.currentSrc || img.src;
+    // A lazy image far below the fold has no currentSrc until it is near the viewport: nothing was chosen yet, so the WebP source above is what counts (not img.src, the JPEG fallback).
+    const cur = img.currentSrc;
     const below = img.getBoundingClientRect().top > innerHeight;
-    if (!/\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)}, not a WebP`);
-    else if (innerWidth <= 700 && !/-800\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)} on a ${innerWidth}px screen, wanted the 800w`);
+    if (cur && !/\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)}, not a WebP`);
+    else if (cur && innerWidth <= 700 && !/-800\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)} on a ${innerWidth}px screen, wanted the 800w`);
     if (below && img.getAttribute('loading') !== 'lazy') t.problem('bug', `Home: ${name} is below the fold and not lazy`);
   }
   t.event('picture', `${pics.length} pictures: ${pics.map((p) => fileOf((p.querySelector('img').currentSrc || ''))).join(', ')} at ${innerWidth}px`);
