@@ -1260,7 +1260,9 @@ picture { display: contents; }
   .text-link { display: inline-flex; align-items: center; min-height: var(--btn-h); }
   .site-footer nav { gap: 0 var(--space-4); }
   .site-footer nav a { display: inline-flex; align-items: center; min-height: var(--btn-h); }
-  .legal a { padding-block: 14px; }
+  .legal a { display: inline-flex; align-items: center; min-height: var(--btn-h); padding-block: 0; }
+  .legal .powered { display: flex; }
+  .contact-card a, .office a:not([class]) { display: inline-flex; align-items: center; min-height: var(--btn-h); }
   .facts .source { display: flex; align-items: center; min-height: var(--btn-h); }
   main :is(p, li, dd, td, figcaption) a:not([class]) { padding-block: 12px; }
 
@@ -1278,10 +1280,10 @@ picture { display: contents; }
 
 /* Polish: hero fits one screen at 1280x720; headings keep even space and clear descenders; product links read apart. */
 @media (min-width: 761px) {
-  .hero-photo img { height: clamp(120px, 28vh, 300px); }
-  .hero-copy { padding-top: var(--space-5); }
-  .hero .display { font-size: clamp(40px, 9vh, 72px); margin-bottom: var(--space-2); }
-  .hero .mission { font-size: var(--fs-lede); margin-bottom: var(--space-2); }
+  .hero-photo img { height: clamp(100px, 22vh, 260px); }
+  .hero-copy { padding-top: var(--space-4); }
+  .hero .display { font-size: clamp(40px, 8vh, 72px); margin-bottom: var(--space-2); }
+  .hero .mission { max-width: 52ch; font-size: var(--fs-lede); margin-bottom: var(--space-2); }
   .hero .position { font-size: var(--fs-lede); margin-bottom: 0; }
   .hero .actions { margin-top: var(--space-3); }
 }
