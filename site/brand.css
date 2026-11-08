@@ -1265,7 +1265,9 @@ picture { display: contents; }
   .legal .powered { display: flex; }
   .contact-card a, .office a:not([class]) { display: inline-flex; align-items: center; min-height: var(--btn-h); }
   .facts .source { display: flex; align-items: center; min-height: var(--btn-h); }
-  main :is(p, li, dd, td, figcaption) a:not([class]) { padding-block: 12px; }
+  /* Plain links in body text, tables, captions and the eyebrow: padding on an inline link counts in its
+     rect but not in layout and falls short by a few px (PH Origins 38px, Research 20px), so make each a 44px box. */
+  main a:not([class]), .eyebrow a { display: inline-flex; align-items: center; min-height: var(--btn-h); padding-block: 0; }
 
   /* Hero: a short photograph band, then the headline, the mission and the button, all above the fold. */
   .hero-photo img { height: clamp(140px, 20vh, 200px); }
