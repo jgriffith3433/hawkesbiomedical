@@ -1029,7 +1029,10 @@ async function phone(options, t) {
   await t.wait(150);
   small(doc, 'Home with the menu open');
   toggle.click();
-  for (const [name, href] of DESIGN_PAGES.filter(([n]) => n !== 'Home')) {
+  // Every page, including all eight product pages (not only PH Origins): the plain links in body text and tables were the ones that fell short.
+  const PRODUCT_PAGES = ['sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen']
+    .map((slug) => [`Product file ${slug}`, `./product-${slug}.html`]);
+  for (const [name, href] of [...DESIGN_PAGES.filter(([n]) => n !== 'Home'), ...PRODUCT_PAGES]) {
     doc = await frameLoad((fr) => (fr.src = href));
     if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
     await t.wait(400);
