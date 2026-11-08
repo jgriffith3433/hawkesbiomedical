@@ -629,7 +629,105 @@ async function access(options, t) {
   document.activeElement?.blur?.();
   t.metric('controlsFocused', seen);
   t.event('focus', `${seen} of ${controls.length} controls take focus with a visible ring`);
+  t.progress(0.6);
+  await accessPages(t);
   t.progress(1);
+}
+
+/* ---------------- every page: alt text and body-copy contrast ---------------- */
+
+// Alt text that names a file or says nothing: "hero.jpg", "img_123", "DSC0042", "image", "photo", "logo".
+const GENERIC_ALT = /^(img|image|images|photo|picture|pic|graphic|icon|logo|banner|hero|thumbnail|thumb|untitled|dsc|screenshot)[\s_\-.]*\d*$/i;
+const FILENAME_ALT = /\.(jpe?g|png|webp|gif|svg|avif)$|^[\w-]+[_-]\d{2,}$/i;
+const isDecorative = (img) => img.getAttribute('alt') === '' && (/^(presentation|none)$/.test(img.getAttribute('role') || '') || img.getAttribute('aria-hidden') === 'true' || /decor/i.test(img.className || ''));
+
+/** Logs every <img> of a page and returns the problems: a non-decorative image needs real alt text. */
+function checkAlt(t, doc, page) {
+  const imgs = [...doc.querySelectorAll('img')];
+  let decorative = 0;
+  for (const img of imgs) {
+    const file = fileOf(img.currentSrc || img.src || img.getAttribute('src') || '');
+    const hasAlt = img.hasAttribute('alt');
+    const alt = (img.getAttribute('alt') || '').trim();
+    const deco = isDecorative(img);
+    if (deco) decorative++;
+    t.event('alt', `${page}: ${file} | alt ${hasAlt ? `"${alt}"` : '(missing)'} | ${deco ? 'decorative' : 'not decorative'}`);
+    if (deco) continue;
+    if (!hasAlt) t.problem('bug', `${page}: ${file} has no alt attribute`);
+    else if (!alt) t.problem('bug', `${page}: ${file} has empty alt text and is not marked decorative`);
+    else if (GENERIC_ALT.test(alt) || FILENAME_ALT.test(alt) || alt.toLowerCase() === file.toLowerCase()) t.problem('bug', `${page}: ${file} has alt text that reads as a filename or says nothing ("${alt}")`);
+  }
+  t.event('alt-page', `${page}: ${imgs.length} images, ${decorative} decorative, ${imgs.length - decorative} with described alt`);
+  t.add('altPagesChecked');
+  return imgs.length;
+}
+
+const COPY_SELECTOR = 'main p, main li, main td, main th, main dd, main dt, main figcaption, main blockquote, main .mission, main .position, main label, main small, [class*="hero"] p, [class*="card"] *, [class*="row"] *, .desk *, .beat *';
+const selectorOf = (el) => el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') + (el.classList.length ? '.' + [...el.classList].slice(0, 2).join('.') : '');
+
+/** Lowest contrast of the body copy on a page: computed colour (with opacity) against the effective background. Text over a photograph is listed apart. */
+function checkCopyContrast(t, doc, page, width) {
+  const view = doc.defaultView;
+  let worst = null;
+  let measured = 0;
+  let overImage = 0;
+  for (const el of doc.querySelectorAll(COPY_SELECTOR)) {
+    if (/^H[1-6]$/.test(el.tagName) || el.closest('header, footer, script, style, noscript, [hidden]')) continue;
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.nodeValue.trim())) continue;
+    if (!el.getClientRects().length) continue;
+    const cs = view.getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+    let image = false;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = parseRgb(view.getComputedStyle(n).backgroundColor);
+      if (view.getComputedStyle(n).backgroundImage !== 'none') image = true;
+      if (c && c.a > 0.5) break;
+    }
+    if (image) { overImage++; continue; }
+    const bg = backgroundOf(el);
+    const fg = parseRgb(cs.color);
+    if (!fg) continue;
+    let opacity = 1;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) opacity *= parseFloat(view.getComputedStyle(n).opacity);
+    const a = fg.a * opacity;
+    const mixed = { r: fg.r * a + bg.r * (1 - a), g: fg.g * a + bg.g * (1 - a), b: fg.b * a + bg.b * (1 - a) };
+    const ratio = fixed2(contrast(mixed, bg));
+    measured++;
+    if (!worst || ratio < worst.ratio) worst = { ratio, sel: selectorOf(el), cs, bg, text: el.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) };
+  }
+  if (!worst) { t.event('copy-contrast', `${page} at ${width}px: no body copy measured`); return null; }
+  t.event('copy-contrast', `${page} at ${width}px: lowest ${worst.ratio}:1 from ${worst.sel} ("${worst.text}", ${worst.cs.color} on rgb(${worst.bg.r}, ${worst.bg.g}, ${worst.bg.b}), ${worst.cs.fontSize}); ${measured} elements measured, ${overImage} over an image skipped`);
+  t.add('copyPagesMeasured');
+  if (worst.ratio < MIN_CONTRAST) t.problem('bug', `${page} at ${width}px: body copy ${worst.sel} has contrast ${worst.ratio}:1, under ${MIN_CONTRAST}:1 ("${worst.text}")`);
+  return worst.ratio;
+}
+
+/** Every page, at 1440 and 390: alt text on each image, body-copy contrast, and the footer line (still measured). */
+async function accessPages(t) {
+  let low = Infinity;
+  for (const w of [1440, 390]) {
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    t.scene(`Every page at ${w}px: alt text and contrast`);
+    for (const [name, href] of DESIGN_PAGES) {
+      const doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+      await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+      await t.until(() => imagesLoaded(doc), 6000, 'images').catch(() => {});
+      await t.wait(200);
+      if (w === 1440) checkAlt(t, doc, name);
+      const r = checkCopyContrast(t, doc, name, w);
+      if (r !== null) low = Math.min(low, r);
+      const legal = doc.querySelector('footer .legal');
+      if (legal) {
+        const fr = fixed2(contrast(parseRgb(doc.defaultView.getComputedStyle(legal).color), backgroundOf(legal)));
+        t.event('footer', `${name} at ${w}px: footer line contrast ${fr}:1`);
+        if (fr < MIN_CONTRAST) t.problem('bug', `${name} at ${w}px: footer line contrast ${fr}:1 is under ${MIN_CONTRAST}:1`);
+      } else t.problem('bug', `${name} at ${w}px: no footer line`);
+    }
+  }
+  if (low !== Infinity) t.metric('copyContrastMin', fixed2(low));
+  closeFrame();
 }
 
 /** Leadership: each person has a portrait and a role; the founding story is at least 150 words. */
@@ -1201,10 +1299,10 @@ installPlaytest({
     },
     {
       id: 'access',
-      title: 'Performance and access on Home: every picture has a WebP (800w on a 390px phone) and a JPEG fallback, width/height, lazy below the fold, no image over 150 KB, no layout shift, every control shows a focus ring',
-      seconds: 45,
+      title: 'Performance and access on Home: every picture has a WebP (800w on a 390px phone) and a JPEG fallback, width/height, lazy below the fold, no image over 150 KB, no layout shift, every control shows a focus ring; every page keeps alt text and body-copy contrast',
+      seconds: 90,
       tags: ['full'],
-      description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears.',
+      description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
       id: 'analytics',
