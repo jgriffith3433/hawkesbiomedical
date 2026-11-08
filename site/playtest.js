@@ -799,6 +799,19 @@ async function phone(options, t) {
   hero('button', '.hero .btn');
   t.add('heroChecked');
 
+  // The same hero at 1280x720: eyebrow, headline and button all on the first screen.
+  t.scene('Home at 1280x720');
+  f.style.width = '1280px'; f.style.height = '720px';
+  await t.wait(500);
+  for (const [what, sel] of [['eyebrow', '.hero .eyebrow'], ['headline', '.hero h1'], ['button', '.hero .btn']]) {
+    const r = doc.querySelector(sel)?.getBoundingClientRect();
+    if (!r) { t.problem('bug', `Hero: no ${what}`); continue; }
+    t.event('hero', `${what} at 1280x720: bottom ${Math.round(r.bottom)} of 720`);
+    if (r.top < 0 || r.bottom > 720) t.problem('bug', `Hero at 1280x720: the ${what} is not on the first screen (bottom ${Math.round(r.bottom)})`);
+  }
+  f.style.width = `${W}px`; f.style.height = `${H}px`;
+  await t.wait(300);
+
   // Menu: tap to open (focus goes in), Escape to close (focus returns), tap again, tap to close.
   t.scene('Menu');
   const toggle = doc.getElementById('navToggle');

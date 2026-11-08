@@ -157,7 +157,7 @@ a {
 }
 
 .display {
-  margin: 0 0 18px;
+  margin: 0 0 var(--space-3);
   max-width: none;
   font-size: var(--fs-display);
 }
@@ -658,7 +658,7 @@ a {
 
 .dossier-photo {
   border: 1px solid var(--line);
-  background: #000;
+  background: var(--bg-raise);
 }
 
 .dossier-photo img {
@@ -1275,3 +1275,18 @@ picture { display: contents; }
   .line-grid > li { min-width: 0; }
   .line-grid .kicker, .line-grid strong { overflow-wrap: anywhere; }
 }
+
+/* Polish: hero fits one screen at 1280x720; headings keep even space and clear descenders; product links read apart. */
+@media (min-width: 761px) {
+  .hero-photo img { height: clamp(120px, 28vh, 300px); }
+  .hero-copy { padding-top: var(--space-5); }
+  .hero .display { font-size: clamp(40px, 9vh, 72px); margin-bottom: var(--space-2); }
+  .hero .mission { font-size: var(--fs-lede); margin-bottom: var(--space-2); }
+  .hero .position { font-size: var(--fs-lede); margin-bottom: 0; }
+  .hero .actions { margin-top: var(--space-3); }
+}
+@media (max-height: 600px) and (min-width: 761px) { .hero-photo img { height: 100px; } }
+h1, .page-title { margin-bottom: var(--space-3); line-height: 1.12; padding-bottom: 0.06em; }
+.page-title { margin-bottom: var(--space-3); }
+main section h2, .product h2, .dossier h2, .section-title { margin-bottom: var(--space-3); line-height: 1.1; }
+.product .text-link + .text-link { display: block; width: fit-content; margin-top: var(--space-2); }
