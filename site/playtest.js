@@ -491,24 +491,43 @@ async function access(options, t) {
     if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
   }
   // Responsive images: a WebP variant is chosen from the srcset (a phone gets the 800w), every one keeps a JPEG fallback and lazy below the fold.
+  // Scroll to each picture first (real scrolling) so the lazy ones have chosen and loaded their file before it is judged.
   const pics = [...document.querySelectorAll('picture')];
+  const sized = [];
   for (const pic of pics) {
     const img = pic.querySelector('img');
     const name = fileOf(img.src);
     const src = pic.querySelector('source[type="image/webp"]');
     if (!src || !/\.jpg$/i.test(img.getAttribute('src') || '')) t.problem('bug', `Home: ${name} has no WebP source with a JPEG fallback`);
-    // A lazy image far below the fold has no currentSrc until it is near the viewport: nothing was chosen yet, so the WebP source above is what counts (not img.src, the JPEG fallback).
-    const cur = img.currentSrc;
-    const below = img.getBoundingClientRect().top > innerHeight;
-    if (cur && !/\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)}, not a WebP`);
-    else if (cur && innerWidth <= 700 && !/-800\.webp/.test(cur)) t.problem('bug', `Home: ${name} loaded ${fileOf(cur)} on a ${innerWidth}px screen, wanted the 800w`);
+    const below = img.getBoundingClientRect().top + scrollY > innerHeight;
     if (below && img.getAttribute('loading') !== 'lazy') t.problem('bug', `Home: ${name} is below the fold and not lazy`);
+    if (!below && img.getAttribute('loading') === 'lazy') t.problem('bug', `Home: ${name} is the first screen and must load eagerly`);
+    smoothTo(img);
+    await t.until(() => img.complete && img.currentSrc, 8000, `${name} to load`).catch(() => {});
+    const cur = img.currentSrc;
+    if (!cur) { t.problem('bug', `Home: ${name} never chose a file`); continue; }
+    const file = fileOf(cur);
+    if (!/\.webp$/i.test(file)) t.problem('bug', `Home: ${name} loaded ${file}, not a WebP`);
+    else if (innerWidth <= 700 && !/-800[-.]/.test(file)) t.problem('bug', `Home: ${name} loaded ${file} on a ${innerWidth}px screen, wanted the 800w`);
+    const entry = performance.getEntriesByType('resource').find((r) => r.name === cur);
+    let kb = entry && (entry.encodedBodySize || entry.transferSize) ? entry.encodedBodySize / 1024 : 0;
+    if (!kb) {
+      try { kb = (await (await fetch(cur)).blob()).size / 1024; } catch {}
+    }
+    sized.push({ file, kb: Math.round(kb), w: img.naturalWidth });
+    await t.wait(300);
   }
-  t.event('picture', `${pics.length} pictures: ${pics.map((p) => fileOf((p.querySelector('img').currentSrc || ''))).join(', ')} at ${innerWidth}px`);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  t.event('picture', `${pics.length} pictures at ${innerWidth}px: ${sized.map((x) => `${x.file} (${x.w}px wide, ${x.kb} KB)`).join(', ')}`);
   t.metric('images', imgs.length);
+  t.metric('largestPictureKB', Math.max(0, ...sized.map((x) => x.kb)));
   t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
-  const heavy = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img' && r.encodedBodySize > 150 * 1024);
+  // Every image the page loaded (Home's thumbnails and JPEG fallbacks included) under 150 KB.
+  const loaded = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img');
+  const heavy = loaded.filter((r) => r.encodedBodySize > 150 * 1024);
   for (const r of heavy) t.problem('bug', `Home: image ${fileOf(r.name)} is ${Math.round(r.encodedBodySize / 1024)} KB`);
+  for (const x of sized) if (x.kb > 150) t.problem('bug', `Home: image ${x.file} is ${x.kb} KB`);
+  t.event('weight', `${loaded.length} image files loaded, largest ${Math.round(Math.max(0, ...loaded.map((r) => r.encodedBodySize)) / 1024)} KB (limit 150 KB)`);
   let cls = 0;
   try {
     for (const e of performance.getEntriesByType('layout-shift')) if (!e.hadRecentInput) cls += e.value;
