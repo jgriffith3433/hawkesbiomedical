@@ -15,6 +15,7 @@ const PAGES = [
   { name: 'Privacy', href: './privacy.html' },
   { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
+  { name: 'Research', href: './research.html' },
   { name: 'Style guide', href: './styleguide.html' },
   { name: "What's new", href: './whatsnew.html' },
   { name: 'Home', href: './index.html' },
@@ -33,6 +34,7 @@ const SHARE_URLS = {
   Terms: 'https://hawkesbiomedical.com/terms.html',
   'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
   Research: 'https://hawkesbiomedical.com/research.html',
+  '404': 'https://hawkesbiomedical.com/404.html',
   'PH Origins': 'https://hawkesbiomedical.com/product-ph-origins.html',
   'Sick of It': 'https://hawkesbiomedical.com/product-sick-of-it.html',
   'Imagine Live TV': 'https://hawkesbiomedical.com/product-imagine-live-tv.html',
@@ -41,6 +43,7 @@ const SHARE_URLS = {
   'I Can Be': 'https://hawkesbiomedical.com/product-i-can-be.html',
   'Dose Of Destruction': 'https://hawkesbiomedical.com/product-dose-of-destruction.html',
   'Hawkes Gen': 'https://hawkesbiomedical.com/product-hawkes-gen.html',
+  "What's new": 'https://hawkesbiomedical.com/whatsnew.html',
 };
 const MIN_CONTRAST = 4.5;
 // Rough gate for "a daylight image": mean perceived lightness (0..1) and the share of near-black pixels.
@@ -193,6 +196,16 @@ function checkPoweredBy(t, doc, page) {
 }
 
 /** The link-preview tags: og:title and og:description match the page's own title and description. */
+/** One h1, no skipped heading levels, and alt text on every image (empty only for decoration). */
+function checkStructure(t, doc, page) {
+  const hs = [...doc.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => +h.tagName[1]);
+  if (hs.filter((n) => n === 1).length !== 1) t.problem('bug', `${page}: ${hs.filter((n) => n === 1).length} h1 elements, expected one`);
+  hs.forEach((n, i) => { if (i && n > hs[i - 1] + 1) t.problem('bug', `${page}: heading jumps from h${hs[i - 1]} to h${n}`); });
+  const bad = [...doc.querySelectorAll('img')].filter((im) => !im.hasAttribute('alt') || (im.alt.trim() === '' && !im.closest('[aria-hidden="true"]')));
+  if (bad.length) t.problem('bug', `${page}: ${bad.length} image(s) without alt text`);
+  t.event('structure', `${page}: headings h${hs.join(' h')}; ${doc.images.length} images checked for alt`);
+}
+
 function checkShareTags(t, doc, page) {
   const meta = (attr, key) => doc.head.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content') ?? null;
   const og = (key) => meta('property', `og:${key}`);
@@ -205,11 +218,18 @@ function checkShareTags(t, doc, page) {
     'og:url': og('url'),
     'og:site_name': og('site_name'),
     'twitter:card': meta('name', 'twitter:card'),
+    'twitter:title': meta('name', 'twitter:title'),
+    'twitter:description': meta('name', 'twitter:description'),
   };
+  t.event('meta-description', `${page}: title "${title}"; meta description "${description ?? '(missing)'}"`);
+  if (!title || !description) t.problem('bug', `${page}: missing title or meta description`);
   t.event('share-tags', `${page}: ${Object.entries(tags).map(([k, v]) => `${k}="${v ?? '(missing)'}"`).join(', ')}`);
   for (const [k, v] of Object.entries(tags)) if (!v) t.problem('bug', `${page}: no ${k} tag (link previews)`);
   if (tags['og:title'] && tags['og:title'] !== title) t.problem('bug', `${page}: og:title "${tags['og:title']}" isn't the page title "${title}"`);
   if (tags['og:description'] && tags['og:description'] !== description) t.problem('bug', `${page}: og:description isn't the page's meta description`);
+  if (tags['twitter:title'] && tags['twitter:title'] !== title) t.problem('bug', `${page}: twitter:title isn't the page title`);
+  if (tags['twitter:description'] && tags['twitter:description'] !== description) t.problem('bug', `${page}: twitter:description isn't the page's meta description`);
+  checkStructure(t, doc, page);
   if (tags['og:type'] && tags['og:type'] !== 'website') t.problem('bug', `${page}: og:type is "${tags['og:type']}", not "website"`);
   if (tags['og:url'] && tags['og:url'] !== SHARE_URLS[page]) t.problem('bug', `${page}: og:url is "${tags['og:url']}", not ${SHARE_URLS[page]}`);
   if (tags['og:site_name'] && tags['og:site_name'] !== 'Hawkes Biomedical') t.problem('bug', `${page}: og:site_name is "${tags['og:site_name']}"`);
@@ -463,6 +483,88 @@ async function story(options, t) {
 }
 
 
+/** Layout shift of a document, read through an observer (getEntriesByType does not return layout-shift in Chrome). */
+function layoutShiftOf(win) {
+  let total = 0;
+  try {
+    const po = new win.PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value; });
+    po.observe({ type: 'layout-shift', buffered: true });
+    return () => { po.takeRecords().forEach((e) => { if (!e.hadRecentInput) total += e.value; }); po.disconnect(); return total; };
+  } catch {
+    return () => 0;
+  }
+}
+
+/**
+ * Every <picture> of a page, judged at that page's own width: the WebP source it chose (a phone gets the 800w), the JPEG fallback
+ * (it exists, decodes, is under 150 KB and has the same shape as the WebP), width/height on the img, lazy below the fold and eager
+ * with fetchpriority high on the first screen. Scrolls to each one (real scrolling) so the lazy ones choose and load. One `image` event per picture.
+ */
+async function checkPictures(t, doc, label) {
+  const win = doc.defaultView;
+  const W = win.innerWidth;
+  const dpr = win.devicePixelRatio || 1;
+  const shift = layoutShiftOf(win);
+  await t.until(() => doc.readyState === 'complete', 10000, `${label} load`).catch(() => {});
+  const pics = [...doc.querySelectorAll('picture')];
+  const sized = [];
+  for (const pic of pics) {
+    const img = pic.querySelector('img');
+    const name = fileOf(img.getAttribute('src') || img.src);
+    const where = `${label}: ${name}`;
+    const webp = pic.querySelector('source[type="image/webp"]');
+    const fallback = img.getAttribute('src') || '';
+    const wAttr = Number(img.getAttribute('width')), hAttr = Number(img.getAttribute('height'));
+    const loading = img.getAttribute('loading') || 'eager';
+    const priority = img.getAttribute('fetchpriority') || 'auto';
+    const candidates = ((webp && webp.getAttribute('srcset')) || '').split(',').map((c) => c.trim().split(/\s+/)).filter((c) => c[0]).map((c) => ({ file: fileOf(c[0]), w: parseInt(c[1], 10) || 0 }));
+    if (!webp || !candidates.length) t.problem('bug', `${where} has no WebP source`);
+    if (!/\.jpe?g$/i.test(fallback)) t.problem('bug', `${where} has no JPEG fallback (img src is "${fallback}")`);
+    if (!(wAttr > 0 && hAttr > 0)) t.problem('bug', `${where} has no width and height (layout shift)`);
+    const below = img.getBoundingClientRect().top + win.scrollY > win.innerHeight;
+    if (below && loading !== 'lazy') t.problem('bug', `${where} is below the fold and not lazy`);
+    if (!below && loading === 'lazy') t.problem('bug', `${where} is on the first screen and must load eagerly`);
+    if (!below && priority !== 'high') t.problem('bug', `${where} is the first image on screen and lacks fetchpriority="high"`);
+    smoothTo(img);
+    await t.until(() => img.complete && img.currentSrc && img.naturalWidth > 0, 8000, `${name} to load`).catch(() => {});
+    const cur = img.currentSrc;
+    if (!cur) { t.problem('bug', `${where} never chose a file`); continue; }
+    const file = fileOf(cur);
+    const slot = img.getBoundingClientRect().width * dpr;
+    const want = [...candidates].sort((x, y) => x.w - y.w).find((c) => c.w >= slot) || candidates[candidates.length - 1];
+    if (!/\.webp$/i.test(file)) t.problem('bug', `${where} loaded ${file}, not a WebP`);
+    else if (W <= 700) {
+      if (!/-800[-.]/.test(file) && slot <= 800) t.problem('bug', `${where} loaded ${file} on a ${W}px screen, wanted the 800w`);
+      else if (!/-800[-.]/.test(file)) t.event('note', `${where}: ${file} on a ${W}px screen at ${dpr}x needs ${Math.round(slot)}px, so the browser skipped the 800w`);
+    } else if (want && file !== want.file && slot <= 800 && /-800[-.]/.test(want.file)) t.problem('bug', `${where} loaded ${file} for a ${Math.round(slot)}px slot, ${want.file} was enough`);
+    // The chosen WebP: bytes, and a shape that matches width/height (no shift when it arrives).
+    const entry = win.performance.getEntriesByType('resource').find((r) => r.name === cur);
+    let kb = entry && (entry.encodedBodySize || entry.transferSize) ? entry.encodedBodySize / 1024 : 0;
+    if (!kb) { try { kb = (await (await fetch(cur)).blob()).size / 1024; } catch {} }
+    const shape = img.naturalWidth && hAttr ? (img.naturalWidth / img.naturalHeight) / (wAttr / hAttr) : 0;
+    if (shape && Math.abs(shape - 1) > 0.02) t.problem('bug', `${where}: ${file} is ${img.naturalWidth}x${img.naturalHeight} but width/height say ${wAttr}x${hAttr} (layout shift)`);
+    // The JPEG fallback, fetched and decoded on its own (what a browser without WebP would show).
+    let fb = '(not fetched)';
+    try {
+      const res = await fetch(new URL(fallback, doc.baseURI).href);
+      const blob = await res.blob();
+      const jkb = blob.size / 1024;
+      const bmp = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = URL.createObjectURL(blob); });
+      if (!res.ok || !bmp) t.problem('bug', `${where}: the JPEG fallback does not load`);
+      else {
+        if (Math.abs((bmp.naturalWidth / bmp.naturalHeight) / (wAttr / hAttr) - 1) > 0.02) t.problem('bug', `${where}: the JPEG fallback is ${bmp.naturalWidth}x${bmp.naturalHeight}, width/height say ${wAttr}x${hAttr}`);
+        if (jkb > 150) t.problem('bug', `${where}: the JPEG fallback is ${Math.round(jkb)} KB (over 150 KB)`);
+        fb = `${fileOf(fallback)} ${bmp.naturalWidth}x${bmp.naturalHeight} ${Math.round(jkb)} KB`;
+      }
+    } catch { t.problem('bug', `${where}: the JPEG fallback could not be fetched`); }
+    sized.push({ file, kb: Math.round(kb), w: img.naturalWidth });
+    t.event('image', `${label} ${W}px (${dpr}x): ${name} -> ${file} ${img.naturalWidth}px ${Math.round(kb)} KB of ${candidates.map((c) => `${c.file} ${c.w}w`).join(' / ')}; fallback ${fb}; width/height ${wAttr}x${hAttr}; ${loading}${priority === 'high' ? ', fetchpriority high' : ''}, ${below ? 'below' : 'on'} the first screen`);
+    t.add('picturesChecked');
+    await t.wait(300);
+  }
+  return { pics: pics.length, sized, cls: shift() };
+}
+
 /** Performance and access on Home: every image has alt text and its size, every control shows a focus ring, images are light, layout does not shift. */
 async function access(options, t) {
   t.scene('Home: images');
@@ -474,15 +576,42 @@ async function access(options, t) {
     else if (!img.getAttribute('alt').trim()) t.problem('bug', `Home: ${name} has empty alt text`);
     if (!img.getAttribute('width') || !img.getAttribute('height')) t.problem('bug', `Home: ${name} has no width and height (layout shift)`);
   }
+  // 1. The page as the bot has it.
+  const main = await checkPictures(t, document, 'Home');
+  // The other lazy images (product thumbnails): scroll to each so they load and count towards the weight.
+  for (const img of imgs.filter((i) => !i.closest('picture') && i.getAttribute('loading') === 'lazy')) {
+    smoothTo(img);
+    await t.until(() => img.complete && img.naturalWidth > 0, 6000, `${fileOf(img.src)} to load`).catch(() => {});
+    await t.wait(150);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 2. The same pictures on a 390x844 phone, in a frame, whatever size the bot's window is: the 800w WebP must be the one that loads.
+  let phone = null;
+  if (innerWidth > 700) {
+    t.scene('Home: images at 390px');
+    const f = openFrame();
+    f.style.cssText = 'position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea';
+    const doc = await frameLoad((fr) => (fr.src = './index.html'));
+    if (!doc) throw new Error("the home page didn't open in the 390px frame");
+    phone = await checkPictures(t, doc, 'Home');
+    t.metric('phoneLargestPictureKB', Math.max(0, ...phone.sized.map((x) => x.kb)));
+    t.event('phone', `390px: ${phone.sized.map((x) => `${x.file} (${x.kb} KB)`).join(', ')}; ${phone.sized.every((x) => /-800[-.]/.test(x.file)) ? 'every picture loaded its 800w WebP' : 'not every picture loaded the 800w'}`);
+    closeFrame();
+  }
+  const sized = [...main.sized, ...(phone ? phone.sized : [])];
+  t.event('picture', `${main.pics} pictures at ${innerWidth}px: ${main.sized.map((x) => `${x.file} (${x.w}px wide, ${x.kb} KB)`).join(', ')}`);
   t.metric('images', imgs.length);
+  t.metric('largestPictureKB', Math.max(0, ...sized.map((x) => x.kb)));
   t.event('alt', `${imgs.length} images, ${imgs.filter((i) => i.getAttribute('alt')?.trim()).length} with alt text`);
-  const heavy = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img' && r.encodedBodySize > 150 * 1024);
+  // Every image the page loaded (Home's thumbnails and JPEG fallbacks included) under 150 KB.
+  const loaded = performance.getEntriesByType('resource').filter((r) => r.initiatorType === 'img');
+  const heavy = loaded.filter((r) => r.encodedBodySize > 150 * 1024);
   for (const r of heavy) t.problem('bug', `Home: image ${fileOf(r.name)} is ${Math.round(r.encodedBodySize / 1024)} KB`);
-  let cls = 0;
-  try {
-    for (const e of performance.getEntriesByType('layout-shift')) if (!e.hadRecentInput) cls += e.value;
-  } catch {}
+  for (const x of sized) if (x.kb > 150) t.problem('bug', `Home: image ${x.file} is ${x.kb} KB`);
+  t.event('weight', `${loaded.length} image files loaded, largest ${Math.round(Math.max(0, ...loaded.map((r) => r.encodedBodySize)) / 1024)} KB (limit 150 KB)`);
+  const cls = Math.max(main.cls, phone ? phone.cls : 0);
   t.metric('layoutShift', fixed2(cls));
+  t.event('shift', `layout shift ${fixed2(main.cls)} at ${innerWidth}px${phone ? `, ${fixed2(phone.cls)} at 390px` : ''}`);
   if (cls > 0.1) t.problem('bug', `Home: layout shift ${fixed2(cls)} (over 0.1)`);
   t.progress(0.4);
   t.scene('Home: keyboard focus');
@@ -500,7 +629,105 @@ async function access(options, t) {
   document.activeElement?.blur?.();
   t.metric('controlsFocused', seen);
   t.event('focus', `${seen} of ${controls.length} controls take focus with a visible ring`);
+  t.progress(0.6);
+  await accessPages(t);
   t.progress(1);
+}
+
+/* ---------------- every page: alt text and body-copy contrast ---------------- */
+
+// Alt text that names a file or says nothing: "hero.jpg", "img_123", "DSC0042", "image", "photo", "logo".
+const GENERIC_ALT = /^(img|image|images|photo|picture|pic|graphic|icon|logo|banner|hero|thumbnail|thumb|untitled|dsc|screenshot)[\s_\-.]*\d*$/i;
+const FILENAME_ALT = /\.(jpe?g|png|webp|gif|svg|avif)$|^[\w-]+[_-]\d{2,}$/i;
+const isDecorative = (img) => img.getAttribute('alt') === '' && (/^(presentation|none)$/.test(img.getAttribute('role') || '') || img.getAttribute('aria-hidden') === 'true' || /decor/i.test(img.className || ''));
+
+/** Logs every <img> of a page and returns the problems: a non-decorative image needs real alt text. */
+function checkAlt(t, doc, page) {
+  const imgs = [...doc.querySelectorAll('img')];
+  let decorative = 0;
+  for (const img of imgs) {
+    const file = fileOf(img.currentSrc || img.src || img.getAttribute('src') || '');
+    const hasAlt = img.hasAttribute('alt');
+    const alt = (img.getAttribute('alt') || '').trim();
+    const deco = isDecorative(img);
+    if (deco) decorative++;
+    t.event('alt', `${page}: ${file} | alt ${hasAlt ? `"${alt}"` : '(missing)'} | ${deco ? 'decorative' : 'not decorative'}`);
+    if (deco) continue;
+    if (!hasAlt) t.problem('bug', `${page}: ${file} has no alt attribute`);
+    else if (!alt) t.problem('bug', `${page}: ${file} has empty alt text and is not marked decorative`);
+    else if (GENERIC_ALT.test(alt) || FILENAME_ALT.test(alt) || alt.toLowerCase() === file.toLowerCase()) t.problem('bug', `${page}: ${file} has alt text that reads as a filename or says nothing ("${alt}")`);
+  }
+  t.event('alt-page', `${page}: ${imgs.length} images, ${decorative} decorative, ${imgs.length - decorative} with described alt`);
+  t.add('altPagesChecked');
+  return imgs.length;
+}
+
+const COPY_SELECTOR = 'main p, main li, main td, main th, main dd, main dt, main figcaption, main blockquote, main .mission, main .position, main label, main small, [class*="hero"] p, [class*="card"] *, [class*="row"] *, .desk *, .beat *';
+const selectorOf = (el) => el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') + (el.classList.length ? '.' + [...el.classList].slice(0, 2).join('.') : '');
+
+/** Lowest contrast of the body copy on a page: computed colour (with opacity) against the effective background. Text over a photograph is listed apart. */
+function checkCopyContrast(t, doc, page, width) {
+  const view = doc.defaultView;
+  let worst = null;
+  let measured = 0;
+  let overImage = 0;
+  for (const el of doc.querySelectorAll(COPY_SELECTOR)) {
+    if (/^H[1-6]$/.test(el.tagName) || el.closest('header, footer, script, style, noscript, [hidden]')) continue;
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.nodeValue.trim())) continue;
+    if (!el.getClientRects().length) continue;
+    const cs = view.getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+    let image = false;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = parseRgb(view.getComputedStyle(n).backgroundColor);
+      if (view.getComputedStyle(n).backgroundImage !== 'none') image = true;
+      if (c && c.a > 0.5) break;
+    }
+    if (image) { overImage++; continue; }
+    const bg = backgroundOf(el);
+    const fg = parseRgb(cs.color);
+    if (!fg) continue;
+    let opacity = 1;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) opacity *= parseFloat(view.getComputedStyle(n).opacity);
+    const a = fg.a * opacity;
+    const mixed = { r: fg.r * a + bg.r * (1 - a), g: fg.g * a + bg.g * (1 - a), b: fg.b * a + bg.b * (1 - a) };
+    const ratio = fixed2(contrast(mixed, bg));
+    measured++;
+    if (!worst || ratio < worst.ratio) worst = { ratio, sel: selectorOf(el), cs, bg, text: el.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) };
+  }
+  if (!worst) { t.event('copy-contrast', `${page} at ${width}px: no body copy measured`); return null; }
+  t.event('copy-contrast', `${page} at ${width}px: lowest ${worst.ratio}:1 from ${worst.sel} ("${worst.text}", ${worst.cs.color} on rgb(${worst.bg.r}, ${worst.bg.g}, ${worst.bg.b}), ${worst.cs.fontSize}); ${measured} elements measured, ${overImage} over an image skipped`);
+  t.add('copyPagesMeasured');
+  if (worst.ratio < MIN_CONTRAST) t.problem('bug', `${page} at ${width}px: body copy ${worst.sel} has contrast ${worst.ratio}:1, under ${MIN_CONTRAST}:1 ("${worst.text}")`);
+  return worst.ratio;
+}
+
+/** Every page, at 1440 and 390: alt text on each image, body-copy contrast, and the footer line (still measured). */
+async function accessPages(t) {
+  let low = Infinity;
+  for (const w of [1440, 390]) {
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    t.scene(`Every page at ${w}px: alt text and contrast`);
+    for (const [name, href] of DESIGN_PAGES) {
+      const doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+      await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+      await t.until(() => imagesLoaded(doc), 6000, 'images').catch(() => {});
+      await t.wait(200);
+      if (w === 1440) checkAlt(t, doc, name);
+      const r = checkCopyContrast(t, doc, name, w);
+      if (r !== null) low = Math.min(low, r);
+      const legal = doc.querySelector('footer .legal');
+      if (legal) {
+        const fr = fixed2(contrast(parseRgb(doc.defaultView.getComputedStyle(legal).color), backgroundOf(legal)));
+        t.event('footer', `${name} at ${w}px: footer line contrast ${fr}:1`);
+        if (fr < MIN_CONTRAST) t.problem('bug', `${name} at ${w}px: footer line contrast ${fr}:1 is under ${MIN_CONTRAST}:1`);
+      } else t.problem('bug', `${name} at ${w}px: no footer line`);
+    }
+  }
+  if (low !== Infinity) t.metric('copyContrastMin', fixed2(low));
+  closeFrame();
 }
 
 /** Leadership: each person has a portrait and a role; the founding story is at least 150 words. */
@@ -535,6 +762,131 @@ async function people(options, t) {
   t.progress(1);
 }
 
+/** Visual polish: hero above the fold, even heading space, product domains as their own links, Leadership and Contact on the shared container, light portrait borders. */
+async function polish(options, t) {
+  const f = openFrame();
+  const size = (w, h) => { f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`; };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true) && imagesLoaded(doc), 8000, 'fonts and images').catch(() => {});
+    await t.wait(400);
+  };
+  const box = (el) => el.getBoundingClientRect();
+
+  // 1. Hero: eyebrow, headline and button on the first screen at both sizes.
+  let doc;
+  for (const [W, H] of [[1280, 720], [390, 844]]) {
+    size(W, H);
+    t.scene(`Home at ${W}x${H}`);
+    doc = await frameLoad((fr) => (fr.src = './index.html'));
+    if (!doc) throw new Error("the home page didn't open in the frame");
+    await settle(doc);
+    for (const [what, sel] of [['eyebrow', '.hero .eyebrow'], ['headline', '.hero h1'], ['button', '.hero .btn']]) {
+      const el = doc.querySelector(sel);
+      if (!el) { t.problem('bug', `Hero: no ${what}`); continue; }
+      const r = box(el);
+      t.event('hero', `${W}x${H}: ${what} top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+      if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero at ${W}x${H}: the ${what} is not fully on the first screen (bottom ${Math.round(r.bottom)})`);
+    }
+    t.add('heroChecked');
+  }
+
+  // 3. Products: each row's domain is a link of its own, apart from the product-file label.
+  size(1440, 900);
+  t.scene('Products: domains');
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
+  await settle(doc);
+  const rows = [...doc.querySelectorAll('.products .product')];
+  t.metric('productRows', rows.length);
+  if (rows.length < 8) t.problem('bug', `Products: ${rows.length} rows, 8 wanted`);
+  for (const row of rows) {
+    const name = row.querySelector('h2')?.textContent.trim() || '(row)';
+    const label = row.querySelector('a[href^="./product-"]');
+    const domain = row.querySelector('a[href^="http"]');
+    if (!label || !domain) { t.problem('bug', `Products: ${name} has no product-file label or no domain link`); continue; }
+    smoothTo(row);
+    await t.wait(500);
+    const a = box(label), b = box(domain);
+    const apart = b.top >= a.bottom - 1 || b.left >= a.right + 8;
+    t.event('domain', `${name}: "${label.textContent.trim()}" then "${domain.textContent.trim()}" (${apart ? 'separate' : 'run together'})`);
+    if (!apart) t.problem('bug', `Products: the ${name} domain runs into the product-file label`);
+    if (label.textContent.toLowerCase().includes(domain.textContent.trim().toLowerCase())) t.problem('bug', `Products: the ${name} label contains the domain`);
+    t.add('domainsChecked');
+  }
+
+  // 2. Headings: a line-height that clears descenders, and an even 12-16px under each h2 (Privacy, Research, a product page).
+  for (const [name, href] of [['Privacy', './privacy.html'], ['Research', './research.html'], ['PH Origins', './product-ph-origins.html']]) {
+    t.scene(`Headings: ${name}`);
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) throw new Error(`${href} didn't open`);
+    await settle(doc);
+    const view = doc.defaultView;
+    const next = (el) => { let n = el.nextElementSibling; while (n && n.getClientRects().length === 0) n = n.nextElementSibling; return n; };
+    const h1 = doc.querySelector('main h1:not(.visually-hidden)');
+    if (h1) {
+      const cs = view.getComputedStyle(h1);
+      const lh = parseFloat(cs.lineHeight) / parseFloat(cs.fontSize);
+      const n = next(h1);
+      const gap = n ? box(n).top - box(h1).bottom : 0;
+      t.event('h1', `${name}: line-height ${fixed2(lh)}, ${Math.round(gap)}px to the next block`);
+      if (lh < 1.1) t.problem('bug', `${name}: the h1 line-height is ${fixed2(lh)}, descenders may touch the next line`);
+      if (gap < 12) t.problem('bug', `${name}: only ${Math.round(gap)}px under the h1`);
+    }
+    for (const h2 of doc.querySelectorAll('main h2.sub')) {
+      const cs = view.getComputedStyle(h2);
+      const n = next(h2);
+      if (!n) continue;
+      const gap = box(n).top - box(h2).bottom;
+      const lh = parseFloat(cs.lineHeight) / parseFloat(cs.fontSize);
+      smoothTo(h2);
+      await t.wait(300);
+      t.event('h2', `${name}: "${h2.textContent.trim()}" line-height ${fixed2(lh)}, ${fixed2(gap)}px below`);
+      if (gap < 11.5 || gap > 16.5) t.problem('bug', `${name}: "${h2.textContent.trim()}" has ${fixed2(gap)}px below it, 12-16px wanted`);
+      if (lh < 1.05) t.problem('bug', `${name}: an h2 line-height of ${fixed2(lh)} may touch the next line`);
+      t.add('headingsChecked');
+    }
+  }
+
+  // 4. Leadership and Contact: the same container as the other pages at desktop and phone width; light portrait borders.
+  const containers = {};
+  for (const [W, H] of [[1440, 900], [390, 844]]) {
+    size(W, H);
+    for (const [name, href] of [['Privacy', './privacy.html'], ['Company', './company.html'], ['Leadership', './leadership.html'], ['Contact', './contact.html']]) {
+      t.scene(`${name} at ${W}px`);
+      doc = await frameLoad((fr) => (fr.src = href));
+      if (!doc) throw new Error(`${href} didn't open`);
+      await settle(doc);
+      const wrap = [...doc.querySelectorAll('main .wrap')].map(box).find((r) => r.width > 0);
+      if (!wrap) { t.problem('bug', `${name}: no .wrap container`); continue; }
+      containers[`${name}@${W}`] = wrap;
+      t.event('container', `${name} at ${W}px: content ${Math.round(wrap.left)} to ${Math.round(wrap.right)} (${Math.round(wrap.width)} wide)`);
+      if (name === 'Leadership' || name === 'Contact') {
+        const ref = containers[`Privacy@${W}`];
+        if (ref && (Math.abs(ref.left - wrap.left) > 1 || Math.abs(ref.width - wrap.width) > 1)) t.problem('bug', `${name} at ${W}px: content ${Math.round(wrap.left)}/${Math.round(wrap.width)} does not line up with Privacy ${Math.round(ref.left)}/${Math.round(ref.width)}`);
+        t.add('containersChecked');
+      }
+      if (name === 'Leadership' && W === 1440) {
+        const view = doc.defaultView;
+        const bg = backgroundOf(doc.body);
+        for (const el of doc.querySelectorAll('.dossier-photo, .board-card .portrait')) {
+          el.scrollIntoView({ block: 'center' });
+          const cs = view.getComputedStyle(el);
+          const c = parseRgb(cs.borderTopColor);
+          const wide = parseFloat(cs.borderTopWidth);
+          const blended = c && { r: c.r * c.a + bg.r * (1 - c.a), g: c.g * c.a + bg.g * (1 - c.a), b: c.b * c.a + bg.b * (1 - c.a) };
+          const light = blended ? (0.299 * blended.r + 0.587 * blended.g + 0.114 * blended.b) / 255 : 0;
+          t.event('portrait', `${el.closest('[id]')?.id || el.className}: border ${wide}px ${cs.borderTopColor} (lightness ${fixed2(light)})`);
+          if (!(wide > 0) || light < 0.75) t.problem('bug', `Leadership: a portrait border is ${cs.borderTopColor}, not the light grey hairline`);
+          t.add('portraitsChecked');
+          await t.wait(500);
+        }
+      }
+    }
+  }
+  closeFrame();
+  t.progress(1);
+}
+
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
@@ -542,7 +894,14 @@ const DESIGN_PAGES = [
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
 const chromeOf = (doc) => {
-  const norm = (el) => (el ? el.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ') : '');
+  // The site revision link is filled in by hawkes-release.js after its fetch: its text, title and hidden state depend on
+  // when that fetch lands (a browser serialises a set boolean as hidden=""), not on the markup. Compare the markup only.
+  const norm = (el) => {
+    if (!el) return '';
+    const copy = el.cloneNode(true);
+    copy.querySelectorAll('[data-hawkes-version]').forEach((r) => { r.removeAttribute('hidden'); r.removeAttribute('title'); r.textContent = 'Site revision'; });
+    return copy.outerHTML.replace(/\s+aria-current="page"/g, '').replace(/\s+(hidden|href="[^"]*")(?=[\s>])/g, '').replace(/>[^<]*Site revision[^<]*</g, '><').replace(/\s+/g, ' ');
+  };
   return { header: norm(doc.querySelector('header.nav')), footer: norm(doc.querySelector('footer')) };
 };
 const styleOf = (doc, sel) => {
@@ -594,7 +953,7 @@ async function design(options, t) {
         if (chrome.header !== baseline.header) t.problem('bug', `${name}: the header differs from Home's`);
         if (chrome.footer !== baseline.footer) t.problem('bug', `${name}: the footer differs from Home's`);
       }
-      const probes = { 'nav link': 'header .nav-links a', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
+      const probes = { 'nav link': 'header .nav-links a:not([aria-current])', 'header button': 'header .nav-cta', 'footer link': 'footer .site-footer nav a', 'fiction line': 'footer .legal', eyebrow: 'main .eyebrow', 'page title': 'main h1.page-title', 'primary button': 'main .btn:not(.btn-outline)', 'text link': 'main .text-link' };
       for (const [what, sel] of Object.entries(probes)) {
         const style = styleOf(doc, sel);
         if (!style) continue;
@@ -727,9 +1086,161 @@ async function products(options, t, everyPage) {
     if (!doc) throw new Error("404.html didn't open");
     t.scene('Not found (404.html, loaded directly)');
     t.add('pagesOpened');
+    checkShareTags(t, doc, '404');
     worst = await checkFooter(t, doc, '404', worst);
   }
   t.metric('footerContrastMin', fixed2(worst));
+  closeFrame();
+  t.progress(1);
+}
+
+/** Phone (390x844): the menu by tap and Escape with focus handling, the product strip, the hero above the fold, 44px tap targets, no sideways scroll. */
+async function phone(options, t) {
+  const W = 390, H = 844, MIN_TAP = 44;
+  const f = openFrame();
+  f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  t.scene('Home at 390x844');
+  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const win = doc.defaultView;
+  const de = doc.documentElement;
+
+  // Name what sticks out past the right edge, so a sideways scroll is traceable to an element, not just a number.
+  const wide = (d) => {
+    const edge = d.documentElement.clientWidth;
+    const out = [];
+    for (const el of d.body.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.right > edge + 1) out.push(`${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/)[0] : ''} +${Math.round(r.right - edge)}px`);
+    }
+    return out.slice(0, 4).join(', ');
+  };
+
+  // Hero: headline and button inside the first screen.
+  const hero = (what, sel) => {
+    const el = doc.querySelector(sel);
+    const r = el && el.getBoundingClientRect();
+    if (!r) return t.problem('bug', `Hero: no ${what}`);
+    t.event('hero', `${what}: top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+    if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero at ${W}x${H}: the ${what} is not on the first screen (bottom ${Math.round(r.bottom)})`);
+  };
+  hero('headline', '.hero h1');
+  hero('button', '.hero .btn');
+  t.add('heroChecked');
+
+  // The same hero at 1280x720: eyebrow, headline and button all on the first screen.
+  t.scene('Home at 1280x720');
+  f.style.width = '1280px'; f.style.height = '720px';
+  await t.wait(500);
+  for (const [what, sel] of [['eyebrow', '.hero .eyebrow'], ['headline', '.hero h1'], ['button', '.hero .btn']]) {
+    const r = doc.querySelector(sel)?.getBoundingClientRect();
+    if (!r) { t.problem('bug', `Hero: no ${what}`); continue; }
+    t.event('hero', `${what} at 1280x720: bottom ${Math.round(r.bottom)} of 720`);
+    if (r.top < 0 || r.bottom > 720) t.problem('bug', `Hero at 1280x720: the ${what} is not on the first screen (bottom ${Math.round(r.bottom)})`);
+  }
+  f.style.width = `${W}px`; f.style.height = `${H}px`;
+  await t.wait(300);
+
+  // Menu: tap to open (focus goes in), Escape to close (focus returns), tap again, tap to close.
+  t.scene('Menu');
+  const toggle = doc.getElementById('navToggle');
+  const links = doc.getElementById('nav-links');
+  const expanded = () => toggle.getAttribute('aria-expanded');
+  const key = (k) => doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  if (win.getComputedStyle(toggle).display === 'none') t.problem('bug', `The menu toggle is not shown at ${W}px`);
+  const open = async (how) => {
+    // A real touch tap: pointer and touch events, then the click a phone sends.
+    for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new win.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
+    toggle.click();
+    await t.wait(150);
+    const visible = links.getClientRects().length > 0;
+    const inside = links.contains(doc.activeElement);
+    t.event('menu-open', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus in menu ${inside}`);
+    if (expanded() !== 'true' || !visible) t.problem('bug', 'Menu: a tap on the toggle does not open it');
+    if (!inside) t.problem('bug', 'Menu: focus does not move into the menu on open');
+  };
+  const closed = (how) => {
+    const visible = links.getClientRects().length > 0;
+    const back = doc.activeElement === toggle;
+    t.event('menu-close', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus on toggle ${back}`);
+    if (expanded() !== 'false' || visible) t.problem('bug', `Menu: ${how} does not close it`);
+    if (!back) t.problem('bug', `Menu: focus does not return to the toggle after ${how}`);
+  };
+  await open('tap');
+  key('Escape');
+  await t.wait(150);
+  closed('Escape');
+  await open('tap again');
+  toggle.click();
+  await t.wait(150);
+  closed('a tap on the toggle');
+  t.add('menuChecked');
+
+  // The eight-product strip: every card inside the width, none clipped, no overlap of a card's image.
+  t.scene('Product strip');
+  const strip = doc.querySelector('.line-grid');
+  strip.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  const cards = [...strip.querySelectorAll('li')];
+  t.metric('productCards', cards.length);
+  if (cards.length !== 8) t.problem('bug', `Product strip: ${cards.length} cards, expected 8`);
+  const clipped = cards.filter((c) => {
+    const r = c.getBoundingClientRect();
+    const a = c.querySelector('a').getBoundingClientRect();
+    return r.left < -1 || r.right > de.clientWidth + 1 || a.width < 100 || c.scrollWidth > c.clientWidth + 1;
+  });
+  t.event('strip', `${cards.length} cards, ${clipped.length} clipped; columns ${win.getComputedStyle(strip).gridTemplateColumns.split(' ').length}`);
+  if (clipped.length) t.problem('bug', `Product strip: ${clipped.length} card(s) clipped at ${W}px`);
+  // Cards sit side by side without overlapping, and a title is never stacked a letter per line.
+  const boxes = cards.map((c) => c.getBoundingClientRect());
+  const overlaps = boxes.filter((r, i) => boxes.some((q, j) => j > i && r.left < q.right - 1 && q.left < r.right - 1 && r.top < q.bottom - 1 && q.top < r.bottom - 1)).length;
+  const stacked = cards.filter((c) => { const st = c.querySelector('strong'); return st && st.getBoundingClientRect().height > 3 * parseFloat(win.getComputedStyle(st).lineHeight || 24) * 1.5; }).length;
+  t.event('strip-layout', `${overlaps} overlapping, ${stacked} with stacked text`);
+  if (overlaps) t.problem('bug', `Product strip: ${overlaps} card(s) overlap at ${W}px`);
+  if (stacked) t.problem('bug', `Product strip: ${stacked} title(s) wrap to five or more lines at ${W}px`);
+  t.add('stripChecked');
+
+  // Tap targets, on Home and the pages a visitor reaches next.
+  const small = (d, name) => {
+    const bad = [];
+    for (const el of d.querySelectorAll('a[href], button')) {
+      if (el.classList.contains('skip')) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width && !r.height) continue; // hidden (the closed menu)
+      if (r.height < MIN_TAP - 0.5) bad.push(`${(el.textContent || el.getAttribute('alt') || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
+    }
+    t.event('tap-targets', `${name}: ${bad.length} under ${MIN_TAP}px`);
+    if (bad.length) t.problem('bug', `${name} at ${W}px: ${bad.length} link(s) or button(s) under ${MIN_TAP}px tall (${bad.slice(0, 4).join(', ')})`);
+  };
+  small(doc, 'Home');
+  // The closed menu is hidden; check its links with the menu open.
+  toggle.click();
+  await t.wait(150);
+  small(doc, 'Home with the menu open');
+  toggle.click();
+  // Every page, including all eight product pages (not only PH Origins): the plain links in body text and tables were the ones that fell short.
+  const PRODUCT_PAGES = ['sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen']
+    .map((slug) => [`Product file ${slug}`, `./product-${slug}.html`]);
+  for (const [name, href] of [...DESIGN_PAGES.filter(([n]) => n !== 'Home'), ...PRODUCT_PAGES]) {
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
+    await t.wait(400);
+    small(doc, name);
+    const d = doc.documentElement;
+    const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
+    if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
+    t.add('pagesMeasured');
+  }
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (doc) {
+    await t.wait(300);
+    const d = doc.documentElement;
+    const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
+    t.event('overflow', `Home at ${W}px: scrollWidth ${d.scrollWidth}, width ${d.clientWidth}`);
+    if (over > 1) t.problem('bug', `Home at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
+  }
   closeFrame();
   t.progress(1);
 }
@@ -773,11 +1284,25 @@ installPlaytest({
       description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
     },
     {
-      id: 'access',
-      title: 'Performance and access on Home: every image has alt text and a size, no image over 150 KB, no layout shift, every control shows a focus ring',
-      seconds: 15,
+      id: 'phone',
+      title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
+      seconds: 30,
       tags: ['full'],
-      description: 'Checks each image on Home for alt text and width/height, flags heavy images and layout shift, then moves focus to every link and button and checks that a visible outline appears.',
+      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too) and on every other page (product page, Research, Company, Products, Leadership, Newsroom, Investors, Contact, Compliance, Privacy, Terms, Notices, Style guide, 404), and checks for sideways overflow.',
+    },
+    {
+      id: 'polish',
+      title: 'Visual polish: Home headline and button on the first screen at 1280x720 and 390x844; even space under headings; each product domain a link of its own; Leadership and Contact on the shared container; light grey portrait borders',
+      seconds: 60,
+      tags: ['full'],
+      description: "Loads Home in a 1280x720 then a 390x844 frame and checks the eyebrow, headline and button are fully on screen; clicks Products in the nav and checks each row's domain link sits apart from the product-file label; measures the h1 line-height and the 12-16px under each h2 on Privacy, Research and PH Origins; compares the container of Leadership and Contact with Privacy at 1440 and 390px; reads the Leadership portrait border colour.",
+    },
+    {
+      id: 'access',
+      title: 'Performance and access on Home: every picture has a WebP (800w on a 390px phone) and a JPEG fallback, width/height, lazy below the fold, no image over 150 KB, no layout shift, every control shows a focus ring; every page keeps alt text and body-copy contrast',
+      seconds: 90,
+      tags: ['full'],
+      description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
       id: 'analytics',
@@ -793,6 +1318,8 @@ installPlaytest({
       if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
+      else if (id === 'phone') await phone(options, t);
+      else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
       else if (id === 'story') await story(options, t);

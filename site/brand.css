@@ -52,7 +52,7 @@
   /* Shape and layout */
   --radius: 2px;
   --card-pad: 26px 22px 28px;
-  --btn-h: 42px;
+  --btn-h: 44px;
   --nav-h: 76px;
   --wrap: 1120px;
   --wrap-wide: 1240px;
@@ -77,6 +77,7 @@ body {
 
 body {
   min-height: 100dvh;
+  overflow-x: clip; /* a stray full-bleed element must never make the page scroll sideways */
 }
 
 img {
@@ -148,7 +149,8 @@ a {
 .dossier h2,
 .desk h3,
 .beat h3,
-.office h3 {
+.office h3,
+.office h2 {
   font-family: var(--serif);
   font-weight: 500;
   letter-spacing: 0;
@@ -156,7 +158,7 @@ a {
 }
 
 .display {
-  margin: 0 0 18px;
+  margin: 0 0 var(--space-3);
   max-width: none;
   font-size: var(--fs-display);
 }
@@ -526,7 +528,8 @@ a {
 
 .desk h3,
 .beat h3,
-.office h3 {
+.office h3,
+.office h2 {
   margin: 0 0 12px;
   font-size: var(--fs-h3);
 }
@@ -569,7 +572,7 @@ a {
 
 .prose {
   display: grid;
-  gap: 18px;
+  gap: var(--space-3);
   max-width: 68ch;
 }
 
@@ -656,7 +659,7 @@ a {
 
 .dossier-photo {
   border: 1px solid var(--line);
-  background: #000;
+  background: var(--bg-raise);
 }
 
 .dossier-photo img {
@@ -1090,6 +1093,8 @@ a {
 .legal .revision:hover { color: var(--gold); }
 .product p.formulation a { color: inherit; text-decoration: underline; text-underline-offset: 3px; white-space: normal; overflow-wrap: anywhere; }
 .product p.formulation { margin-top: 10px; max-width: none; white-space: normal; overflow-wrap: anywhere; color: var(--muted); font-size: var(--fs-ui); letter-spacing: var(--ls-ui); text-transform: uppercase; }
+.product p.formulation .formulation-date::before { content: ' \00b7 '; white-space: pre; }
+@media (max-width: 480px) { .product p.formulation { font-size: var(--fs-label); letter-spacing: 0.04em; } .product p.formulation .formulation-date { display: block; margin-top: 4px; } .product p.formulation .formulation-date::before { content: none; } }
 
 /* "Powered by HAWKES GEN" mark at the end of the footer line, on every page. */
 .legal .powered { float: right; margin-left: 18px; color: inherit; font-size: var(--fs-label); letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; }
@@ -1109,7 +1114,7 @@ a {
 .board-card p { margin-bottom: 10px; }
 .board-card .role { color: var(--text); font-size: var(--fs-body); }
 .dossier .prose { margin: 14px 0 22px; }
-.sub { margin: 28px 0 0; font-family: var(--serif); font-size: var(--fs-quote); font-weight: 600; line-height: 1.15; }
+.sub { margin: 28px 0 var(--space-3); font-family: var(--serif); font-size: var(--fs-quote); font-weight: 600; line-height: 1.15; }
 .prose a, .fine a, .notes a { color: var(--text); text-underline-offset: 3px; }
 .fine { margin: 28px 0 0; max-width: 68ch; color: var(--muted); font-family: var(--serif); font-size: var(--fs-fine); line-height: 1.5; }
 .notes { display: grid; margin-top: 40px; }
@@ -1140,13 +1145,13 @@ a {
 .line-grid a:hover strong { color: var(--gold); }
 .mast-caption { margin: 10px auto 0; width: min(1120px, calc(100% - 48px)); color: var(--muted); font-size: var(--fs-label); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 @media (max-width: 900px) {
-  .line-intro { grid-template-columns: 1fr; }
-  .pillars { grid-template-columns: 1fr 1fr; }
+  .line-intro { grid-template-columns: minmax(0, 1fr); }
+  .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pillar:nth-child(3) { padding-left: 0; border-left: 0; }
   .line-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
-  .pillars { grid-template-columns: 1fr; }
+  .pillars { grid-template-columns: minmax(0, 1fr); }
   .pillar, .pillar + .pillar { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
   .pillar:first-child { border-top: 0; }
   .line-grid { gap: 14px; }
@@ -1215,6 +1220,7 @@ a {
 .product-file .sub { margin-top: 0; }
 .how { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--line); }
 .how .sub { margin-top: 0; }
+.prose .sub { margin-bottom: 0; } /* the grid gap (--space-3) is the space below */
 .diagram { margin: var(--space-5) 0 0; padding: var(--space-4); border: 1px solid var(--line); background: var(--bg-raise); }
 .diagram-svg { display: block; width: 100%; height: auto; }
 .diagram .fine { margin-top: var(--space-3); }
@@ -1241,3 +1247,59 @@ a {
 .spec thead th { color: var(--gold); font-family: var(--sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; }
 .spec tbody th { color: var(--text); font-weight: 600; }
 .facts .source { display: block; margin-top: var(--space-2); font-size: var(--fs-fine); }
+
+/* <picture> wraps the responsive images without changing their layout */
+picture { display: contents; }
+
+/* Phone (390x844, touch): a 44px tap target on every link and button, the hero inside one screen,
+   the eight-product strip in two columns that never clip. Menu behaviour is in brand.js. */
+@media (max-width: 760px) {
+  .brand { min-height: var(--btn-h); }
+  .nav-toggle { min-height: var(--btn-h); min-width: var(--btn-h); padding: 0 var(--space-2); }
+  .nav-links { gap: 0; }
+  .nav-links a { display: flex; align-items: center; min-height: 48px; padding: 0 var(--space-3); }
+  .btn { min-height: var(--btn-h); }
+  .text-link { display: inline-flex; align-items: center; min-height: var(--btn-h); }
+  .site-footer nav { gap: 0 var(--space-4); }
+  .site-footer nav a { display: inline-flex; align-items: center; min-height: var(--btn-h); }
+  .legal a { display: inline-flex; align-items: center; min-height: var(--btn-h); padding-block: 0; }
+  .legal .powered { display: flex; }
+  .contact-card a, .office a:not([class]) { display: inline-flex; align-items: center; min-height: var(--btn-h); }
+  .facts .source { display: flex; align-items: center; min-height: var(--btn-h); }
+  /* Plain links in body text, tables, captions and the eyebrow: padding on an inline link counts in its
+     rect but not in layout and falls short by a few px (PH Origins 38px, Research 20px), so make each a 44px box. */
+  main a:not([class]), .eyebrow a { display: inline-flex; align-items: center; min-height: var(--btn-h); padding-block: 0; }
+
+  /* Hero: a short photograph band, then the headline, the mission and the button, all above the fold. */
+  .hero-photo img { height: clamp(140px, 20vh, 200px); }
+  .hero-copy { padding-top: var(--space-4); }
+  .hero .display { font-size: clamp(38px, 11vw, 52px); }
+  .hero .mission { font-size: var(--fs-lede); margin-bottom: var(--space-2); }
+  .hero .position { font-size: var(--fs-lede); margin-bottom: 0; }
+  .hero .actions { margin-top: var(--space-3); }
+
+  /* The strip's card links are plain <a>: undo the inline-flex tap box above, or image, label and title sit in one row. */
+  main .line-grid a:not([class]) { display: block; min-height: 0; }
+  .line-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .line-grid > li { min-width: 0; }
+  .line-grid .kicker, .line-grid strong { overflow-wrap: anywhere; }
+}
+
+/* Polish: hero fits one screen at 1280x720; headings keep even space and clear descenders; product links read apart. */
+@media (min-width: 761px) {
+  .hero-photo img { height: clamp(100px, 22vh, 260px); }
+  .hero-copy { padding-top: var(--space-4); }
+  .hero .display { font-size: clamp(40px, 8vh, 72px); margin-bottom: var(--space-2); }
+  .hero .mission { max-width: 52ch; font-size: var(--fs-lede); margin-bottom: var(--space-2); }
+  .hero .position { font-size: var(--fs-lede); margin-bottom: 0; }
+  .hero .actions { margin-top: var(--space-3); }
+}
+@media (max-height: 600px) and (min-width: 761px) { .hero-photo img { height: 100px; } }
+h1, .page-title { margin-bottom: var(--space-3); line-height: 1.12; padding-bottom: 0.06em; }
+.page-title { margin-bottom: var(--space-3); }
+main section h2, .product h2, .dossier h2, .section-title { margin-bottom: var(--space-3); line-height: 1.1; }
+.product .text-link + .text-link { display: block; width: fit-content; margin-top: var(--space-2); }
+/* The product domain is its own link, set apart from the product-file label: on its own line with an arrow for the new tab. */
+.product .text-link[target="_blank"]::after { content: " \2197"; }
+/* Even space under every h2.sub: the block that follows owns no top margin, so the gap is the h2's own --space-3 (16px) whatever follows (lede, note, table, figures). */
+main .sub + * { margin-top: 0; }
