@@ -926,7 +926,7 @@ async function design(options, t) {
   t.metric('tokensListed', unique.length);
   if (unique.length < 25) t.problem('bug', `Style guide: only ${unique.length} tokens listed`);
   if (missing.length) t.problem('bug', `Style guide: lists tokens that :root does not define: ${missing.join(', ')}`);
-  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
+  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards', 'motion']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
   t.add('styleGuideChecked');
   for (const w of widths) {
     const f = openFrame();
@@ -1151,20 +1151,25 @@ async function phone(options, t) {
   const links = doc.getElementById('nav-links');
   const expanded = () => toggle.getAttribute('aria-expanded');
   const key = (k) => doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  // Menu uses opacity/visibility (so it can slide); open means is-open + visible + opaque.
+  const menuShown = () => {
+    const cs = win.getComputedStyle(links);
+    return links.classList.contains('is-open') && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.5;
+  };
   if (win.getComputedStyle(toggle).display === 'none') t.problem('bug', `The menu toggle is not shown at ${W}px`);
   const open = async (how) => {
     // A real touch tap: pointer and touch events, then the click a phone sends.
     for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new win.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
     toggle.click();
-    await t.wait(150);
-    const visible = links.getClientRects().length > 0;
+    await t.wait(400);
+    const visible = menuShown();
     const inside = links.contains(doc.activeElement);
     t.event('menu-open', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus in menu ${inside}`);
     if (expanded() !== 'true' || !visible) t.problem('bug', 'Menu: a tap on the toggle does not open it');
     if (!inside) t.problem('bug', 'Menu: focus does not move into the menu on open');
   };
   const closed = (how) => {
-    const visible = links.getClientRects().length > 0;
+    const visible = menuShown();
     const back = doc.activeElement === toggle;
     t.event('menu-close', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus on toggle ${back}`);
     if (expanded() !== 'false' || visible) t.problem('bug', `Menu: ${how} does not close it`);
@@ -1172,11 +1177,11 @@ async function phone(options, t) {
   };
   await open('tap');
   key('Escape');
-  await t.wait(150);
+  await t.wait(400);
   closed('Escape');
   await open('tap again');
   toggle.click();
-  await t.wait(150);
+  await t.wait(400);
   closed('a tap on the toggle');
   t.add('menuChecked');
 
@@ -1206,9 +1211,12 @@ async function phone(options, t) {
 
   // Tap targets, on Home and the pages a visitor reaches next.
   const small = (d, name) => {
+    const view = d.defaultView;
     const bad = [];
     for (const el of d.querySelectorAll('a[href], button')) {
       if (el.classList.contains('skip')) continue;
+      const cs = view.getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;
       const r = el.getBoundingClientRect();
       if (!r.width && !r.height) continue; // hidden (the closed menu)
       if (r.height < MIN_TAP - 0.5) bad.push(`${(el.textContent || el.getAttribute('alt') || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
@@ -1219,9 +1227,10 @@ async function phone(options, t) {
   small(doc, 'Home');
   // The closed menu is hidden; check its links with the menu open.
   toggle.click();
-  await t.wait(150);
+  await t.wait(400);
   small(doc, 'Home with the menu open');
   toggle.click();
+  await t.wait(400);
   // Every page, including all eight product pages (not only PH Origins): the plain links in body text and tables were the ones that fell short.
   const PRODUCT_PAGES = ['sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen']
     .map((slug) => [`Product file ${slug}`, `./product-${slug}.html`]);
@@ -1822,6 +1831,197 @@ async function transitions(options, t) {
   t.progress(1);
 }
 
+/** Motion tokens and micro-interactions: style guide lists them; cards/buttons/links respond; phone menu slides; focus rings and 44px taps hold. */
+async function motion(options, t) {
+  const MIN_TAP = 44;
+  const MOTION_TOKENS = ['--dur-1', '--dur-2', '--dur-3', '--ease-out', '--ease-in-out', '--shadow-lift', '--shadow-press'];
+  const f = openFrame();
+  f.style.cssText = 'position:fixed;top:0;left:0;width:1280px;height:800px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea';
+
+  t.scene('Style guide: motion tokens');
+  let doc = await frameLoad((fr) => (fr.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't open");
+  await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 6000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const win = doc.defaultView;
+  const root = win.getComputedStyle(doc.documentElement);
+  for (const name of MOTION_TOKENS) {
+    const val = root.getPropertyValue(name).trim();
+    t.event('token', `${name}: ${val || '(missing)'}`);
+    if (!val) t.problem('bug', `Motion: :root is missing ${name}`);
+  }
+  if (root.getPropertyValue('--dur-1').trim() !== '120ms') t.problem('bug', 'Motion: --dur-1 should be 120ms');
+  if (root.getPropertyValue('--dur-2').trim() !== '200ms') t.problem('bug', 'Motion: --dur-2 should be 200ms');
+  if (root.getPropertyValue('--dur-3').trim() !== '320ms') t.problem('bug', 'Motion: --dur-3 should be 320ms');
+  if (!doc.getElementById('motion')) t.problem('bug', 'Style guide: no motion section');
+  if (!doc.getElementById('interaction-states')) t.problem('bug', 'Style guide: no interaction states');
+  const states = {
+    hover: doc.querySelector('.desk.is-hover'),
+    focus: doc.querySelector('.desk.is-focus'),
+    pressed: doc.querySelector('.desk.is-pressed'),
+  };
+  for (const [name, el] of Object.entries(states)) {
+    if (!el) {
+      t.problem('bug', `Style guide: no ${name} state sample`);
+      continue;
+    }
+    smoothTo(el);
+    await t.wait(500);
+    const cs = win.getComputedStyle(el);
+    t.event('state', `${name}: transform ${cs.transform}, shadow ${cs.boxShadow !== 'none'}`);
+    if (name !== 'idle' && cs.transform === 'none') t.problem('bug', `Style guide: ${name} card has no transform`);
+  }
+  t.add('tokensChecked');
+  t.progress(0.25);
+
+  // Desktop: hover/focus samples and a live focused button (gold ring stays).
+  t.scene('Desktop: hover and focus');
+  const hoverCard = states.hover;
+  const focusCard = states.focus;
+  if (hoverCard) {
+    smoothTo(hoverCard);
+    await t.wait(700);
+  }
+  const btn = doc.querySelector('#buttons .btn:not(.btn-outline)') || doc.querySelector('.btn');
+  if (!btn) t.problem('bug', 'Style guide: no primary button');
+  else {
+    try { btn.focus({ preventScroll: true, focusVisible: true }); } catch (_) { btn.focus({ preventScroll: true }); }
+    const cs = win.getComputedStyle(btn);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    const transition = cs.transitionDuration || '';
+    t.event('button-focus', `ring ${ring}, transition ${transition}, transform ${cs.transform}`);
+    if (!ring) t.problem('bug', 'Button focus: no visible focus ring');
+    if (!transition || transition === '0s') t.problem('bug', 'Button: no transition timing');
+    await t.wait(800);
+  }
+  const link = doc.querySelector('#sg-link-sweep') || doc.querySelector('.text-link');
+  if (link) {
+    try { link.focus({ preventScroll: true, focusVisible: true }); } catch (_) { link.focus({ preventScroll: true }); }
+    const after = win.getComputedStyle(link, '::after');
+    t.event('link-focus', `color ${win.getComputedStyle(link).color}, ::after transform ${after.transform}`);
+    await t.wait(700);
+  }
+  if (focusCard) {
+    // The focus sample already carries the gold ring via .is-focus; hold it for the screenshot.
+    smoothTo(focusCard);
+    const cs = win.getComputedStyle(focusCard);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    t.event('card-focus', `ring ${ring}, transform ${cs.transform}`);
+    if (!ring) t.problem('bug', 'Card focus sample: no visible focus ring');
+    await t.wait(800);
+  }
+  const liveCard = doc.querySelector('#cards .desk[tabindex]');
+  if (liveCard) {
+    try { liveCard.focus({ preventScroll: true, focusVisible: true }); } catch (_) { liveCard.focus({ preventScroll: true }); }
+    const cs = win.getComputedStyle(liveCard);
+    t.event('card-live-focus', `transform ${cs.transform}, outline ${cs.outlineStyle} ${cs.outlineWidth}`);
+    await t.wait(600);
+  }
+  t.add('desktopStatesSeen');
+  t.progress(0.5);
+
+  // Phone 390x844: pressed card sample, then the menu slides open and closed.
+  t.scene('Phone: pressed card');
+  f.style.width = '390px';
+  f.style.height = '844px';
+  await t.wait(400);
+  doc = await frameLoad((fr) => (fr.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't reopen at 390");
+  const phoneWin = doc.defaultView;
+  const pressed = doc.querySelector('.desk.is-pressed');
+  if (!pressed) t.problem('bug', 'Style guide at 390: no pressed card sample');
+  else {
+    pressed.scrollIntoView({ block: 'center' });
+    await t.wait(800);
+    const cs = phoneWin.getComputedStyle(pressed);
+    t.event('pressed', `transform ${cs.transform}, shadow ${cs.boxShadow !== 'none'}`);
+    if (cs.transform === 'none') t.problem('bug', 'Pressed card: no press transform');
+  }
+  t.add('pressedSeen');
+
+  t.scene('Phone: menu motion');
+  const toggle = doc.getElementById('navToggle');
+  const links = doc.getElementById('nav-links');
+  if (!toggle || !links) t.problem('bug', 'Phone: no menu toggle');
+  else {
+    const menuCs = () => phoneWin.getComputedStyle(links);
+    t.event('menu-transition', `duration ${menuCs().transitionDuration}, property ${menuCs().transitionProperty}`);
+    if (!/0\.32s|320ms/.test(menuCs().transitionDuration) && !menuCs().transitionProperty.includes('opacity')) {
+      // transitionDuration can list several; accept any that includes the menu fade.
+      const dur = menuCs().transitionDuration;
+      t.event('menu-timing', `computed ${dur}`);
+    }
+    for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new phoneWin.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
+    toggle.click();
+    await t.wait(100);
+    const mid = menuCs();
+    t.event('menu-opening', `opacity ${mid.opacity}, transform ${mid.transform}, aria ${toggle.getAttribute('aria-expanded')}`);
+    await t.wait(400);
+    const open = menuCs();
+    const shown = links.classList.contains('is-open') && open.visibility !== 'hidden' && parseFloat(open.opacity) > 0.9;
+    t.event('menu-open', `opacity ${open.opacity}, transform ${open.transform}, shown ${shown}`);
+    if (!shown) t.problem('bug', 'Phone menu: did not finish open');
+    await t.wait(600);
+    toggle.click();
+    await t.wait(100);
+    const closing = menuCs();
+    t.event('menu-closing', `opacity ${closing.opacity}`);
+    await t.wait(400);
+    const closed = menuCs();
+    const hidden = !links.classList.contains('is-open') || closed.visibility === 'hidden' || parseFloat(closed.opacity) < 0.1;
+    t.event('menu-closed', `opacity ${closed.opacity}, hidden ${hidden}`);
+    if (!hidden) t.problem('bug', 'Phone menu: did not finish closed');
+  }
+  t.add('menuMotionChecked');
+  t.progress(0.75);
+
+  // Focus rings and 44px tap targets at 390 on the style guide (menu open for nav links).
+  t.scene('Phone: focus and taps');
+  const controls = [...doc.querySelectorAll('a[href], button')].filter((el) => {
+    const cs = phoneWin.getComputedStyle(el);
+    return cs.visibility !== 'hidden' && cs.display !== 'none' && parseFloat(cs.opacity) > 0 && el.getClientRects().length;
+  });
+  let rings = 0;
+  for (const el of controls.slice(0, 12)) {
+    el.focus({ preventScroll: true });
+    if (doc.activeElement !== el) continue;
+    const cs = phoneWin.getComputedStyle(el);
+    if (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2) rings++;
+  }
+  t.event('focus-rings', `${rings} controls showed a ring`);
+  if (rings < 3) t.problem('bug', `Focus rings: only ${rings} visible at 390`);
+  if (toggle) {
+    toggle.click();
+    await t.wait(400);
+  }
+  const short = [];
+  for (const el of doc.querySelectorAll('a[href], button')) {
+    if (el.classList.contains('skip')) continue;
+    const cs = phoneWin.getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width && !r.height) continue;
+    if (r.height < MIN_TAP - 0.5) short.push(`${(el.textContent || '').trim().slice(0, 20)} ${Math.round(r.height)}px`);
+  }
+  t.event('tap-targets', `${short.length} under ${MIN_TAP}px`);
+  if (short.length) t.problem('bug', `Style guide at 390: ${short.length} tap target(s) under ${MIN_TAP}px (${short.slice(0, 4).join(', ')})`);
+  t.add('accessHeld');
+
+  // Reduced motion: transitions must drop out.
+  let calmRule = false;
+  for (const sheet of doc.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) {
+        if (r.conditionText && /prefers-reduced-motion:\s*reduce/.test(r.conditionText) && /--dur-|--ease-|transition:\s*none|\.desk/.test(r.cssText)) calmRule = true;
+      }
+    } catch (_) { /* cross-origin */ }
+  }
+  t.event('reduced-motion', `prefers-reduced-motion rule present: ${calmRule}`);
+  if (!calmRule) t.problem('bug', 'Motion: no prefers-reduced-motion rule covering the new transitions');
+  closeFrame();
+  t.progress(1);
+}
+
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
@@ -1875,6 +2075,13 @@ installPlaytest({
       description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
     },
     {
+      id: 'motion',
+      title: 'Motion tokens: durations and easings on the style guide; cards, buttons and links respond; phone menu slides; focus rings and 44px taps hold',
+      seconds: 45,
+      tags: ['full'],
+      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule.',
+    },
+    {
       id: 'phone',
       title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
       seconds: 30,
@@ -1921,6 +2128,7 @@ installPlaytest({
   async start(id, options, t) {
     try {
       if (id === 'transitions') await transitions(options, t);
+      else if (id === 'motion') await motion(options, t);
       else if (id === 'herofield') await herofield(options, t);
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
