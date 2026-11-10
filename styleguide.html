@@ -134,27 +134,74 @@
               <a class="btn btn-outline" href="#buttons">Secondary</a>
               <a class="text-link" href="#buttons">Text link</a>
             </div>
-            <p class="fine">Radius <code>--radius</code> 2px. Buttons set in Barlow Condensed at <code>--fs-ui</code>, tracked <code>--ls-ui</code>. The header button is the same button at <code>--btn-h</code> 44px.</p>
+            <p class="fine">Radius <code>--radius</code> 2px. Buttons set in Barlow Condensed at <code>--fs-ui</code>, tracked <code>--ls-ui</code>. The header button is the same button at <code>--btn-h</code> 44px. Hover and focus lift slightly; press settles. Tap targets stay at least 44 px tall.</p>
           </div>
 
           <div class="sg-section" id="cards">
             <h2 class="section-title">Cards</h2>
             <div class="desks">
-              <article class="desk">
+              <article class="desk" tabindex="0">
                 <p class="kicker">Indication</p>
                 <h3>Card title</h3>
                 <p>Raised paper, a one-pixel rule and the card padding <code>--card-pad</code>. Every card on the site, from the board to the offices, is this card.</p>
               </article>
-              <article class="desk">
+              <article class="desk" tabindex="0">
                 <p class="kicker">Formulation</p>
                 <h3>Card title</h3>
                 <p>A kicker in gold above a serif title, then body copy in muted ink.</p>
               </article>
-              <article class="desk">
+              <article class="desk" tabindex="0">
                 <p class="kicker">Continuity</p>
                 <h3>Card title</h3>
-                <p>The hover edge is <code>--gold-line</code>.</p>
+                <p>Hover and focus lift with <code>--shadow-lift</code>; press settles with <code>--shadow-press</code>.</p>
               </article>
+            </div>
+          </div>
+
+          <div class="sg-section" id="motion">
+            <h2 class="section-title">Motion</h2>
+            <p class="lede section-note">Durations and easings for micro-interactions. Under <code>prefers-reduced-motion</code>, transitions drop out and cards do not lift.</p>
+            <div class="sg-table-wrap"><table class="sg-table">
+              <caption class="visually-hidden">Motion tokens</caption>
+              <tbody>
+              <tr><th scope="row">Fast</th><td><code>--dur-1 · 120ms</code></td></tr>
+              <tr><th scope="row">Default</th><td><code>--dur-2 · 200ms</code></td></tr>
+              <tr><th scope="row">Menu</th><td><code>--dur-3 · 320ms</code></td></tr>
+              <tr><th scope="row">Ease out</th><td><code>--ease-out · cubic-bezier(0.22, 1, 0.36, 1)</code></td></tr>
+              <tr><th scope="row">Ease in-out</th><td><code>--ease-in-out · cubic-bezier(0.45, 0, 0.55, 1)</code></td></tr>
+              <tr><th scope="row">Lift shadow</th><td><code>--shadow-lift</code></td></tr>
+              <tr><th scope="row">Press shadow</th><td><code>--shadow-press</code></td></tr>
+              </tbody>
+            </table></div>
+
+            <h3 class="sg-sub">Interaction states</h3>
+            <p class="fine">Cards, buttons and text links share the same timing. Focus rings stay the gold outline. The phone menu slides and fades over <code>--dur-3</code>.</p>
+            <div class="desks sg-states" id="interaction-states">
+              <article class="desk">
+                <p class="kicker">Idle</p>
+                <h3>Rest</h3>
+                <p>Border <code>--line</code>, no lift.</p>
+              </article>
+              <article class="desk is-hover">
+                <p class="kicker">Hover</p>
+                <h3>Lift</h3>
+                <p>Gold edge, soft shadow, rises 3 px.</p>
+              </article>
+              <article class="desk is-focus">
+                <p class="kicker">Focus</p>
+                <h3>Keyboard</h3>
+                <p>Same lift as hover, plus the focus ring.</p>
+              </article>
+              <article class="desk is-pressed">
+                <p class="kicker">Press</p>
+                <h3>Tap</h3>
+                <p>Settles 1 px and scales to 0.99.</p>
+              </article>
+            </div>
+            <div class="actions" style="margin-top: var(--space-4)">
+              <a class="btn is-demo-hover" href="#motion" id="sg-btn-hover">Button hover</a>
+              <a class="btn btn-outline" href="#motion" id="sg-btn-focus">Button focus</a>
+              <a class="text-link" href="#motion" id="sg-link-sweep">Link sweep</a>
             </div>
           </div>
         </div>
