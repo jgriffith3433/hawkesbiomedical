@@ -1247,6 +1247,146 @@ async function phone(options, t) {
   t.progress(1);
 }
 
+/** Product threads: chips filter the timeline (others fade), ?product= deep-links, each product page has an On the timeline strip; chips stay 44px at 390. */
+async function timelineFilter(options, t) {
+  const MIN_TAP = 44;
+  const f = openFrame();
+  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+
+  const opacityOf = (el, doc) => parseFloat(doc.defaultView.getComputedStyle(el).opacity);
+  const filteredState = (doc) => {
+    const track = doc.querySelector('.timeline-track');
+    const active = doc.querySelector('.tl-chip.is-active[data-filter]');
+    const slug = track?.dataset.product || active?.dataset.filter || '';
+    const thread = [...doc.querySelectorAll('.era.is-thread')];
+    const dim = [...doc.querySelectorAll('.era.is-dim')];
+    return { track, slug, thread, dim, filtered: track?.classList.contains('is-filtered') };
+  };
+
+  t.scene('Timeline chips');
+  let doc = await frameLoad((fr) => (fr.src = './timeline.html'));
+  if (!doc) throw new Error("Timeline didn't open");
+  await t.until(() => doc.querySelectorAll('.tl-chip[data-filter]').length >= 9, 8000, 'chips').catch(() => {});
+  const chips = [...doc.querySelectorAll('.tl-chip[data-filter]')];
+  t.metric('chips', chips.length);
+  if (chips.length < 9) t.problem('bug', `Timeline: ${chips.length} chips, All plus 8 products wanted`);
+
+  // Criterion 1: tap a product chip; its thread stays up, others fade back.
+  const phChip = doc.querySelector('.tl-chip[data-filter="ph-origins"]');
+  if (!phChip) t.problem('bug', 'Timeline: no PH Origins chip');
+  else {
+    phChip.scrollIntoView({ block: 'center' });
+    await t.wait(300);
+    phChip.click();
+    await t.wait(700);
+    const st = filteredState(doc);
+    t.event('filter', `chip ph-origins: product=${st.slug}, thread ${st.thread.length}, dim ${st.dim.length}`);
+    if (st.slug !== 'ph-origins' || !st.filtered) t.problem('bug', 'Timeline: tapping PH Origins did not filter the track');
+    if (st.thread.length < 1) t.problem('bug', 'Timeline: filtered thread has no highlighted era');
+    if (st.dim.length < 1) t.problem('bug', 'Timeline: other eras did not fade back');
+    for (const era of st.dim) {
+      if (opacityOf(era, doc) > 0.4) t.problem('bug', `Timeline: dim era ${era.querySelector('time')?.textContent} is still full opacity`);
+    }
+    for (const era of st.thread) {
+      if (opacityOf(era, doc) < 0.9 && era.classList.contains('is-in')) t.problem('bug', 'Timeline: a thread era is faded');
+    }
+    if (!/product=ph-origins/.test(doc.defaultView.location.search)) t.problem('bug', 'Timeline: chip did not set ?product=ph-origins');
+  }
+  t.progress(0.25);
+
+  // Criterion 4 + screenshots: phone size, chips at least 44px, filtered thread visible.
+  t.scene('Filtered thread 390x844');
+  f.style.cssText = `position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(500);
+  for (const chip of [...doc.querySelectorAll('.tl-chip')]) {
+    const r = chip.getBoundingClientRect();
+    t.event('chip-tap', `${chip.textContent.trim()}: ${Math.round(r.height)}px tall`);
+    if (r.height + 0.5 < MIN_TAP) t.problem('bug', `Timeline chip "${chip.textContent.trim()}" is ${Math.round(r.height)}px tall at 390px, ${MIN_TAP} wanted`);
+  }
+  const overPhone = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  if (overPhone > 1) t.problem('bug', `Timeline at 390px: sideways scroll by ${overPhone}px`);
+  await t.wait(600);
+
+  t.scene('Filtered thread 1440x900');
+  f.style.cssText = `position:fixed;top:0;left:0;width:1440px;height:900px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(600);
+  t.progress(0.5);
+
+  // Criterion 2: deep link opens already filtered.
+  t.scene('Deep link ?product=');
+  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
+  if (!doc) throw new Error("deep-linked Timeline didn't open");
+  await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep-link filter').catch(() => {});
+  {
+    const st = filteredState(doc);
+    const active = doc.querySelector('.tl-chip.is-active');
+    t.event('deeplink', `product=${st.slug}, chip=${active?.dataset.filter || 'none'}, thread ${st.thread.length}, dim ${st.dim.length}`);
+    if (st.slug !== 'sick-of-it' || !st.filtered) t.problem('bug', 'Timeline: ?product=sick-of-it did not filter on load');
+    if (active?.dataset.filter !== 'sick-of-it') t.problem('bug', 'Timeline: deep link did not press the Sick of It chip');
+    if (st.dim.length < 1 || st.thread.length < 1) t.problem('bug', 'Timeline: deep link did not split thread and faded eras');
+  }
+  t.progress(0.75);
+
+  // Criterion 3: every product page has the strip; one strip is screenshotted and its link opens the filtered thread.
+  const productFiles = [
+    ['./product-ph-origins.html', 'ph-origins'],
+    ['./product-sick-of-it.html', 'sick-of-it'],
+    ['./product-the-place-department.html', 'the-place-department'],
+    ['./product-imagine-live-tv.html', 'imagine-live-tv'],
+    ['./product-yooba-land.html', 'yooba-land'],
+    ['./product-i-can-be.html', 'i-can-be'],
+    ['./product-dose-of-destruction.html', 'dose-of-destruction'],
+    ['./product-hawkes-gen.html', 'hawkes-gen'],
+  ];
+  for (const [href, slug] of productFiles) {
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) { t.problem('bug', `${href} did not open`); continue; }
+    const strip = doc.querySelector('.on-timeline');
+    const moments = strip ? [...strip.querySelectorAll('.tl-moments li')] : [];
+    const link = strip?.querySelector(`a[href="./timeline.html?product=${slug}"]`);
+    t.event('strip', `${slug}: moments ${moments.length}, link ${link ? 'yes' : 'no'}`);
+    if (!strip) t.problem('bug', `${slug}: no On the timeline strip`);
+    else if (moments.length < 2 || moments.length > 3) t.problem('bug', `${slug}: strip has ${moments.length} moments, 2 or 3 wanted`);
+    if (!link) t.problem('bug', `${slug}: strip has no link to timeline.html?product=${slug}`);
+    t.add('productStrips');
+  }
+
+  t.scene('Product strip 390x844');
+  f.style.cssText = `position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  doc = await frameLoad((fr) => (fr.src = './product-ph-origins.html'));
+  if (doc) {
+    const strip = doc.querySelector('.on-timeline');
+    if (strip) {
+      smoothTo(strip);
+      await t.wait(800);
+    }
+  }
+  await t.wait(400);
+
+  t.scene('Product strip 1440x900');
+  f.style.cssText = `position:fixed;top:0;left:0;width:1440px;height:900px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(500);
+  if (doc) {
+    const strip = doc.querySelector('.on-timeline');
+    if (strip) {
+      smoothTo(strip);
+      await t.wait(800);
+    }
+    const link = doc.querySelector('.on-timeline a[href="./timeline.html?product=ph-origins"]');
+    if (link) {
+      doc = await clickLink(t, doc, '.on-timeline a[href="./timeline.html?product=ph-origins"]', 'PH Origins on the timeline');
+      await t.wait(600);
+      const st = filteredState(doc);
+      t.event('strip-link', `landed product=${st.slug}, filtered=${st.filtered}`);
+      if (st.slug !== 'ph-origins' || !st.filtered) t.problem('bug', 'Product strip link did not open the filtered PH Origins thread');
+    }
+  }
+
+  closeFrame();
+  t.progress(1);
+}
+
 /** Timeline: reached from the header menu and the footer; eras in order, each with a year, image and line; each product origin links its page; no sideways scroll. */
 async function timeline(options, t) {
   let doc = await frameLoad((f) => (f.src = './index.html'));
@@ -1379,6 +1519,13 @@ installPlaytest({
       description: 'Opens Timeline from the nav, scrolls each era, checks year order, images, lines, the eight product origin links and that the page does not scroll sideways.',
     },
     {
+      id: 'timelinefilter',
+      title: 'Timeline product threads: chips filter one product (others fade), ?product= deep-links, each product page has an On the timeline strip; chips are 44px at 390',
+      seconds: 55,
+      tags: ['full'],
+      description: 'Opens Timeline, taps a product chip and checks the thread stays up while other eras fade, loads timeline.html?product= already filtered, checks every product page strip and that its link opens the filtered thread, and measures chip tap height at 390x844 (with filtered-thread and product-strip scenes at 390x844 and 1440x900).',
+    },
+    {
       id: 'productpages',
       title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
       seconds: 60,
@@ -1446,6 +1593,7 @@ installPlaytest({
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
       else if (id === 'timeline') await timeline(options, t);
+      else if (id === 'timelinefilter') await timelineFilter(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
