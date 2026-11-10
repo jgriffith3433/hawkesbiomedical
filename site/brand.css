@@ -1315,7 +1315,29 @@ main .sub + * { margin-top: 0; }
 .origins a { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; color: inherit; text-decoration: none; min-height: 44px; }
 .origins img { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--line); }
 .origins a:hover strong { color: var(--gold); }
-@media (max-width: 700px) { .era { grid-template-columns: minmax(0, 1fr); } }
+/* Scroll-led timeline: rail, sticky year, alternating eras. */
+.timeline-track { position: relative; }
+.year-marker { position: sticky; top: calc(var(--nav-h) + 8px); z-index: 2; margin: 0 0 -8px; text-align: center; }
+.year-marker span { display: inline-block; padding: 4px 16px; background: var(--bg-raise, #fff); border: 1px solid var(--gold); color: var(--gold); font-family: var(--serif); font-size: var(--fs-h3, 32px); font-weight: 600; line-height: 1.1; }
+.rail { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--line); }
+.rail-fill { display: block; width: 100%; height: 100%; background: var(--gold); transform-origin: top; transform: scaleY(0); transition: transform 0.6s ease; }
+.timeline { position: relative; }
+.era { position: relative; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; }
+.era::before { content: ""; position: absolute; top: -6px; left: 50%; width: 11px; height: 11px; margin-left: -5px; border-radius: 50%; background: var(--bg-raise, #fff); border: 2px solid var(--line); }
+.era.is-current::before { border-color: var(--gold); background: var(--gold); }
+.era:nth-child(even) > figure { order: 2; }
+@media (max-width: 700px) {
+  .year-marker { text-align: left; padding-left: 40px; }
+  .rail { left: 14px; margin-left: 0; }
+  .era { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-left: 40px; }
+  .era::before { left: 14px; margin-left: -5px; }
+  .era:nth-child(even) > figure { order: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tl-on .era { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; will-change: opacity, transform; }
+  .tl-on .era.is-in { opacity: 1; transform: none; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .rail-fill { transition: none; } }
 
 /* Cross-document view transitions: header and footer stay, content cross-fades and lifts, a product image morphs into its page hero. Unsupported browsers navigate normally. */
 @view-transition { navigation: auto; }
