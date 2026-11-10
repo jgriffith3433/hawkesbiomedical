@@ -30,9 +30,10 @@ New pages are generated from the same head/header/footer: copy one and keep the 
 ## Layout
 
 ```
-index.html company.html products.html research.html leadership.html newsroom.html investors.html contact.html
+index.html company.html products.html research.html leadership.html newsroom.html timeline.html investors.html contact.html
 compliance.html privacy.html terms.html whatsnew.html 404.html
 styleguide.html (the design tokens, shown; in every footer)
+data/timeline.json (eras, product origins and per-product moments)
 site/brand.css site/brand.js  (tokens in :root at the top of brand.css: colour, type scale --fs-*, spacing --space-*, --card-pad, --btn-h)
 site/analytics.js  Hawkes Analytics additions (after the SDK tag in every page head)
 assets/brand/     Tower and board photography
@@ -44,7 +45,7 @@ CNAME favicon.svg
 
 ## Product pages
 
-Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`.
+Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`, and an "On the timeline" strip of two or three moments linking to `timeline.html?product=<slug>`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`. `timeline.html` chips filter one product's thread (other eras fade; deep-link `?product=<slug>`).
 
 `research.html` (footer link, not in the header nav; `data-page="products"`) shows how a product is made (one `.diagram-svg`), the indication table (`.spec`) and the figures (`.facts[data-sourced]`). Every figure there must carry an `a.source` link to the page that already states it (Investors, Products): never add a figure with no source here. The `productpages` scenario checks it.
 
@@ -52,7 +53,7 @@ Each product has `product-<slug>.html` (overview, how it works, one inline SVG d
 
 `site/playtest.js` (loaded on `index.html` only) implements the Hawkes playtest contract with
 `site/hawkes-playtest.js` (a copy of `hawkesstudio/clients/web/hawkes-playtest.js`). Scenarios: `smoke`,
-`products`, `story` (the narrative home), `access` (Home pictures, at the bot's width and again in a 390x844 frame: the WebP chosen (800w on a phone), the JPEG fallback fetched and decoded, width/height matching the image shape, lazy below the fold and eager with fetchpriority high on the hero, under 150 KB, layout shift read with a PerformanceObserver; one `image` event per picture; a visible focus ring on every control), `phone` (390x844: menu by tap and Escape with focus, product strip, hero above the fold, 44px tap targets, no sideways scroll), `polish` (hero eyebrow/headline/button on the first screen at 1280x720 and 390x844, 12-16px under h2.sub, each Products domain a link apart from its label, Leadership and Contact on the Privacy container, light portrait borders), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
+`products`, `story` (the narrative home), `timeline` (eras, origins, rail), `timelinefilter` (product chips filter a thread with others faded, `?product=` deep links, each product page's On the timeline strip, 44px chips at 390), `access` (Home pictures, at the bot's width and again in a 390x844 frame: the WebP chosen (800w on a phone), the JPEG fallback fetched and decoded, width/height matching the image shape, lazy below the fold and eager with fetchpriority high on the hero, under 150 KB, layout shift read with a PerformanceObserver; one `image` event per picture; a visible focus ring on every control), `phone` (390x844: menu by tap and Escape with focus, product strip, hero above the fold, 44px tap targets, no sideways scroll), `polish` (hero eyebrow/headline/button on the first screen at 1280x720 and 390x844, 12-16px under h2.sub, each Products domain a link apart from its label, Leadership and Contact on the Privacy container, light portrait borders), `design` (same header/footer/type/buttons on every page, tokens listed, no overflow at 390 and 1440px) and `analytics`. A run stays on the home page and opens the other pages in a full-screen frame over it, by clicking the
 nav and footer links. It measures each product thumbnail's lightness (warns on a dark one) and the footer fiction
 line's contrast on every page (a bug under 4.5:1) and that the "Powered by HAWKES GEN" link is there and goes to https://hawkesgen.ai (not clicked: it leaves the site). It also checks the link-preview tags (Open Graph, Twitter card)
 on Home, Products, Company, Leadership, Newsroom, Investors, Compliance, Privacy, Terms and Contact against each page's own `<title>` and meta description (`SHARE_URLS` lists the pages that

@@ -10,6 +10,7 @@ const PAGES = [
   { name: 'Company', href: './company.html' },
   { name: 'Leadership', href: './leadership.html' },
   { name: 'Newsroom', href: './newsroom.html' },
+  { name: 'Timeline', href: './timeline.html' },
   { name: 'Investors', href: './investors.html' },
   { name: 'Compliance', href: './compliance.html' },
   { name: 'Privacy', href: './privacy.html' },
@@ -28,6 +29,7 @@ const SHARE_URLS = {
   Leadership: 'https://hawkesbiomedical.com/leadership.html',
   Contact: 'https://hawkesbiomedical.com/contact.html',
   Newsroom: 'https://hawkesbiomedical.com/newsroom.html',
+  Timeline: 'https://hawkesbiomedical.com/timeline.html',
   Investors: 'https://hawkesbiomedical.com/investors.html',
   Compliance: 'https://hawkesbiomedical.com/compliance.html',
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
@@ -890,7 +892,7 @@ async function polish(options, t) {
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
-  ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
+  ['Newsroom', './newsroom.html'], ['Timeline', './timeline.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
 const chromeOf = (doc) => {
@@ -1245,6 +1247,347 @@ async function phone(options, t) {
   t.progress(1);
 }
 
+/** Product threads: chips filter the timeline (others fade), ?product= deep-links, each product page has an On the timeline strip; chips stay 44px at 390. */
+async function timelineFilter(options, t) {
+  const MIN_TAP = 44;
+  const f = openFrame();
+  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+
+  const opacityOf = (el, doc) => parseFloat(doc.defaultView.getComputedStyle(el).opacity);
+  const filteredState = (doc) => {
+    const track = doc.querySelector('.timeline-track');
+    const active = doc.querySelector('.tl-chip.is-active[data-filter]');
+    const slug = track?.dataset.product || active?.dataset.filter || '';
+    const thread = [...doc.querySelectorAll('.era.is-thread')];
+    const dim = [...doc.querySelectorAll('.era.is-dim')];
+    return { track, slug, thread, dim, filtered: track?.classList.contains('is-filtered') };
+  };
+
+  t.scene('Timeline chips');
+  let doc = await frameLoad((fr) => (fr.src = './timeline.html'));
+  if (!doc) throw new Error("Timeline didn't open");
+  await t.until(() => doc.querySelectorAll('.tl-chip[data-filter]').length >= 9, 8000, 'chips').catch(() => {});
+  const chips = [...doc.querySelectorAll('.tl-chip[data-filter]')];
+  t.metric('chips', chips.length);
+  if (chips.length < 9) t.problem('bug', `Timeline: ${chips.length} chips, All plus 8 products wanted`);
+
+  // Criterion 1: tap a product chip; its thread stays up, others fade back.
+  const phChip = doc.querySelector('.tl-chip[data-filter="ph-origins"]');
+  if (!phChip) t.problem('bug', 'Timeline: no PH Origins chip');
+  else {
+    phChip.scrollIntoView({ block: 'center' });
+    await t.wait(300);
+    phChip.click();
+    await t.wait(700);
+    const st = filteredState(doc);
+    t.event('filter', `chip ph-origins: product=${st.slug}, thread ${st.thread.length}, dim ${st.dim.length}`);
+    if (st.slug !== 'ph-origins' || !st.filtered) t.problem('bug', 'Timeline: tapping PH Origins did not filter the track');
+    if (st.thread.length < 1) t.problem('bug', 'Timeline: filtered thread has no highlighted era');
+    if (st.dim.length < 1) t.problem('bug', 'Timeline: other eras did not fade back');
+    for (const era of st.dim) {
+      if (opacityOf(era, doc) > 0.4) t.problem('bug', `Timeline: dim era ${era.querySelector('time')?.textContent} is still full opacity`);
+    }
+    for (const era of st.thread) {
+      if (opacityOf(era, doc) < 0.9 && era.classList.contains('is-in')) t.problem('bug', 'Timeline: a thread era is faded');
+    }
+    if (!/product=ph-origins/.test(doc.defaultView.location.search)) t.problem('bug', 'Timeline: chip did not set ?product=ph-origins');
+  }
+  t.progress(0.25);
+
+  // Criterion 4 + screenshots: phone size, chips at least 44px, filtered thread visible.
+  t.scene('Filtered thread 390x844');
+  f.style.cssText = `position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(500);
+  for (const chip of [...doc.querySelectorAll('.tl-chip')]) {
+    const r = chip.getBoundingClientRect();
+    t.event('chip-tap', `${chip.textContent.trim()}: ${Math.round(r.height)}px tall`);
+    if (r.height + 0.5 < MIN_TAP) t.problem('bug', `Timeline chip "${chip.textContent.trim()}" is ${Math.round(r.height)}px tall at 390px, ${MIN_TAP} wanted`);
+  }
+  const overPhone = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  if (overPhone > 1) t.problem('bug', `Timeline at 390px: sideways scroll by ${overPhone}px`);
+  await t.wait(600);
+
+  t.scene('Filtered thread 1440x900');
+  f.style.cssText = `position:fixed;top:0;left:0;width:1440px;height:900px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(600);
+  t.progress(0.5);
+
+  // Criterion 2: deep link opens already filtered.
+  t.scene('Deep link ?product=');
+  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
+  if (!doc) throw new Error("deep-linked Timeline didn't open");
+  await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep-link filter').catch(() => {});
+  {
+    const st = filteredState(doc);
+    const active = doc.querySelector('.tl-chip.is-active');
+    t.event('deeplink', `product=${st.slug}, chip=${active?.dataset.filter || 'none'}, thread ${st.thread.length}, dim ${st.dim.length}`);
+    if (st.slug !== 'sick-of-it' || !st.filtered) t.problem('bug', 'Timeline: ?product=sick-of-it did not filter on load');
+    if (active?.dataset.filter !== 'sick-of-it') t.problem('bug', 'Timeline: deep link did not press the Sick of It chip');
+    if (st.dim.length < 1 || st.thread.length < 1) t.problem('bug', 'Timeline: deep link did not split thread and faded eras');
+  }
+  t.progress(0.75);
+
+  // Criterion 3: every product page has the strip; one strip is screenshotted and its link opens the filtered thread.
+  const productFiles = [
+    ['./product-ph-origins.html', 'ph-origins'],
+    ['./product-sick-of-it.html', 'sick-of-it'],
+    ['./product-the-place-department.html', 'the-place-department'],
+    ['./product-imagine-live-tv.html', 'imagine-live-tv'],
+    ['./product-yooba-land.html', 'yooba-land'],
+    ['./product-i-can-be.html', 'i-can-be'],
+    ['./product-dose-of-destruction.html', 'dose-of-destruction'],
+    ['./product-hawkes-gen.html', 'hawkes-gen'],
+  ];
+  for (const [href, slug] of productFiles) {
+    doc = await frameLoad((fr) => (fr.src = href));
+    if (!doc) { t.problem('bug', `${href} did not open`); continue; }
+    const strip = doc.querySelector('.on-timeline');
+    const moments = strip ? [...strip.querySelectorAll('.tl-moments li')] : [];
+    const link = strip?.querySelector(`a[href="./timeline.html?product=${slug}"]`);
+    t.event('strip', `${slug}: moments ${moments.length}, link ${link ? 'yes' : 'no'}`);
+    if (!strip) t.problem('bug', `${slug}: no On the timeline strip`);
+    else if (moments.length < 2 || moments.length > 3) t.problem('bug', `${slug}: strip has ${moments.length} moments, 2 or 3 wanted`);
+    if (!link) t.problem('bug', `${slug}: strip has no link to timeline.html?product=${slug}`);
+    t.add('productStrips');
+  }
+
+  t.scene('Product strip 390x844');
+  f.style.cssText = `position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  doc = await frameLoad((fr) => (fr.src = './product-ph-origins.html'));
+  if (doc) {
+    const strip = doc.querySelector('.on-timeline');
+    if (strip) {
+      smoothTo(strip);
+      await t.wait(800);
+    }
+  }
+  await t.wait(400);
+
+  t.scene('Product strip 1440x900');
+  f.style.cssText = `position:fixed;top:0;left:0;width:1440px;height:900px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  await t.wait(500);
+  if (doc) {
+    const strip = doc.querySelector('.on-timeline');
+    if (strip) {
+      smoothTo(strip);
+      await t.wait(800);
+    }
+    const link = doc.querySelector('.on-timeline a[href="./timeline.html?product=ph-origins"]');
+    if (link) {
+      doc = await clickLink(t, doc, '.on-timeline a[href="./timeline.html?product=ph-origins"]', 'PH Origins on the timeline');
+      await t.wait(600);
+      const st = filteredState(doc);
+      t.event('strip-link', `landed product=${st.slug}, filtered=${st.filtered}`);
+      if (st.slug !== 'ph-origins' || !st.filtered) t.problem('bug', 'Product strip link did not open the filtered PH Origins thread');
+    }
+  }
+
+  closeFrame();
+  t.progress(1);
+}
+
+/** Timeline: reached from the header menu and the footer; eras in order, each with a year, image and line; each product origin links its page; no sideways scroll. */
+async function timeline(options, t) {
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  const footer = doc.querySelector('footer nav a[href="./timeline.html"]');
+  t.event('footer', `Home footer links Timeline: ${footer ? 'yes' : 'no'}`);
+  if (!footer) t.problem('bug', 'Home: the footer has no Timeline link');
+  const nav = doc.querySelector('.nav-links a[data-nav="timeline"]');
+  if (!nav) t.problem('bug', 'Home: the header menu has no Timeline link');
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="timeline"]', 'Timeline (nav)');
+  t.scene('Timeline');
+  await t.until(() => imagesLoaded(doc), 10000, 'timeline images').catch(() => {});
+  const eras = [...doc.querySelectorAll('.timeline .era')];
+  t.metric('eras', eras.length);
+  if (eras.length < 4) t.problem('bug', `Timeline: ${eras.length} eras, at least 4 wanted`);
+  let last = 0;
+  for (const era of eras) {
+    const year = parseInt(era.querySelector('time')?.textContent, 10);
+    const img = era.querySelector(':scope > figure img');
+    const line = era.querySelector(':scope > div > p:not(.kicker)')?.textContent.trim();
+    smoothTo(era);
+    await t.wait(700);
+    t.event('era', `${year}: ${era.querySelector('h2')?.textContent.trim()}`);
+    if (!(year > last)) t.problem('bug', `Timeline: ${year} is out of order`);
+    last = year;
+    if (!img || !img.naturalWidth || !img.alt) t.problem('bug', `Timeline ${year}: no loaded image with alt`);
+    if (!line) t.problem('bug', `Timeline ${year}: no line`);
+  }
+  const track = doc.querySelector('.timeline-track');
+  const marker = doc.querySelector('.year-marker [data-year]');
+  const calm = doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!track || !marker) t.problem('bug', 'Timeline: no rail or year marker');
+  else {
+    doc.defaultView.scrollTo(0, 0);
+    await t.wait(500);
+    const fillOf = () => new DOMMatrix(doc.defaultView.getComputedStyle(track.querySelector('.rail-fill')).transform).d;
+    const f0 = fillOf();
+    const years = [];
+    for (const era of eras) {
+      smoothTo(era);
+      await t.wait(1000);
+      years.push(marker.textContent);
+      t.event('year', `marker ${marker.textContent}, rail ${fixed2(fillOf())}, era opacity ${doc.defaultView.getComputedStyle(era).opacity}`);
+      if (!calm && doc.defaultView.getComputedStyle(era).opacity < 0.99) t.problem('bug', 'Timeline: an era in view has not eased in');
+    }
+    const f1 = fillOf();
+    if (!calm && !(f1 > f0)) t.problem('bug', `Timeline: the rail did not fill (${fixed2(f0)} to ${fixed2(f1)})`);
+    if (!calm && new Set(years).size < eras.length) t.problem('bug', `Timeline: the year marker did not follow (${years.join(', ')})`);
+    t.event('motion', calm ? 'reduced motion: every era shown at once' : 'eras ease in, rail fills, year follows');
+    if (calm && eras.some((e) => doc.defaultView.getComputedStyle(e).opacity !== '1')) t.problem('bug', 'Timeline: reduced motion hides an era');
+  }
+  const origins = [...doc.querySelectorAll('.timeline .origins a')];
+  t.metric('productOrigins', origins.length);
+  if (origins.length < 8) t.problem('bug', `Timeline: ${origins.length} product origins, 8 wanted`);
+  for (const a of origins) if (!/^\.\/product-[a-z-]+\.html$/.test(a.getAttribute('href'))) t.problem('bug', `Timeline: odd origin link ${a.getAttribute('href')}`);
+  const de = doc.documentElement;
+  const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+  t.event('overflow', `Timeline: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
+  if (over > 1) t.problem('bug', `Timeline: the page scrolls sideways by ${over}px`);
+  await timelineSizes(t);
+  closeFrame();
+  t.progress(1);
+}
+
+/** Timeline at 390x844 and 1440x900: top/middle/end scenes, era count, sticky year, overflow, tap targets, chip filter, deep link, product strip link. */
+async function timelineSizes(t) {
+  const MIN_TAP = 44;
+  const f = openFrame();
+  const sizes = [[390, 844], [1440, 900]];
+  for (const [W, H] of sizes) {
+    f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    const tag = `${W}x${H}`;
+    let doc = await frameLoad((fr) => (fr.src = './timeline.html'));
+    if (!doc) { t.problem('bug', `Timeline ${tag} did not open`); continue; }
+    const win = doc.defaultView;
+    await t.until(() => imagesLoaded(doc), 10000, 'timeline images').catch(() => {});
+    const eras = [...doc.querySelectorAll('.timeline .era')];
+    t.metric(`eras${W}`, eras.length);
+    t.event('eras', `Timeline ${tag}: ${eras.length} eras`);
+    if (eras.length < 4) t.problem('bug', `Timeline ${tag}: ${eras.length} eras, at least 4 wanted`);
+
+    t.scene(`Timeline top ${tag}`);
+    win.scrollTo(0, 0);
+    await t.wait(700);
+    const marker = doc.querySelector('.year-marker [data-year]');
+    const years = [marker?.textContent.trim()];
+    const mid = eras[Math.floor(eras.length / 2)];
+    t.scene(`Timeline middle ${tag}`);
+    if (mid) smoothTo(mid);
+    await t.wait(1200);
+    years.push(marker?.textContent.trim());
+    t.scene(`Timeline end ${tag}`);
+    const lastEra = eras[eras.length - 1];
+    if (lastEra) smoothTo(lastEra);
+    await t.wait(1200);
+    years.push(marker?.textContent.trim());
+    const calm = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const changes = years.filter((y, i) => i && y !== years[i - 1]).length;
+    t.event('sticky-year', `Timeline ${tag}: year ${years.join(' -> ')} (${changes} changes)`);
+    if (!marker) t.problem('bug', `Timeline ${tag}: no sticky year marker`);
+    else if (!calm && changes < 2) t.problem('bug', `Timeline ${tag}: the sticky year did not change while scrolling (${years.join(', ')})`);
+
+    const de = doc.documentElement;
+    const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+    t.metric(`overflow${W}`, Math.max(0, over));
+    t.event('overflow', `Timeline ${tag}: horizontal overflow ${Math.max(0, over)}px`);
+    if (over > 1) t.problem('bug', `Timeline ${tag}: horizontal overflow of ${over}px`);
+
+    const small = [];
+    for (const el of doc.querySelectorAll('a[href], button')) {
+      if (el.classList.contains('skip')) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width && !r.height) continue;
+      if (r.height < MIN_TAP - 0.5 && W <= 480) small.push(`${(el.textContent || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
+    }
+    for (const chip of doc.querySelectorAll('.tl-chip')) {
+      const r = chip.getBoundingClientRect();
+      if (r.height + 0.5 < MIN_TAP && !small.some((s) => s.startsWith(chip.textContent.trim().slice(0, 24)))) small.push(`chip ${chip.textContent.trim()} ${Math.round(r.height)}px`);
+    }
+    t.metric(`smallTargets${W}`, small.length);
+    t.event('tap-targets', `Timeline ${tag}: ${small.length} under ${MIN_TAP}px`);
+    if (small.length) t.problem('bug', `Timeline ${tag}: ${small.length} tap target(s) under ${MIN_TAP}px (${small.slice(0, 4).join(', ')})`);
+
+    const chip = doc.querySelector('.tl-chip[data-filter="ph-origins"]');
+    if (!chip) t.problem('bug', `Timeline ${tag}: no PH Origins chip`);
+    else {
+      chip.scrollIntoView({ block: 'center' });
+      await t.wait(300);
+      chip.click();
+      await t.wait(700);
+      const track = doc.querySelector('.timeline-track');
+      const thread = doc.querySelectorAll('.era.is-thread').length;
+      const dim = doc.querySelectorAll('.era.is-dim').length;
+      t.event('filter', `Timeline ${tag}: chip PH Origins, product=${track?.dataset.product}, thread ${thread}, faded ${dim}`);
+      if (track?.dataset.product !== 'ph-origins' || !thread || !dim) t.problem('bug', `Timeline ${tag}: the PH Origins chip did not filter the thread`);
+    }
+
+    doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
+    if (!doc) { t.problem('bug', `Timeline ${tag}: deep link did not open`); continue; }
+    await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep link').catch(() => {});
+    const active = doc.querySelector('.tl-chip.is-active')?.dataset.filter;
+    const filtered = !!doc.querySelector('.timeline-track.is-filtered');
+    t.event('deeplink', `Timeline ${tag}: ?product=sick-of-it filtered ${filtered}, chip ${active || 'none'}`);
+    if (!filtered || active !== 'sick-of-it') t.problem('bug', `Timeline ${tag}: ?product=sick-of-it did not open the filtered thread`);
+
+    doc = await frameLoad((fr) => (fr.src = './product-ph-origins.html'));
+    const link = doc?.querySelector('.on-timeline a[href="./timeline.html?product=ph-origins"]');
+    if (!link) { t.problem('bug', `PH Origins ${tag}: no On the timeline link`); continue; }
+    smoothTo(link);
+    await t.wait(600);
+    doc = await clickLink(t, doc, '.on-timeline a[href="./timeline.html?product=ph-origins"]', `PH Origins On the timeline (${tag})`);
+    await t.wait(600);
+    const landed = doc?.querySelector('.timeline-track');
+    t.event('strip-link', `Timeline ${tag}: strip link landed product=${landed?.dataset.product}, filtered ${landed?.classList.contains('is-filtered')}`);
+    if (landed?.dataset.product !== 'ph-origins' || !landed.classList.contains('is-filtered')) t.problem('bug', `Timeline ${tag}: the product page link did not land on the filtered thread`);
+  }
+}
+
+/** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
+async function transitions(options, t) {
+  const supported = typeof CSSViewTransitionRule !== 'undefined';
+  t.event('support', `cross-document view transitions: ${supported ? 'supported' : 'not supported (plain navigation)'}`);
+  let rule = false;
+  let calm = false;
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) {
+        if (/^@view-transition/.test(r.cssText)) rule = true;
+        if (r.conditionText && /reduce/.test(r.conditionText) && /view-transition/.test(r.cssText)) calm = true;
+      }
+    } catch {}
+  }
+  if (!rule) t.problem('bug', 'no @view-transition rule in the stylesheet');
+  if (!calm) t.problem('bug', 'no reduced-motion rule for the view transitions');
+  t.scene('Home to Products');
+  let doc = await clickLink(t, (openFrame(), await frameLoad((f) => { f.src = './index.html'; })), 'header a[href$="products.html"]', 'Products in the nav');
+  await t.wait(600);
+  const win = () => frame.contentWindow;
+  const nameOf = (d, sel) => d.defaultView.getComputedStyle(d.querySelector(sel)).viewTransitionName;
+  for (const [sel, what] of [['.nav', 'header'], ['footer', 'footer'], ['main', 'content']]) {
+    t.event('name', `${what}: view-transition-name ${nameOf(doc, sel)}`);
+    if (nameOf(doc, sel) === 'none') t.problem('bug', `${what} has no view-transition-name`);
+  }
+  const shot = doc.querySelector('#ph-origins .product-shot');
+  const cardName = nameOf(doc, '#ph-origins img');
+  t.scene('Products to PH Origins');
+  doc = await clickLink(t, doc, '#ph-origins .product-shot', 'PH Origins product image');
+  await t.wait(600);
+  const heroName = nameOf(doc, '.product-file img');
+  t.event('morph', `card image ${cardName}, hero ${heroName}`);
+  if (cardName === 'none' || cardName !== heroName) t.problem('bug', `product image and hero do not share a view-transition-name (${cardName} / ${heroName})`);
+  if (!shot) t.problem('bug', 'no product image link');
+  t.scene('Back to Products');
+  const back = await frameLoad(() => win().history.back());
+  if (!back || !/products\.html/.test(win().location.pathname)) t.problem('bug', 'back did not return to Products');
+  else t.event('back', 'back returned to Products');
+  const active = back && back.activeElement;
+  t.event('focus', `focus after back: ${active ? active.tagName : 'none'}`);
+  t.progress(1);
+}
+
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
@@ -1262,6 +1605,20 @@ installPlaytest({
       seconds: 25,
       tags: ['full'],
       description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
+    },
+    {
+      id: 'timeline',
+      title: 'Timeline: reached from the header menu and footer; eras in order with year, image and line; every product origin links its product page; no sideways scroll',
+      seconds: 90,
+      tags: ['full', 'smoke'],
+      description: 'Opens Timeline from the nav, scrolls each era, checks year order, images, lines, the eight product origin links and that the page does not scroll sideways. Then at 390x844 and 1440x900: scenes at the top, middle and end, era count, the sticky year changing, horizontal overflow (0), tap targets under 44px (0), a product chip filtering the thread, the ?product= deep link, and a product page On the timeline link landing on the filtered thread.',
+    },
+    {
+      id: 'timelinefilter',
+      title: 'Timeline product threads: chips filter one product (others fade), ?product= deep-links, each product page has an On the timeline strip; chips are 44px at 390',
+      seconds: 55,
+      tags: ['full'],
+      description: 'Opens Timeline, taps a product chip and checks the thread stays up while other eras fade, loads timeline.html?product= already filtered, checks every product page strip and that its link opens the filtered thread, and measures chip tap height at 390x844 (with filtered-thread and product-strip scenes at 390x844 and 1440x900).',
     },
     {
       id: 'productpages',
@@ -1305,6 +1662,13 @@ installPlaytest({
       description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
+      id: 'transitions',
+      title: 'View transitions: Home to Products to a product page and back; header and footer keep their place, the product image morphs into the hero, reduced motion gets a plain fade',
+      seconds: 30,
+      tags: ['full'],
+      description: 'Checks the @view-transition rule and its reduced-motion rule, clicks Products in the nav, checks header, footer and content carry view-transition names, opens PH Origins from its card image, checks the card image and the hero share a name, then goes back.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -1315,13 +1679,16 @@ installPlaytest({
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
-      if (id === 'access') await access(options, t);
+      if (id === 'transitions') await transitions(options, t);
+      else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
       else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
+      else if (id === 'timeline') await timeline(options, t);
+      else if (id === 'timelinefilter') await timelineFilter(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
