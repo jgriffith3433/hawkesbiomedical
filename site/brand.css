@@ -392,6 +392,36 @@ a {
   padding: 56px 0 8px;
 }
 
+/* Fixed-size lab field beside/behind the headline: never changes layout (CLS 0). */
+.hero-field {
+  position: absolute;
+  top: var(--space-4);
+  right: 0;
+  width: min(320px, 100%);
+  height: 200px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.hero-field canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hero-copy > :not(.hero-field) {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 760px) {
+  .hero-field {
+    top: var(--space-2);
+    right: 0;
+    opacity: 0.72;
+  }
+}
+
 .stage {
   position: absolute;
   inset: 0;

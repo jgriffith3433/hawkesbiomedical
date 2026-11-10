@@ -1545,6 +1545,240 @@ async function timelineSizes(t) {
   }
 }
 
+/** Home hero field: slow lab visual in brand colours; above the fold; pauses off-screen and when the tab is hidden; still under reduced motion; no layout shift. */
+async function herofield(options, t) {
+  const f = openFrame();
+  const size = (w, h) => { f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`; };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+    await t.until(() => !!doc.defaultView.hawkesHeroField, 8000, 'hero field').catch(() => {});
+    await t.wait(500);
+  };
+  const box = (el) => el.getBoundingClientRect();
+  const pageBg = { r: 243, g: 240, b: 234, a: 1 };
+
+  const contrastOverField = (doc, el, label) => {
+    const win = doc.defaultView;
+    const field = doc.querySelector('[data-hero-field] canvas');
+    const cs = win.getComputedStyle(el);
+    const fg = parseRgb(cs.color);
+    const solid = backgroundOf(el);
+    let bg = solid || pageBg;
+    // If the control has an opaque fill of its own (the primary button), that is the contrast pair.
+    const own = parseRgb(cs.backgroundColor);
+    if (own && own.a > 0.9) {
+      const ink = parseRgb(cs.color);
+      const ratio = fixed2(contrast(ink, own));
+      t.event('contrast', `${label}: ${cs.color} on own fill rgb(${own.r},${own.g},${own.b}) = ${ratio}:1`);
+      if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: ${label} contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+      return;
+    }
+    if (field && el) {
+      const er = box(el);
+      const fr = box(field);
+      const overlap = !(er.right < fr.left || er.left > fr.right || er.bottom < fr.top || er.top > fr.bottom);
+      if (overlap) {
+        const ctx = field.getContext('2d', { willReadFrequently: true });
+        if (ctx) {
+          const sx = Math.max(0, Math.floor(((er.left + er.width / 2) - fr.left) * (field.width / fr.width)));
+          const sy = Math.max(0, Math.floor(((er.top + er.height / 2) - fr.top) * (field.height / fr.height)));
+          const sample = ctx.getImageData(Math.min(field.width - 1, sx), Math.min(field.height - 1, sy), 1, 1).data;
+          const a = sample[3] / 255;
+          bg = {
+            r: Math.round(sample[0] * a + pageBg.r * (1 - a)),
+            g: Math.round(sample[1] * a + pageBg.g * (1 - a)),
+            b: Math.round(sample[2] * a + pageBg.b * (1 - a)),
+            a: 1,
+          };
+        }
+      }
+    }
+    if (!fg) { t.problem('bug', `Hero field: no colour for ${label}`); return; }
+    const ratio = fixed2(contrast(fg, bg));
+    t.event('contrast', `${label}: ${cs.color} on rgb(${bg.r},${bg.g},${bg.b}) = ${ratio}:1`);
+    if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: ${label} contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+  };
+
+  const checkFold = (doc, W, H) => {
+    for (const [what, sel] of [['headline', '.hero h1'], ['button', '.hero .btn']]) {
+      const el = doc.querySelector(sel);
+      if (!el) { t.problem('bug', `Hero field: no ${what}`); continue; }
+      const r = box(el);
+      t.event('hero', `${W}x${H}: ${what} top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+      if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero field at ${W}x${H}: the ${what} is not fully on the first screen (bottom ${Math.round(r.bottom)})`);
+      contrastOverField(doc, el, `${what} @ ${W}x${H}`);
+    }
+    // Gold second slogan line is easier to lose over the field than the ink h1 colour.
+    const goldLine = doc.querySelector('.hero .slogan-line + .slogan-line');
+    if (goldLine) contrastOverField(doc, goldLine, `gold slogan @ ${W}x${H}`);
+    else t.problem('bug', 'Hero field: no gold slogan line to contrast-check');
+    fieldGoldFloor(doc, `${W}x${H}`);
+  };
+
+  /** Sample gold (#6f5b3e) against every field pixel (paper under alpha × element opacity). */
+  const fieldGoldFloor = (doc, label) => {
+    const host = doc.querySelector('[data-hero-field]');
+    const canvas = host?.querySelector('canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    const opacity = Number(doc.defaultView.getComputedStyle(host).opacity) || 1;
+    const { width: cw, height: ch } = canvas;
+    const data = ctx.getImageData(0, 0, cw, ch).data;
+    const gold = { r: 111, g: 91, b: 62, a: 1 };
+    let worst = Infinity;
+    let at = '';
+    for (let y = 0; y < ch; y += 8) {
+      for (let x = 0; x < cw; x += 8) {
+        const i = (y * cw + x) * 4;
+        const a = (data[i + 3] / 255) * opacity;
+        const bg = {
+          r: Math.round(data[i] * a + pageBg.r * (1 - a)),
+          g: Math.round(data[i + 1] * a + pageBg.g * (1 - a)),
+          b: Math.round(data[i + 2] * a + pageBg.b * (1 - a)),
+          a: 1,
+        };
+        const ratio = contrast(gold, bg);
+        if (ratio < worst) { worst = ratio; at = `${x},${y}`; }
+      }
+    }
+    const ratio = fixed2(worst);
+    t.event('contrast', `${label}: gold over field floor ${ratio}:1 at ${at} (opacity ${opacity})`);
+    if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: gold slogan floor contrast ${ratio}:1 under ${MIN_CONTRAST}:1 (${label})`);
+  };
+
+  // 1. Desktop: field live, above the fold, contrast, fixed size (no CLS).
+  size(1280, 720);
+  t.scene('Home hero field 1280x720');
+  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  await settle(doc);
+  const field = doc.querySelector('[data-hero-field]');
+  const canvas = field?.querySelector('canvas');
+  if (!field || !canvas) t.problem('bug', 'Hero field: no fixed canvas beside the headline');
+  else {
+    const r = box(field);
+    const w1 = Math.round(r.width);
+    const h1 = Math.round(r.height);
+    t.event('field', `box ${w1}x${h1}, canvas ${canvas.width}x${canvas.height}, motion ${field.dataset.motion || '?'}`);
+    if (h1 !== 200 || w1 < 200 || w1 > 320) t.problem('bug', `Hero field: layout box is ${w1}x${h1}, fixed height 200 and width 200-320 wanted (CLS risk)`);
+    if (canvas.width !== 320 || canvas.height !== 200) t.problem('bug', `Hero field: canvas buffer ${canvas.width}x${canvas.height}, 320x200 wanted`);
+    await t.wait(600);
+    const r2 = box(field);
+    if (Math.round(r2.width) !== w1 || Math.round(r2.height) !== h1) t.problem('bug', `Hero field: box shifted after paint (${w1}x${h1} → ${Math.round(r2.width)}x${Math.round(r2.height)}), CLS must stay 0`);
+    else t.add('fieldNoShift');
+  }
+  const api = doc.defaultView.hawkesHeroField;
+  if (!api) t.problem('bug', 'Hero field: window.hawkesHeroField missing');
+  else {
+    await t.wait(400);
+    const st = api.status();
+    t.event('field-status', JSON.stringify(st));
+    t.metric('fieldRunning', st.running ? 1 : 0);
+    if (st.reducedMotion) {
+      if (st.running) t.problem('bug', 'Hero field: animation runs under prefers-reduced-motion');
+      if (st.motion !== 'still') t.problem('bug', `Hero field: motion is "${st.motion}", still wanted under reduced motion`);
+      t.event('reduced', 'still frame under prefers-reduced-motion');
+    } else if (!st.running || st.motion !== 'live') {
+      t.problem('bug', `Hero field: expected live animation on screen, got running=${st.running} motion=${st.motion}`);
+    } else {
+      t.add('fieldLive');
+    }
+  }
+  checkFold(doc, 1280, 720);
+  t.add('heroChecked');
+  t.progress(0.35);
+
+  // 2. Scroll away: animation pauses; scroll back: it resumes (skipped under reduced motion).
+  if (api && !api.status().reducedMotion) {
+    t.scene('Hero field scrolled away');
+    const problem = doc.querySelector('#problem');
+    if (problem) {
+      problem.scrollIntoView({ block: 'start' });
+      await t.wait(700);
+      const away = api.status();
+      t.event('field-away', JSON.stringify(away));
+      if (away.running || away.motion === 'live') t.problem('bug', 'Hero field: still animating after scrolling away');
+      else t.add('fieldPausedOffscreen');
+      doc.defaultView.scrollTo(0, 0);
+      await t.wait(700);
+      const back = api.status();
+      t.event('field-back', JSON.stringify(back));
+      if (!back.running || back.motion !== 'live') t.problem('bug', 'Hero field: did not resume after scrolling back');
+      else t.add('fieldResumed');
+    } else {
+      t.problem('bug', 'Hero field: no #problem chapter to scroll to');
+    }
+
+    // Tab hidden: pause without scrolling.
+    t.scene('Hero field tab hidden');
+    const win = doc.defaultView;
+    Object.defineProperty(doc, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    Object.defineProperty(doc, 'hidden', { configurable: true, get: () => true });
+    doc.dispatchEvent(new win.Event('visibilitychange'));
+    await t.wait(200);
+    const hid = api.status();
+    t.event('field-hidden', JSON.stringify(hid));
+    if (hid.running || hid.motion === 'live') t.problem('bug', 'Hero field: still animating while the tab is hidden');
+    else t.add('fieldPausedHidden');
+    Object.defineProperty(doc, 'visibilityState', { configurable: true, get: () => 'visible' });
+    Object.defineProperty(doc, 'hidden', { configurable: true, get: () => false });
+    doc.dispatchEvent(new win.Event('visibilitychange'));
+    await t.wait(200);
+    const shown = api.status();
+    t.event('field-shown', JSON.stringify(shown));
+    if (!shown.running) t.problem('bug', 'Hero field: did not resume when the tab became visible');
+  } else {
+    t.event('pause-checks', 'skipped: reduced motion (still frame only)');
+  }
+  t.progress(0.7);
+
+  // 3. Phone: same fold + contrast; field keeps its fixed box (no shift).
+  size(390, 844);
+  t.scene('Home hero field 390x844');
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open at 390x844");
+  await settle(doc);
+  const fieldPhone = doc.querySelector('[data-hero-field]');
+  if (fieldPhone) {
+    const r = box(fieldPhone);
+    t.event('field-phone', `box ${Math.round(r.width)}x${Math.round(r.height)}, motion ${fieldPhone.dataset.motion || '?'}`);
+    if (Math.round(r.height) !== 200 || r.width < 200 || r.width > 320) t.problem('bug', `Hero field at 390: layout box ${Math.round(r.width)}x${Math.round(r.height)}, fixed height 200 and width 200-320 wanted`);
+  }
+  checkFold(doc, 390, 844);
+  t.add('heroChecked');
+
+  // Still-frame path: force the reduced-motion end state and confirm no running loop and no box shift.
+  const phoneApi = doc.defaultView.hawkesHeroField;
+  if (phoneApi) {
+    const before = box(doc.querySelector('[data-hero-field]'));
+    t.scene('Home hero field reduced-motion still');
+    const still = phoneApi.forceStill();
+    t.event('field-still', JSON.stringify(still));
+    if (still.running || still.motion !== 'still' || !still.reducedMotion) {
+      t.problem('bug', `Hero field: forceStill left running=${still.running} motion=${still.motion} reduced=${still.reducedMotion}`);
+    } else {
+      t.add('fieldStill');
+    }
+    await t.wait(300);
+    const after = box(doc.querySelector('[data-hero-field]'));
+    if (Math.round(before.width) !== Math.round(after.width) || Math.round(before.height) !== Math.round(after.height)) {
+      t.problem('bug', 'Hero field: box shifted when switching to a still frame');
+    }
+    const c = doc.querySelector('[data-hero-field] canvas');
+    if (c) {
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      let ink = 0;
+      for (let i = 3; i < data.length; i += 16) if (data[i] > 8) ink++;
+      t.metric('fieldPixels', ink);
+      if (ink < 10) t.problem('bug', 'Hero field: still canvas is blank');
+      else t.add('fieldDrawn');
+    }
+  }
+  t.progress(1);
+}
+
 /** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
 async function transitions(options, t) {
   const supported = typeof CSSViewTransitionRule !== 'undefined';
@@ -1662,6 +1896,13 @@ installPlaytest({
       description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
+      id: 'herofield',
+      title: 'Home hero field: slow molecular lab visual in brand colours; headline and button above the fold at 1280x720 and 390x844 with 4.5:1 contrast; pauses off-screen and when the tab is hidden; still under reduced motion; fixed 320x200 box (CLS 0)',
+      seconds: 40,
+      tags: ['full'],
+      description: 'Loads Home at 1280x720 and 390x844, screenshots the hero with the field, checks the fixed canvas size, headline and button on the first screen and their contrast over the field, scrolls away and back to confirm pause/resume, and toggles document visibility to confirm the tab-hidden pause.',
+    },
+    {
       id: 'transitions',
       title: 'View transitions: Home to Products to a product page and back; header and footer keep their place, the product image morphs into the hero, reduced motion gets a plain fade',
       seconds: 30,
@@ -1680,6 +1921,7 @@ installPlaytest({
   async start(id, options, t) {
     try {
       if (id === 'transitions') await transitions(options, t);
+      else if (id === 'herofield') await herofield(options, t);
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
