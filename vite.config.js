@@ -61,6 +61,7 @@ export default defineConfig({
         'leadership.html',
         'contact.html',
         'newsroom.html',
+        'timeline.html',
         'investors.html',
         'compliance.html',
         'privacy.html',
