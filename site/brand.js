@@ -69,3 +69,34 @@ if (chapters.length) {
     chapters.forEach((el) => seen.observe(el));
   }
 }
+
+// Timeline: eras ease in, the rail fills to the era in view and the sticky year follows. IntersectionObserver only, no scroll polling.
+const track = document.querySelector('.timeline-track');
+if (track) {
+  const eras = [...track.querySelectorAll('.era')];
+  const fill = track.querySelector('.rail-fill');
+  const yearEl = track.querySelector('[data-year]');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const setActive = (era) => {
+    const top = era.parentElement.offsetTop + era.offsetTop + 6;
+    fill.style.transform = `scaleY(${Math.min(1, top / track.offsetHeight)})`;
+    yearEl.textContent = era.querySelector('time').textContent;
+    eras.forEach((e) => e.classList.toggle('is-current', e === era));
+    track.dataset.year = yearEl.textContent;
+  };
+  if (calm || !('IntersectionObserver' in window)) {
+    eras.forEach((e) => e.classList.add('is-in'));
+    fill.style.transform = 'none';
+  } else {
+    track.classList.add('tl-on');
+    const show = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('is-in'); show.unobserve(e.target); }
+    }), { threshold: 0.15 });
+    eras.forEach((e) => show.observe(e));
+    const mark = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) setActive(e.target);
+    }), { rootMargin: '-40% 0px -55% 0px' });
+    eras.forEach((e) => mark.observe(e));
+    setActive(eras[0]);
+  }
+}

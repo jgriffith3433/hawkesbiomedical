@@ -1275,6 +1275,29 @@ async function timeline(options, t) {
     if (!img || !img.naturalWidth || !img.alt) t.problem('bug', `Timeline ${year}: no loaded image with alt`);
     if (!line) t.problem('bug', `Timeline ${year}: no line`);
   }
+  const track = doc.querySelector('.timeline-track');
+  const marker = doc.querySelector('.year-marker [data-year]');
+  const calm = doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!track || !marker) t.problem('bug', 'Timeline: no rail or year marker');
+  else {
+    doc.defaultView.scrollTo(0, 0);
+    await t.wait(500);
+    const fillOf = () => new DOMMatrix(doc.defaultView.getComputedStyle(track.querySelector('.rail-fill')).transform).d;
+    const f0 = fillOf();
+    const years = [];
+    for (const era of eras) {
+      smoothTo(era);
+      await t.wait(1000);
+      years.push(marker.textContent);
+      t.event('year', `marker ${marker.textContent}, rail ${fixed2(fillOf())}, era opacity ${doc.defaultView.getComputedStyle(era).opacity}`);
+      if (!calm && doc.defaultView.getComputedStyle(era).opacity < 0.99) t.problem('bug', 'Timeline: an era in view has not eased in');
+    }
+    const f1 = fillOf();
+    if (!calm && !(f1 > f0)) t.problem('bug', `Timeline: the rail did not fill (${fixed2(f0)} to ${fixed2(f1)})`);
+    if (!calm && new Set(years).size < eras.length) t.problem('bug', `Timeline: the year marker did not follow (${years.join(', ')})`);
+    t.event('motion', calm ? 'reduced motion: every era shown at once' : 'eras ease in, rail fills, year follows');
+    if (calm && eras.some((e) => doc.defaultView.getComputedStyle(e).opacity !== '1')) t.problem('bug', 'Timeline: reduced motion hides an era');
+  }
   const origins = [...doc.querySelectorAll('.timeline .origins a')];
   t.metric('productOrigins', origins.length);
   if (origins.length < 8) t.problem('bug', `Timeline: ${origins.length} product origins, 8 wanted`);
