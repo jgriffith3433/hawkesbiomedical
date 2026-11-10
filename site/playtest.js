@@ -10,6 +10,7 @@ const PAGES = [
   { name: 'Company', href: './company.html' },
   { name: 'Leadership', href: './leadership.html' },
   { name: 'Newsroom', href: './newsroom.html' },
+  { name: 'Timeline', href: './timeline.html' },
   { name: 'Investors', href: './investors.html' },
   { name: 'Compliance', href: './compliance.html' },
   { name: 'Privacy', href: './privacy.html' },
@@ -28,6 +29,7 @@ const SHARE_URLS = {
   Leadership: 'https://hawkesbiomedical.com/leadership.html',
   Contact: 'https://hawkesbiomedical.com/contact.html',
   Newsroom: 'https://hawkesbiomedical.com/newsroom.html',
+  Timeline: 'https://hawkesbiomedical.com/timeline.html',
   Investors: 'https://hawkesbiomedical.com/investors.html',
   Compliance: 'https://hawkesbiomedical.com/compliance.html',
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
@@ -890,7 +892,7 @@ async function polish(options, t) {
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
-  ['Newsroom', './newsroom.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
+  ['Newsroom', './newsroom.html'], ['Timeline', './timeline.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
   ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
 const chromeOf = (doc) => {
@@ -1245,6 +1247,46 @@ async function phone(options, t) {
   t.progress(1);
 }
 
+/** Timeline: reached from the header menu and the footer; eras in order, each with a year, image and line; each product origin links its page; no sideways scroll. */
+async function timeline(options, t) {
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  const footer = doc.querySelector('footer nav a[href="./timeline.html"]');
+  t.event('footer', `Home footer links Timeline: ${footer ? 'yes' : 'no'}`);
+  if (!footer) t.problem('bug', 'Home: the footer has no Timeline link');
+  const nav = doc.querySelector('.nav-links a[data-nav="timeline"]');
+  if (!nav) t.problem('bug', 'Home: the header menu has no Timeline link');
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="timeline"]', 'Timeline (nav)');
+  t.scene('Timeline');
+  await t.until(() => imagesLoaded(doc), 10000, 'timeline images').catch(() => {});
+  const eras = [...doc.querySelectorAll('.timeline .era')];
+  t.metric('eras', eras.length);
+  if (eras.length < 4) t.problem('bug', `Timeline: ${eras.length} eras, at least 4 wanted`);
+  let last = 0;
+  for (const era of eras) {
+    const year = parseInt(era.querySelector('time')?.textContent, 10);
+    const img = era.querySelector(':scope > figure img');
+    const line = era.querySelector(':scope > div > p:not(.kicker)')?.textContent.trim();
+    smoothTo(era);
+    await t.wait(700);
+    t.event('era', `${year}: ${era.querySelector('h2')?.textContent.trim()}`);
+    if (!(year > last)) t.problem('bug', `Timeline: ${year} is out of order`);
+    last = year;
+    if (!img || !img.naturalWidth || !img.alt) t.problem('bug', `Timeline ${year}: no loaded image with alt`);
+    if (!line) t.problem('bug', `Timeline ${year}: no line`);
+  }
+  const origins = [...doc.querySelectorAll('.timeline .origins a')];
+  t.metric('productOrigins', origins.length);
+  if (origins.length < 8) t.problem('bug', `Timeline: ${origins.length} product origins, 8 wanted`);
+  for (const a of origins) if (!/^\.\/product-[a-z-]+\.html$/.test(a.getAttribute('href'))) t.problem('bug', `Timeline: odd origin link ${a.getAttribute('href')}`);
+  const de = doc.documentElement;
+  const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+  t.event('overflow', `Timeline: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
+  if (over > 1) t.problem('bug', `Timeline: the page scrolls sideways by ${over}px`);
+  closeFrame();
+  t.progress(1);
+}
+
 /** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
 async function transitions(options, t) {
   const supported = typeof CSSViewTransitionRule !== 'undefined';
@@ -1305,6 +1347,13 @@ installPlaytest({
       seconds: 25,
       tags: ['full'],
       description: 'Reads the hero mission, scrolls to each chapter of the home page and checks its headline, its visual and that it is shown, and checks that the scroll reveal is off (or has a rule) under prefers-reduced-motion.',
+    },
+    {
+      id: 'timeline',
+      title: 'Timeline: reached from the header menu and footer; eras in order with year, image and line; every product origin links its product page; no sideways scroll',
+      seconds: 30,
+      tags: ['full'],
+      description: 'Opens Timeline from the nav, scrolls each era, checks year order, images, lines, the eight product origin links and that the page does not scroll sideways.',
     },
     {
       id: 'productpages',
@@ -1373,6 +1422,7 @@ installPlaytest({
       else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
+      else if (id === 'timeline') await timeline(options, t);
       else if (id === 'story') await story(options, t);
       else await products(options, t, id === 'products');
     } finally {
