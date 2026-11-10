@@ -1446,8 +1446,103 @@ async function timeline(options, t) {
   const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
   t.event('overflow', `Timeline: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
   if (over > 1) t.problem('bug', `Timeline: the page scrolls sideways by ${over}px`);
+  await timelineSizes(t);
   closeFrame();
   t.progress(1);
+}
+
+/** Timeline at 390x844 and 1440x900: top/middle/end scenes, era count, sticky year, overflow, tap targets, chip filter, deep link, product strip link. */
+async function timelineSizes(t) {
+  const MIN_TAP = 44;
+  const f = openFrame();
+  const sizes = [[390, 844], [1440, 900]];
+  for (const [W, H] of sizes) {
+    f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    const tag = `${W}x${H}`;
+    let doc = await frameLoad((fr) => (fr.src = './timeline.html'));
+    if (!doc) { t.problem('bug', `Timeline ${tag} did not open`); continue; }
+    const win = doc.defaultView;
+    await t.until(() => imagesLoaded(doc), 10000, 'timeline images').catch(() => {});
+    const eras = [...doc.querySelectorAll('.timeline .era')];
+    t.metric(`eras${W}`, eras.length);
+    t.event('eras', `Timeline ${tag}: ${eras.length} eras`);
+    if (eras.length < 4) t.problem('bug', `Timeline ${tag}: ${eras.length} eras, at least 4 wanted`);
+
+    t.scene(`Timeline top ${tag}`);
+    win.scrollTo(0, 0);
+    await t.wait(700);
+    const marker = doc.querySelector('.year-marker [data-year]');
+    const years = [marker?.textContent.trim()];
+    const mid = eras[Math.floor(eras.length / 2)];
+    t.scene(`Timeline middle ${tag}`);
+    if (mid) smoothTo(mid);
+    await t.wait(1200);
+    years.push(marker?.textContent.trim());
+    t.scene(`Timeline end ${tag}`);
+    const lastEra = eras[eras.length - 1];
+    if (lastEra) smoothTo(lastEra);
+    await t.wait(1200);
+    years.push(marker?.textContent.trim());
+    const calm = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const changes = years.filter((y, i) => i && y !== years[i - 1]).length;
+    t.event('sticky-year', `Timeline ${tag}: year ${years.join(' -> ')} (${changes} changes)`);
+    if (!marker) t.problem('bug', `Timeline ${tag}: no sticky year marker`);
+    else if (!calm && changes < 2) t.problem('bug', `Timeline ${tag}: the sticky year did not change while scrolling (${years.join(', ')})`);
+
+    const de = doc.documentElement;
+    const over = Math.max(de.scrollWidth, doc.body.scrollWidth) - de.clientWidth;
+    t.metric(`overflow${W}`, Math.max(0, over));
+    t.event('overflow', `Timeline ${tag}: horizontal overflow ${Math.max(0, over)}px`);
+    if (over > 1) t.problem('bug', `Timeline ${tag}: horizontal overflow of ${over}px`);
+
+    const small = [];
+    for (const el of doc.querySelectorAll('a[href], button')) {
+      if (el.classList.contains('skip')) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width && !r.height) continue;
+      if (r.height < MIN_TAP - 0.5 && W <= 480) small.push(`${(el.textContent || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
+    }
+    for (const chip of doc.querySelectorAll('.tl-chip')) {
+      const r = chip.getBoundingClientRect();
+      if (r.height + 0.5 < MIN_TAP && !small.some((s) => s.startsWith(chip.textContent.trim().slice(0, 24)))) small.push(`chip ${chip.textContent.trim()} ${Math.round(r.height)}px`);
+    }
+    t.metric(`smallTargets${W}`, small.length);
+    t.event('tap-targets', `Timeline ${tag}: ${small.length} under ${MIN_TAP}px`);
+    if (small.length) t.problem('bug', `Timeline ${tag}: ${small.length} tap target(s) under ${MIN_TAP}px (${small.slice(0, 4).join(', ')})`);
+
+    const chip = doc.querySelector('.tl-chip[data-filter="ph-origins"]');
+    if (!chip) t.problem('bug', `Timeline ${tag}: no PH Origins chip`);
+    else {
+      chip.scrollIntoView({ block: 'center' });
+      await t.wait(300);
+      chip.click();
+      await t.wait(700);
+      const track = doc.querySelector('.timeline-track');
+      const thread = doc.querySelectorAll('.era.is-thread').length;
+      const dim = doc.querySelectorAll('.era.is-dim').length;
+      t.event('filter', `Timeline ${tag}: chip PH Origins, product=${track?.dataset.product}, thread ${thread}, faded ${dim}`);
+      if (track?.dataset.product !== 'ph-origins' || !thread || !dim) t.problem('bug', `Timeline ${tag}: the PH Origins chip did not filter the thread`);
+    }
+
+    doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
+    if (!doc) { t.problem('bug', `Timeline ${tag}: deep link did not open`); continue; }
+    await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep link').catch(() => {});
+    const active = doc.querySelector('.tl-chip.is-active')?.dataset.filter;
+    const filtered = !!doc.querySelector('.timeline-track.is-filtered');
+    t.event('deeplink', `Timeline ${tag}: ?product=sick-of-it filtered ${filtered}, chip ${active || 'none'}`);
+    if (!filtered || active !== 'sick-of-it') t.problem('bug', `Timeline ${tag}: ?product=sick-of-it did not open the filtered thread`);
+
+    doc = await frameLoad((fr) => (fr.src = './product-ph-origins.html'));
+    const link = doc?.querySelector('.on-timeline a[href="./timeline.html?product=ph-origins"]');
+    if (!link) { t.problem('bug', `PH Origins ${tag}: no On the timeline link`); continue; }
+    smoothTo(link);
+    await t.wait(600);
+    doc = await clickLink(t, doc, '.on-timeline a[href="./timeline.html?product=ph-origins"]', `PH Origins On the timeline (${tag})`);
+    await t.wait(600);
+    const landed = doc?.querySelector('.timeline-track');
+    t.event('strip-link', `Timeline ${tag}: strip link landed product=${landed?.dataset.product}, filtered ${landed?.classList.contains('is-filtered')}`);
+    if (landed?.dataset.product !== 'ph-origins' || !landed.classList.contains('is-filtered')) t.problem('bug', `Timeline ${tag}: the product page link did not land on the filtered thread`);
+  }
 }
 
 /** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
@@ -1514,9 +1609,9 @@ installPlaytest({
     {
       id: 'timeline',
       title: 'Timeline: reached from the header menu and footer; eras in order with year, image and line; every product origin links its product page; no sideways scroll',
-      seconds: 30,
-      tags: ['full'],
-      description: 'Opens Timeline from the nav, scrolls each era, checks year order, images, lines, the eight product origin links and that the page does not scroll sideways.',
+      seconds: 90,
+      tags: ['full', 'smoke'],
+      description: 'Opens Timeline from the nav, scrolls each era, checks year order, images, lines, the eight product origin links and that the page does not scroll sideways. Then at 390x844 and 1440x900: scenes at the top, middle and end, era count, the sticky year changing, horizontal overflow (0), tap targets under 44px (0), a product chip filtering the thread, the ?product= deep link, and a product page On the timeline link landing on the filtered thread.',
     },
     {
       id: 'timelinefilter',
