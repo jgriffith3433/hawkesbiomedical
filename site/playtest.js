@@ -2022,6 +2022,153 @@ async function motion(options, t) {
   t.progress(1);
 }
 
+/** Redacted passages: black bars, reveal on tap/focus with glitch, stay for the visit, 8–12 across four pages, contrast and nav clear. */
+async function redaction(options, t) {
+  const f = openFrame();
+  const size = (w, h) => {
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+    await t.wait(300);
+  };
+  const redactPages = [
+    { name: 'Leadership', href: './leadership.html' },
+    { name: 'Newsroom', href: './newsroom.html' },
+    { name: 'Research', href: './research.html' },
+    { name: 'Investors', href: './investors.html' },
+  ];
+
+  // Fresh visit so bars start closed for the before screenshots.
+  try { sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+
+  size(390, 844);
+  t.scene('Redaction before 390x844');
+  let doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  if (!doc) throw new Error("Leadership didn't open");
+  await settle(doc);
+  try { doc.defaultView.sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+  // Reload so brand.js reads an empty reveal set after we cleared storage.
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  let first = doc.querySelector('.redacted');
+  if (!first) throw new Error('Leadership has no .redacted');
+  first.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  const beforeClosed = !first.classList.contains('is-revealed');
+  const barBg = doc.defaultView.getComputedStyle(first.querySelector('.redacted-text') || first).backgroundColor;
+  t.event('bar', `before: closed=${beforeClosed}, bar bg ${barBg}`);
+  if (!beforeClosed) t.problem('bug', 'Redaction: first passage was already revealed before interaction');
+  t.metric('beforeClosed', beforeClosed ? 1 : 0);
+  t.progress(0.15);
+
+  t.scene('Redaction after 390x844');
+  first.focus({ preventScroll: true });
+  await t.wait(450);
+  if (!first.classList.contains('is-revealed')) first.click();
+  await t.wait(450);
+  const afterOpen = first.classList.contains('is-revealed');
+  t.event('reveal', `after focus/click: revealed=${afterOpen}, id=${first.dataset.redact || ''}`);
+  if (!afterOpen) t.problem('bug', 'Redaction: focus/click did not reveal the passage');
+  const stamp = doc.defaultView.getComputedStyle(first, '::after').content;
+  t.event('stamp', `::after content ${stamp}`);
+  if (!/DECLASSIFIED/i.test(stamp || '')) t.problem('bug', 'Redaction: revealed passage has no DECLASSIFIED stamp');
+  const textEl = first.querySelector('.redacted-text') || first;
+  const fg = parseRgb(doc.defaultView.getComputedStyle(textEl).color);
+  const bg = backgroundOf(textEl);
+  const ratio = fg ? fixed2(contrast(fg, bg)) : 0;
+  t.event('reveal-contrast', `revealed text contrast ${ratio}:1`);
+  if (ratio < MIN_CONTRAST) t.problem('bug', `Redaction: revealed text contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+  t.add('revealedAt390');
+  t.progress(0.35);
+
+  size(1440, 900);
+  t.scene('Redaction before 1440x900');
+  try { doc.defaultView.sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  first = doc.querySelector('.redacted');
+  first?.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  if (first?.classList.contains('is-revealed')) t.problem('bug', 'Redaction at 1440: passage started revealed after storage clear');
+  t.progress(0.45);
+
+  t.scene('Redaction after 1440x900');
+  first?.focus({ preventScroll: true });
+  await t.wait(400);
+  if (first && !first.classList.contains('is-revealed')) first.click();
+  await t.wait(400);
+  if (!first?.classList.contains('is-revealed')) t.problem('bug', 'Redaction at 1440: did not reveal');
+  t.add('revealedAt1440');
+  t.progress(0.55);
+
+  // Count across the four lore pages; confirm none sit in nav or headings.
+  let total = 0;
+  const pagesWith = [];
+  for (const page of redactPages) {
+    doc = await frameLoad((fr) => (fr.src = page.href));
+    if (!doc) { t.problem('bug', `${page.name} did not open`); continue; }
+    await settle(doc);
+    const list = [...doc.querySelectorAll('.redacted')];
+    total += list.length;
+    if (list.length) pagesWith.push(page.name);
+    for (const el of list) {
+      if (el.closest('nav, .nav, h1, h2, h3, h4, h5, h6')) {
+        t.problem('bug', `Redaction: ${page.name} places a bar on nav or a heading (${el.dataset.redact || '?'})`);
+      }
+    }
+    t.event('page-count', `${page.name}: ${list.length} redacted`);
+  }
+  t.metric('redactions', total);
+  t.metric('redactionPages', pagesWith.length);
+  t.event('spread', `${total} redactions on ${pagesWith.length} pages (${pagesWith.join(', ')})`);
+  if (total < 8 || total > 12) t.problem('bug', `Redaction: ${total} passages, 8–12 wanted`);
+  if (pagesWith.length < 4) t.problem('bug', `Redaction: only ${pagesWith.length} pages carry bars, at least 4 wanted`);
+  t.progress(0.75);
+
+  // Stays revealed while browsing: open Leadership (already revealed ids in session), then Newsroom and back.
+  size(1280, 800);
+  t.scene('Redaction stays revealed');
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  const stored = (() => {
+    try { return doc.defaultView.sessionStorage.getItem('hawkes.redacted') || ''; } catch (_) { return ''; }
+  })();
+  t.event('session', `hawkes.redacted=${stored.slice(0, 120)}`);
+  const still = [...doc.querySelectorAll('.redacted.is-revealed')];
+  t.event('persist', `Leadership shows ${still.length} already revealed`);
+  if (still.length < 1) t.problem('bug', 'Redaction: revealed state did not persist across a reload in the visit');
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await settle(doc);
+  const newsNav = doc.querySelector('.nav-links a[data-nav="newsroom"]');
+  const newsBar = doc.querySelector('.redacted');
+  if (newsNav && newsBar) {
+    const nr = newsNav.getBoundingClientRect();
+    const br = newsBar.getBoundingClientRect();
+    const overlap = !(br.bottom < nr.top || br.top > nr.bottom || br.right < nr.left || br.left > nr.right);
+    t.event('nav-clear', `nav vs first bar overlap=${overlap}`);
+    if (overlap) t.problem('bug', 'Redaction: a bar overlaps the navigation');
+  }
+  // Criterion 4: no sideways scroll; primary nav still reachable.
+  for (const [w, h] of [[390, 844], [1440, 900]]) {
+    size(w, h);
+    doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+    await settle(doc);
+    const over = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+    t.event('overflow', `Leadership at ${w}x${h}: sideways ${over}px`);
+    if (over > 1) t.problem('bug', `Redaction: Leadership scrolls sideways by ${over}px at ${w}x${h}`);
+    const company = doc.querySelector('.nav-links a[data-nav="company"]');
+    if (!company) t.problem('bug', `Redaction: Company nav missing at ${w}px`);
+    else {
+      const r = company.getBoundingClientRect();
+      t.event('nav-hit', `Company nav at ${w}px: ${Math.round(r.width)}x${Math.round(r.height)}`);
+      if (r.width < 8 || r.height < 8) t.problem('bug', `Redaction: Company nav not hittable at ${w}px`);
+    }
+  }
+  closeFrame();
+  t.progress(1);
+}
+
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
@@ -2123,6 +2270,13 @@ installPlaytest({
       tags: ['analytics'],
       description: 'Reads the SDK config on Home (product, env, build), clicks Products in the nav, waits for its page_view to go out, scrolls every product row to the footer (progress 25/50/75/100), checks the footer line (fiction, anonymous statistics, no off-brand words), then clicks the phorigins.com link (the new tab is held back) and waits for the outbound event with ctx.product "PH Origins" to go out.',
     },
+    {
+      id: 'redaction',
+      title: 'Redacted passages: black bars reveal on tap, hover or focus with a glitch and DECLASSIFIED stamp; 8–12 across four pages; stay revealed for the visit; 4.5:1 contrast; nav unblocked at 390 and desktop',
+      seconds: 55,
+      tags: ['full'],
+      description: 'Clears session reveals, screenshots Leadership before and after reveal at 390x844 and 1440x900, checks the stamp and revealed contrast, counts 8–12 bars across Leadership, Newsroom, Research and Investors (none on nav or headings), confirms session persistence, and checks nav stays hittable with no sideways scroll.',
+    },
   ],
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
@@ -2132,6 +2286,7 @@ installPlaytest({
       else if (id === 'herofield') await herofield(options, t);
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
+      else if (id === 'redaction') await redaction(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
       else if (id === 'polish') await polish(options, t);

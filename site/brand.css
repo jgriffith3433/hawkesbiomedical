@@ -64,6 +64,9 @@
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
   --shadow-lift: 0 10px 28px rgba(36, 35, 31, 0.12);
   --shadow-press: 0 2px 8px rgba(36, 35, 31, 0.1);
+  /* Redaction bars and the faint declassified stamp */
+  --redact-bar: #1c1b19;
+  --redact-stamp: rgba(111, 91, 62, 0.42);
   color-scheme: light;
 }
 
@@ -1660,6 +1663,91 @@ main .sub + * { margin-top: 0; }
 .on-timeline .text-link { margin-top: var(--space-4); }
 @media (max-width: 700px) {
   .tl-moments li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+}
+
+/* Redacted passages: black bars until tap, click, hover or focus; stay revealed for the visit. Never used on nav or headings. */
+.redacted {
+  position: relative;
+  display: inline;
+  cursor: pointer;
+  border-radius: var(--radius);
+  outline-offset: 3px;
+  vertical-align: baseline;
+}
+.redacted:focus-visible {
+  outline: 2px solid var(--gold);
+}
+.redacted .redacted-text {
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 1px;
+  padding: 0 0.12em;
+}
+.redacted:not(.is-revealed) .redacted-text {
+  color: transparent;
+  background-color: var(--redact-bar);
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--redact-bar) 0 0.72em,
+    rgba(36, 35, 31, 0.92) 0.72em 0.78em,
+    var(--redact-bar) 0.78em 1em
+  );
+  background-size: 100% 1em;
+  user-select: none;
+  caret-color: transparent;
+}
+.redacted.is-revealed .redacted-text {
+  color: var(--text);
+  background: transparent;
+  user-select: text;
+}
+.redacted.is-revealing .redacted-text {
+  animation: redact-glitch var(--dur-3) var(--ease-out) both;
+}
+.redacted.is-revealed::after {
+  content: "DECLASSIFIED" / "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -55%) rotate(-8deg);
+  font-family: var(--sans);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: var(--ls-label);
+  color: var(--redact-stamp);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 1;
+}
+.redacted.is-revealing::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 2px,
+    rgba(243, 240, 234, 0.35) 2px 3px
+  );
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  animation: redact-scan var(--dur-3) var(--ease-in-out) both;
+  z-index: 2;
+}
+@keyframes redact-glitch {
+  0% { opacity: 0.15; filter: contrast(2.4) skewX(8deg); transform: translateX(-2px); }
+  28% { opacity: 0.55; filter: contrast(1.6) hue-rotate(-12deg); transform: translateX(2px); }
+  52% { opacity: 0.85; filter: contrast(1.2); transform: translateX(-1px); }
+  100% { opacity: 1; filter: none; transform: none; }
+}
+@keyframes redact-scan {
+  0% { opacity: 0.9; transform: translateY(-40%); }
+  100% { opacity: 0; transform: translateY(40%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .redacted.is-revealing .redacted-text { animation: none; }
+  .redacted.is-revealing::before { animation: none; content: none; }
 }
 
 /* Cross-document view transitions: header and footer stay, content cross-fades and lifts, a product image morphs into its page hero. Unsupported browsers navigate normally. */

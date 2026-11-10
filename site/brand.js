@@ -1,3 +1,115 @@
+/* Redacted passages: black bars until tap/click/hover/focus; stay revealed for the visit (sessionStorage). */
+const REDACT_KEY = 'hawkes.redacted';
+const loadRevealed = () => {
+  try {
+    const raw = sessionStorage.getItem(REDACT_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(list) ? list : []);
+  } catch {
+    return new Set();
+  }
+};
+const saveRevealed = (set) => {
+  try {
+    sessionStorage.setItem(REDACT_KEY, JSON.stringify([...set]));
+  } catch {
+    /* private mode: stay revealed in-memory for this document only */
+  }
+};
+const revealedIds = loadRevealed();
+const calmMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let stampCtx = null;
+const playStamp = () => {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    stampCtx = stampCtx || new AC();
+    if (stampCtx.state === 'suspended') stampCtx.resume();
+    const t0 = stampCtx.currentTime;
+    const osc = stampCtx.createOscillator();
+    const gain = stampCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(180, t0);
+    osc.frequency.exponentialRampToValueAtTime(70, t0 + 0.08);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.06, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
+    osc.connect(gain);
+    gain.connect(stampCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.14);
+  } catch {
+    /* audio optional */
+  }
+};
+
+const upgradeRedacted = (el) => {
+  if (el.dataset.redactReady) return;
+  el.dataset.redactReady = '1';
+  // Never wrap navigation or headings; skip if an author misplaced the class.
+  if (el.closest('nav, .nav, h1, h2, h3, h4, h5, h6')) return;
+  const id = el.dataset.redact || el.textContent.trim().slice(0, 48);
+  el.dataset.redact = id;
+  let text = el.querySelector('.redacted-text');
+  if (!text) {
+    text = document.createElement('span');
+    text.className = 'redacted-text';
+    while (el.firstChild) text.appendChild(el.firstChild);
+    el.appendChild(text);
+  }
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  let opening = false;
+  const markOpen = () => {
+    revealedIds.add(id);
+    saveRevealed(revealedIds);
+    text.removeAttribute('aria-hidden');
+    el.setAttribute('aria-expanded', 'true');
+    el.removeAttribute('aria-label');
+  };
+  const applyRevealed = (animate) => {
+    if (el.classList.contains('is-revealed') || opening) return;
+    markOpen();
+    playStamp();
+    if (animate && !calmMotion()) {
+      opening = true;
+      el.classList.add('is-revealing');
+      window.setTimeout(() => {
+        el.classList.remove('is-revealing');
+        el.classList.add('is-revealed');
+        opening = false;
+      }, 320);
+    } else {
+      el.classList.add('is-revealed');
+    }
+  };
+  if (revealedIds.has(id)) {
+    markOpen();
+    el.classList.add('is-revealed');
+  } else {
+    text.setAttribute('aria-hidden', 'true');
+    el.setAttribute('aria-expanded', 'false');
+    el.setAttribute('aria-label', 'Redacted passage. Activate to reveal.');
+  }
+  const reveal = () => applyRevealed(true);
+  el.addEventListener('click', (event) => {
+    event.preventDefault();
+    reveal();
+  });
+  el.addEventListener('pointerenter', (event) => {
+    if (event.pointerType === 'mouse') reveal();
+  });
+  el.addEventListener('focus', reveal);
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      reveal();
+    }
+  });
+};
+
+document.querySelectorAll('.redacted').forEach(upgradeRedacted);
+
 const page = document.body.dataset.page;
 document.querySelectorAll('[data-nav]').forEach((link) => {
   if (link.getAttribute('data-nav') === page) {
