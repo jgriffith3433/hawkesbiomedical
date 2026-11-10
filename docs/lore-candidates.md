@@ -16,3 +16,5 @@ The site does not date when each product joined the line. The page places each p
 | Hawkes Gen | 2026 | Eighth product, the newest |
 
 The one-line origins in `data/timeline.json` (`products.*.origin`) are also new wording. Nothing states a clinical result or a figure, and nothing goes beyond the fiction notice in the footer.
+
+Each product's "On the timeline" strip (`products.*.moments`) adds two or three beats beyond the single origin era: later company eras the product is treated as still belonging to (Zurich desk, the Hawkes line), and for Hawkes Gen a soft 2009 beat ("the house that would later open laboratory services"). Confirm or cut those middle beats.
