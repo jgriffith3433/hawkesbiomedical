@@ -1316,7 +1316,7 @@ main .sub + * { margin-top: 0; }
 .origins img { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--line); }
 .origins a:hover strong { color: var(--gold); }
 /* Product chips above the track: wrap on a phone, stay at least --btn-h tall. */
-.tl-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-5) 0 var(--space-4); }
+.tl-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-5) 0 var(--space-4); max-width: 100%; min-width: 0; }
 .tl-chip {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: var(--btn-h); padding: 0 var(--space-3);
