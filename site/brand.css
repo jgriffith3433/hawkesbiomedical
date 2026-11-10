@@ -1316,3 +1316,32 @@ main .sub + * { margin-top: 0; }
 .origins img { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--line); }
 .origins a:hover strong { color: var(--gold); }
 @media (max-width: 700px) { .era { grid-template-columns: minmax(0, 1fr); } }
+
+/* Cross-document view transitions: header and footer stay, content cross-fades and lifts, a product image morphs into its page hero. Unsupported browsers navigate normally. */
+@view-transition { navigation: auto; }
+.nav { view-transition-name: site-nav; }
+footer { view-transition-name: site-footer; }
+main { view-transition-name: site-content; }
+.product img[src*="phorigins-rx"], .product-file img[src*="phorigins-rx"] { view-transition-name: product-ph-origins; }
+.product img[src*="sickofit-rx"], .product-file img[src*="sickofit-rx"] { view-transition-name: product-sick-of-it; }
+.product img[src*="imaginelivetv-rx"], .product-file img[src*="imaginelivetv-rx"] { view-transition-name: product-imagine-live-tv; }
+.product img[src*="theplacedepartment-rx"], .product-file img[src*="theplacedepartment-rx"] { view-transition-name: product-the-place-department; }
+.product img[src*="yoobaland-rx"], .product-file img[src*="yoobaland-rx"] { view-transition-name: product-yooba-land; }
+.product img[src*="icanbe-rx"], .product-file img[src*="icanbe-rx"] { view-transition-name: product-i-can-be; }
+.product img[src*="doseofdestruction-rx"], .product-file img[src*="doseofdestruction-rx"] { view-transition-name: product-dose-of-destruction; }
+.product img[src*="hawkesgen-rx"], .product-file img[src*="hawkesgen-rx"] { view-transition-name: product-hawkes-gen; }
+::view-transition-old(site-nav), ::view-transition-old(site-footer) { display: none; }
+::view-transition-new(site-nav), ::view-transition-new(site-footer) { animation: none; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(12px); } }
+::view-transition-old(site-content) { animation: vt-out 0.2s ease both; }
+::view-transition-new(site-content) { animation: vt-in 0.35s ease both; }
+::view-transition-group(*) { animation-duration: 0.4s; }
+::view-transition-group(site-nav), ::view-transition-group(site-footer) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(site-content), ::view-transition-new(site-content) { animation: vt-fade 0.15s linear both; }
+  ::view-transition-old(site-content) { animation-name: vt-fade-out; }
+  ::view-transition-group(*) { animation-duration: 0.15s; }
+  @keyframes vt-fade { from { opacity: 0; } }
+  @keyframes vt-fade-out { to { opacity: 0; } }
+}

@@ -1284,6 +1284,50 @@ async function timeline(options, t) {
   t.event('overflow', `Timeline: scrollWidth ${de.scrollWidth}, width ${de.clientWidth}`);
   if (over > 1) t.problem('bug', `Timeline: the page scrolls sideways by ${over}px`);
   closeFrame();
+  t.progress(1);
+}
+
+/** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
+async function transitions(options, t) {
+  const supported = typeof CSSViewTransitionRule !== 'undefined';
+  t.event('support', `cross-document view transitions: ${supported ? 'supported' : 'not supported (plain navigation)'}`);
+  let rule = false;
+  let calm = false;
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) {
+        if (/^@view-transition/.test(r.cssText)) rule = true;
+        if (r.conditionText && /reduce/.test(r.conditionText) && /view-transition/.test(r.cssText)) calm = true;
+      }
+    } catch {}
+  }
+  if (!rule) t.problem('bug', 'no @view-transition rule in the stylesheet');
+  if (!calm) t.problem('bug', 'no reduced-motion rule for the view transitions');
+  t.scene('Home to Products');
+  let doc = await clickLink(t, (openFrame(), await frameLoad((f) => { f.src = './index.html'; })), 'header a[href$="products.html"]', 'Products in the nav');
+  await t.wait(600);
+  const win = () => frame.contentWindow;
+  const nameOf = (d, sel) => d.defaultView.getComputedStyle(d.querySelector(sel)).viewTransitionName;
+  for (const [sel, what] of [['.nav', 'header'], ['footer', 'footer'], ['main', 'content']]) {
+    t.event('name', `${what}: view-transition-name ${nameOf(doc, sel)}`);
+    if (nameOf(doc, sel) === 'none') t.problem('bug', `${what} has no view-transition-name`);
+  }
+  const shot = doc.querySelector('#ph-origins .product-shot');
+  const cardName = nameOf(doc, '#ph-origins img');
+  t.scene('Products to PH Origins');
+  doc = await clickLink(t, doc, '#ph-origins .product-shot', 'PH Origins product image');
+  await t.wait(600);
+  const heroName = nameOf(doc, '.product-file img');
+  t.event('morph', `card image ${cardName}, hero ${heroName}`);
+  if (cardName === 'none' || cardName !== heroName) t.problem('bug', `product image and hero do not share a view-transition-name (${cardName} / ${heroName})`);
+  if (!shot) t.problem('bug', 'no product image link');
+  t.scene('Back to Products');
+  const back = await frameLoad(() => win().history.back());
+  if (!back || !/products\.html/.test(win().location.pathname)) t.problem('bug', 'back did not return to Products');
+  else t.event('back', 'back returned to Products');
+  const active = back && back.activeElement;
+  t.event('focus', `focus after back: ${active ? active.tagName : 'none'}`);
+  t.progress(1);
 }
 
 installPlaytest({
@@ -1353,6 +1397,13 @@ installPlaytest({
       description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
+      id: 'transitions',
+      title: 'View transitions: Home to Products to a product page and back; header and footer keep their place, the product image morphs into the hero, reduced motion gets a plain fade',
+      seconds: 30,
+      tags: ['full'],
+      description: 'Checks the @view-transition rule and its reduced-motion rule, clicks Products in the nav, checks header, footer and content carry view-transition names, opens PH Origins from its card image, checks the card image and the hero share a name, then goes back.',
+    },
+    {
       id: 'analytics',
       title: 'Hawkes Analytics: page_view on Products, read depth to the footer, an outbound click to PH Origins naming the product, each sent with its env; the footer statistics line keeps the brand',
       seconds: 40,
@@ -1363,7 +1414,8 @@ installPlaytest({
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
-      if (id === 'access') await access(options, t);
+      if (id === 'transitions') await transitions(options, t);
+      else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
