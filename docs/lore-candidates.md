@@ -37,3 +37,11 @@ Twelve short passages sit behind `.redacted` bars on Leadership, Newsroom, Resea
 | `research-figures` | Research · Figures | Imagine Live TV desks counted in the prescribing base behind the 71% |
 | `investors-line` | Investors · The Hawkes line | Sick of It fever kits and Yooba Land appetite support under one distribution charter |
 | `investors-desk` | Investors · Capital desk | Lang schedules Gen bench time against each product's revision date |
+
+## Product monographs (prescription-insert pages)
+
+Each `product-<slug>.html` now carries a header band (Rx mark, formulation line) and Indications, Dosage and administration, Side effects, Contraindications and How it works blocks. Indications and dosage restate each page's existing text; the rest is new, deadpan and candidate for Jaycee to confirm or cut. No figure, no clinical result.
+
+- Side effects (all eight, three each, in-world and light): e.g. Dose Of Destruction "A feeling of having been quite thoroughly dealt with"; Sick of It "A case that is, correctly, empty"; PH Origins "A calm that colleagues describe as 'balanced'"; Yooba Land "A bright opinion about fruit"; Imagine Live TV "Urge to say 'as we saw in the broadcast' at dinner"; The Place Department "An urge to label things"; I Can Be "A strong impression of having been looked at thoroughly"; Hawkes Gen "Sudden abundance of images".
+- Contraindications: Hawkes Gen "Not for use as a cure. The Hawkes line does not pitch one" (ties to the category-ownership position); Sick of It "Not to be reused. It cannot be."; Dose Of Destruction "Not to be hung without a supervisor in the room".
+- Formulation lines (header band), e.g. "Cytotoxic dose · for supervised infusion · one dose per order", "Single-use shot · high fever · sealed in its case". Descriptive only.
