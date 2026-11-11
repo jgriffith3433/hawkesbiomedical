@@ -1841,7 +1841,7 @@ main { view-transition-name: site-content; }
 }
 .news-cards-home { margin-top: var(--space-4); }
 .latest-news { padding-top: var(--space-5); padding-bottom: var(--space-5); }
-.product-news { margin-top: var(--space-5); }
+.product-news { margin-top: var(--space-5); margin-bottom: var(--space-5); }
 .product-news .product-news-slot { margin-top: var(--space-3); max-width: 28rem; }
 .product-news .news-card p:not(.kicker) { display: none; }
 .news-article .page-title { max-width: 28ch; }

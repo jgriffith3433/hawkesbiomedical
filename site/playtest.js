@@ -2305,7 +2305,7 @@ async function articles(options, t) {
   if (overArt > 1) t.problem('bug', `Article at ${W}x${H}: sideways scroll by ${overArt}px`);
   t.progress(0.65);
 
-  // Criterion 3: each product page with a release shows its latest.
+  // Criterion 3: every product page shows its latest release (a product with none on file shows its product-file notice).
   const productSlugs = ['ph-origins', 'imagine-live-tv', 'dose-of-destruction', 'i-can-be', 'the-place-department', 'yooba-land', 'sick-of-it', 'hawkes-gen'];
   let withLatest = 0;
   for (const slug of productSlugs) {
@@ -2317,20 +2317,20 @@ async function articles(options, t) {
     const shown = block && !block.hidden && !!card;
     if (shown) withLatest += 1;
     t.event('product-latest', `${slug}: ${shown ? `shows ${card.dataset.news} → ${card.getAttribute('href')}` : 'no latest (hidden)'}`);
-    if (slug === 'hawkes-gen') {
-      if (shown) t.problem('bug', 'Hawkes Gen: should not show a press release (no formulation line)');
-    } else if (!shown) {
-      // Sick of It may have no live releases yet; only flag when the slot stayed empty after ready.
-      if (doc.documentElement.dataset.productNewsReady === '1' && slug !== 'sick-of-it') {
-        t.problem('bug', `${slug}: product page has no latest release card`);
-      }
+    if (!shown) {
+      t.problem('bug', `${slug}: product page shows no latest release card`);
     } else if (!card.querySelector('time')?.dateTime || !card.querySelector('h2')) {
       t.problem('bug', `${slug}: latest card lacks date or title`);
+    } else {
+      // The latest sits near the top of the product file, not at the foot of a long page.
+      block.scrollIntoView({ block: 'center' });
+      await t.wait(150);
     }
     const over = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
     if (over > 1) t.problem('bug', `${slug} at ${W}x${H}: sideways scroll by ${over}px`);
   }
   t.metric('productsWithLatest', withLatest);
+  if (withLatest !== productSlugs.length) t.problem('bug', `Only ${withLatest} of ${productSlugs.length} product pages show a latest release`);
   t.progress(1);
   closeFrame();
 }
