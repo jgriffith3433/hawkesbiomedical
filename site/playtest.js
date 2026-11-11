@@ -111,7 +111,7 @@ function openFrame() {
   if (frame) return frame;
   frame = document.createElement('iframe');
   frame.title = 'Playtest';
-  frame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
   document.body.appendChild(frame);
   return frame;
 }
@@ -709,7 +709,7 @@ async function accessPages(t) {
   let low = Infinity;
   for (const w of [1440, 390]) {
     const f = openFrame();
-    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100%;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
     t.scene(`Every page at ${w}px: alt text and contrast`);
     for (const [name, href] of DESIGN_PAGES) {
       const doc = await frameLoad((fr) => (fr.src = href));
@@ -930,7 +930,7 @@ async function design(options, t) {
   t.add('styleGuideChecked');
   for (const w of widths) {
     const f = openFrame();
-    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100%;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
     t.scene(`Every page at ${w}px`);
     for (let i = 0; i < DESIGN_PAGES.length; i++) {
       const [name, href] = DESIGN_PAGES[i];
@@ -1274,7 +1274,7 @@ async function phone(options, t) {
 async function timelineFilter(options, t) {
   const MIN_TAP = 44;
   const f = openFrame();
-  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
 
   const opacityOf = (el, doc) => parseFloat(doc.defaultView.getComputedStyle(el).opacity);
   const filteredState = (doc) => {
@@ -1337,7 +1337,7 @@ async function timelineFilter(options, t) {
 
   // Criterion 2: deep link opens already filtered.
   t.scene('Deep link ?product=');
-  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
   doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
   if (!doc) throw new Error("deep-linked Timeline didn't open");
   await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep-link filter').catch(() => {});
