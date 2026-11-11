@@ -217,6 +217,19 @@
       "article": "./news-yooba-land-1.5.0.html"
     },
     {
+      "id": "hawkes-gen-file",
+      "date": "2026-10-25",
+      "product": "Hawkes Gen",
+      "category": "Hawkes Gen",
+      "slug": "hawkes-gen",
+      "version": "",
+      "headline": "Hawkes Gen laboratory services open to requests",
+      "summary": "Hawkes Gen, the company's laboratory service for on-demand synthesis, is open to requests. A request is submitted, the laboratory synthesises the result, and the finished file is delivered. Formulation notices will be issued here as they are filed.",
+      "image": "./assets/products/hawkesgen-rx.jpg",
+      "page": "./product-hawkes-gen.html",
+      "article": "./news-hawkes-gen-file.html"
+    },
+    {
       "id": "ph-origins-1.9.0",
       "date": "2026-10-25",
       "product": "PH Origins",
@@ -228,6 +241,19 @@
       "image": "./assets/products/phorigins-rx.jpg",
       "page": "./product-ph-origins.html",
       "article": "./news-ph-origins-1.9.0.html"
+    },
+    {
+      "id": "sick-of-it-file",
+      "date": "2026-10-25",
+      "product": "Sick of It",
+      "category": "Sick of It",
+      "slug": "sick-of-it",
+      "version": "",
+      "headline": "Sick of It product file opened in the newsroom",
+      "summary": "The Sick of It single-use fever shot is carried in the Hawkes line under the charter. Each unit remains a single dose with a single stated indication. Formulation notices will be issued here as they are filed.",
+      "image": "./assets/products/sickofit-rx.jpg",
+      "page": "./product-sick-of-it.html",
+      "article": "./news-sick-of-it-file.html"
     },
     {
       "id": "the-place-department-1.5.0",

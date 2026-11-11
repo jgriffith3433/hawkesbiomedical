@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { NEWS_PRODUCTS, byNewest, newsFrom } from './site/news-voice.js';
+import { NEWS_PRODUCTS, byNewest, newsFrom, withNotices } from './site/news-voice.js';
 import { articleFile, articleHtml } from './site/news-pages.js';
 
 // Plain (non-module) scripts and data the pages load by path. Vite leaves them out of dist/, so copy them in:
@@ -88,16 +88,20 @@ const writeNews = () => ({
       }),
     );
     if (items.length) {
-      items.sort(byNewest);
       live.sort();
-      writeFileSync(resolve('data/news.json'), JSON.stringify({ live, items }, null, 2) + '\n');
-      writeArticles(items);
+      const all = withNotices(items);
+      writeFileSync(resolve('data/news.json'), JSON.stringify({ live, items: all }, null, 2) + '\n');
+      writeArticles(all);
       return;
     }
     // Offline: keep the committed news.json, but rewrite articles so their markup stays current.
     try {
       const committed = JSON.parse(readFileSync(resolve('data/news.json'), 'utf8'));
-      if (Array.isArray(committed?.items) && committed.items.length) writeArticles(committed.items);
+      if (Array.isArray(committed?.items) && committed.items.length) {
+        const all = withNotices(committed.items);
+        writeFileSync(resolve('data/news.json'), JSON.stringify({ ...committed, items: all }, null, 2) + '\n');
+        writeArticles(all);
+      }
     } catch { /* no committed file */ }
   },
 });

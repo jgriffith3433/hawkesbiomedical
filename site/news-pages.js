@@ -117,7 +117,7 @@ ${NAV}
           </figure>
           <div class="news-article-body">
             <p>${esc(item.summary)}</p>
-            <p class="fine">Formulation ${esc(item.version)}. Product file: <a href="${esc(item.page)}">${esc(item.product)}</a>.</p>
+            <p class="fine">${item.version ? `Formulation ${esc(item.version)}. ` : ''}Product file: <a href="${esc(item.page)}">${esc(item.product)}</a>.</p>
           </div>
           <p class="actions"><a class="text-link" href="./newsroom.html">All newsroom items</a></p>
         </div>
