@@ -252,3 +252,17 @@ if (track) {
   });
   applyFilter(new URLSearchParams(window.location.search).get('product') || '', { replace: false });
 }
+
+// Cross-document view transitions (@view-transition in brand.css): the browser aborts one that starts on a hidden
+// document or while the page is leaving mid-scroll, logs a page error and disables the opt-in for later navigations.
+// Skip the transition then, and handle the ready/finished promises so an abort never surfaces as an unhandled rejection.
+const guardTransition = (event) => {
+  const vt = event.viewTransition;
+  if (!vt) return;
+  vt.ready.catch(() => {});
+  vt.finished.catch(() => {});
+  vt.updateCallbackDone?.catch(() => {});
+  if (document.visibilityState === 'hidden') vt.skipTransition();
+};
+window.addEventListener('pageswap', guardTransition);
+window.addEventListener('pagereveal', guardTransition);
