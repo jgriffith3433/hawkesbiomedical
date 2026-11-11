@@ -3,6 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFi
 import { dirname, resolve } from 'node:path';
 import { NEWS_PRODUCTS, byNewest, newsFrom, withNotices } from './site/news-voice.js';
 import { articleFile, articleHtml } from './site/news-pages.js';
+import { cardHtml, fillCards } from './site/news-cards.js';
 
 // Plain (non-module) scripts and data the pages load by path. Vite leaves them out of dist/, so copy them in:
 // Studio publishes dist/ as the beta site (GitHub Pages serves the repo root, where they already are).
@@ -66,6 +67,29 @@ function writeArticles(items) {
   return files;
 }
 
+/** Put the cards into the pages as static HTML (Newsroom: all, with summaries; Home: the newest three; each product page: its latest). */
+function writeCards(items) {
+  const sorted = [...items].sort(byNewest);
+  const put = (file, cards) => {
+    let html;
+    try { html = readFileSync(resolve(file), 'utf8'); } catch { return; }
+    const next = fillCards(html, cards);
+    if (next != null && next !== html) writeFileSync(resolve(file), next);
+  };
+  put('newsroom.html', sorted.map((i) => cardHtml(i, { summary: true, indent: '            ' })).join('\n'));
+  put('index.html', sorted.slice(0, 3).map((i) => cardHtml(i, { indent: '            ' })).join('\n'));
+  for (const p of NEWS_PRODUCTS) {
+    const latest = sorted.find((i) => i.slug === p.slug);
+    if (latest) put(`product-${p.slug}.html`, cardHtml(latest, { indent: '            ' }));
+  }
+}
+
+/** Articles and cards for the items of this build. */
+function publish(items) {
+  writeArticles(items);
+  writeCards(items);
+}
+
 // Writes data/news.json and one article page per release: read from each product's releases.json the way
 // site/formulations.js does. A product with no release or an unreachable domain is skipped silently; if nothing can be
 // read at all (offline build) the committed file stays as it is and its articles are regenerated from it. `live` lists
@@ -91,7 +115,7 @@ const writeNews = () => ({
       live.sort();
       const all = withNotices(items);
       writeFileSync(resolve('data/news.json'), JSON.stringify({ live, items: all }, null, 2) + '\n');
-      writeArticles(all);
+      publish(all);
       return;
     }
     // Offline: keep the committed news.json, but rewrite articles so their markup stays current.
@@ -100,7 +124,7 @@ const writeNews = () => ({
       if (Array.isArray(committed?.items) && committed.items.length) {
         const all = withNotices(committed.items);
         writeFileSync(resolve('data/news.json'), JSON.stringify({ ...committed, items: all }, null, 2) + '\n');
-        writeArticles(all);
+        publish(all);
       }
     } catch { /* no committed file */ }
   },

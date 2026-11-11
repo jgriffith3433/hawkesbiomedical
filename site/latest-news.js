@@ -44,9 +44,10 @@ async function run() {
 
   if (home) {
     const slot = home.querySelector('.news-cards') || home;
-    for (const item of items.slice(0, 3)) slot.append(card(item));
-    home.hidden = items.length === 0;
-    home.dataset.newsCount = String(Math.min(3, items.length));
+    // The build already wrote the three newest into the page (site/news-cards.js); draw them only if it did not.
+    if (!slot.querySelector('.news-card')) for (const item of items.slice(0, 3)) slot.append(card(item));
+    home.hidden = !slot.querySelector('.news-card');
+    home.dataset.newsCount = String(slot.querySelectorAll('.news-card').length);
     document.documentElement.dataset.latestNewsReady = '1';
   }
 
@@ -54,10 +55,11 @@ async function run() {
     const slug = product.dataset.productNews;
     const latest = items.find((n) => n.slug === slug);
     const slot = product.querySelector('.product-news-slot') || product;
-    if (latest) {
-      slot.append(card(latest));
+    const built = slot.querySelector('.news-card');
+    if (built || latest) {
+      if (!built) slot.append(card(latest));
       product.hidden = false;
-      product.dataset.newsId = latest.id;
+      product.dataset.newsId = (built || slot.querySelector('.news-card')).dataset.news;
     } else {
       product.hidden = true;
     }

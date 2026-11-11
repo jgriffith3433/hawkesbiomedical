@@ -1,3 +1,5 @@
+import { calmMotion } from './calm.js';
+
 /* Redacted passages: black bars until tap/click/hover/focus; stay revealed for the visit (sessionStorage). */
 const REDACT_KEY = 'hawkes.redacted';
 const loadRevealed = () => {
@@ -17,7 +19,6 @@ const saveRevealed = (set) => {
   }
 };
 const revealedIds = loadRevealed();
-const calmMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let stampCtx = null;
 const playStamp = () => {
   try {
@@ -164,7 +165,7 @@ window.addEventListener('scroll', onScroll, { passive: true });
 // Scroll-led chapters (home): fade in as they enter view. Skipped entirely under prefers-reduced-motion.
 const chapters = document.querySelectorAll('[data-reveal]');
 if (chapters.length) {
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const calm = calmMotion();
   if (calm || !('IntersectionObserver' in window)) {
     chapters.forEach((el) => el.classList.add('is-in'));
   } else {
@@ -189,7 +190,7 @@ if (track) {
   const eras = [...track.querySelectorAll('.era')];
   const fill = track.querySelector('.rail-fill');
   const yearEl = track.querySelector('[data-year]');
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const calm = calmMotion();
   const setActive = (era) => {
     const top = era.parentElement.offsetTop + era.offsetTop + 6;
     fill.style.transform = `scaleY(${Math.min(1, top / track.offsetHeight)})`;
