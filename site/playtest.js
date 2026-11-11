@@ -994,6 +994,20 @@ async function productPages(options, t) {
     if (diagrams.length !== 1) t.problem('bug', `${name}: ${diagrams.length} diagrams, one wanted`);
     const dg = diagrams[0];
     if (dg && (!dg.getAttribute('aria-label') || dg.querySelectorAll('text').length < 6)) t.problem('bug', `${name}: the diagram has no label or text`);
+    // Monograph: header band (Rx mark, formulation line) and the five insert blocks, each with an icon.
+    const mono = doc.querySelector('.mono-band');
+    if (!mono || !mono.querySelector('.mono-rx') || !mono.querySelector('.mono-formulation')?.textContent.trim()) t.problem('bug', `${name}: no monograph header band (Rx mark and formulation line)`);
+    const blocks = ['indications', 'dosage', 'side-effects', 'contraindications', 'how'].filter((id) => doc.querySelector(`#${id}`)?.closest('.mono-block')?.querySelector('svg.mono-icon') && doc.querySelector(`#${id}`).closest('.mono-block').querySelectorAll('li').length);
+    if (blocks.length !== 5) t.problem('bug', `${name}: monograph blocks found ${blocks.length} of 5 (${blocks.join(', ')})`);
+    const view = doc.defaultView;
+    const shown = [...doc.querySelectorAll('svg.diagram-svg')].find((x) => view.getComputedStyle(x).display !== 'none');
+    if (shown) {
+      const r = shown.getBoundingClientRect();
+      if (r.right > view.innerWidth + 1 || r.width < 200) t.problem('bug', `${name}: the shown diagram is cut off or too small (${Math.round(r.width)}px in ${view.innerWidth}px)`);
+    }
+    const wide = [...doc.querySelectorAll('main *')].filter((e) => e.getBoundingClientRect().right > view.innerWidth + 1 && !e.closest('svg') && view.getComputedStyle(e).display !== 'none');
+    if (wide.length) t.problem('bug', `${name}: ${wide.length} elements run past the right edge (first: ${wide[0].className || wide[0].tagName})`);
+    t.event('monograph', `${name}: band ${!!mono}, blocks ${blocks.length}/5, diagram ${shown ? Math.round(shown.getBoundingClientRect().width) : 0}px of ${view.innerWidth}px`);
     for (const el of [overview, how, dg]) {
       if (!el) continue;
       smoothTo(el);
@@ -2243,7 +2257,7 @@ installPlaytest({
     },
     {
       id: 'productpages',
-      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
+      title: 'Product pages: each of the eight products is a monograph (header band with Rx mark and formulation line; Indications, Dosage, Side effects, Contraindications and How it works blocks with icons) with one diagram that fits the screen; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
       seconds: 60,
       tags: ['full'],
       description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products. Then opens Research from the footer and checks its diagram, indication table and that every figure links its source.',
