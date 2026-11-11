@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { NEWS_PRODUCTS, byNewest, newsFrom } from './site/news-voice.js';
 
 // Plain (non-module) scripts and data the pages load by path. Vite leaves them out of dist/, so copy them in:
 // Studio publishes dist/ as the beta site (GitHub Pages serves the repo root, where they already are).
-const PLAIN_FILES = ['site/analytics.js', 'site/hawkes-release.js', 'releases.json'];
+const PLAIN_FILES = ['site/analytics.js', 'site/hawkes-release.js', 'releases.json', 'data/news.json',
+  // Product photographs the Newsroom script names by path (Vite only keeps images a page's own markup references, under hashed names).
+  ...readdirSync('assets/products').filter((f) => f.endsWith('-rx.jpg')).map((f) => `assets/products/${f}`),
+];
 const copyPlainFiles = () => ({
   name: 'copy-plain-files',
   apply: 'build',
@@ -37,9 +41,37 @@ const checkDistLinks = () => ({
   },
 });
 
+// Writes data/news.json: one press release per recent product release, read from each product's releases.json the way
+// site/formulations.js does. A product with no release or an unreachable domain is skipped silently; if nothing can be
+// read at all (offline build) the committed file stays as it is. `live` lists the domains that answered: the Newsroom
+// asks only those on load, so a dead domain never logs a console error there.
+const writeNews = () => ({
+  name: 'write-news',
+  apply: 'build',
+  enforce: 'pre',
+  async buildStart() {
+    const items = [];
+    const live = [];
+    await Promise.all(
+      NEWS_PRODUCTS.map(async (p) => {
+        try {
+          const res = await fetch(p.releases, { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) return;
+          const found = newsFrom(p, await res.json());
+          if (found.length) { items.push(...found); live.push(p.slug); }
+        } catch { /* unreachable: skipped */ }
+      }),
+    );
+    if (!items.length) return;
+    items.sort(byNewest);
+    live.sort();
+    writeFileSync(resolve('data/news.json'), JSON.stringify({ live, items }, null, 2) + '\n');
+  },
+});
+
 export default defineConfig({
   base: './',
-  plugins: [copyPlainFiles(), checkDistLinks()],
+  plugins: [writeNews(), copyPlainFiles(), checkDistLinks()],
   appType: 'mpa',
   build: {
     outDir: 'dist',

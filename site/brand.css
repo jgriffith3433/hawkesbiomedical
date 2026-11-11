@@ -1778,3 +1778,9 @@ main { view-transition-name: site-content; }
   @keyframes vt-fade { from { opacity: 0; } }
   @keyframes vt-fade-out { to { opacity: 0; } }
 }
+
+/* Newsroom: press releases from product releases (site/newsroom.js) */
+.release-product { display: grid; grid-template-columns: 96px 1fr; gap: var(--space-4, 24px); align-items: start; }
+.release-thumb { display: block; border: 1px solid var(--line); }
+.release-thumb img { display: block; width: 100%; height: auto; }
+@media (max-width: 480px) { .release-product { grid-template-columns: 72px 1fr; } }

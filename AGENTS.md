@@ -43,6 +43,10 @@ CNAME favicon.svg
 
 `npm run dev` serves port **5174**. `npm run build` writes `dist/`.
 
+## Newsroom press releases
+
+`site/news-voice.js` holds each product's voice (Dose Of Destruction a trial, Imagine Live TV a broadcast) and turns a release (version, date, lot) into a two-sentence in-world press release, never the player-facing notes. The build (`writeNews` in `vite.config.js`) reads each product's releases.json and writes `data/news.json` (the newest three per product, plus `live`: the domains that answered; offline builds keep the committed file). `site/newsroom.js` renders them among the hand-written statements, newest first, then fetches once the `live` products' releases.json and adds any release not yet shown. Only `live` domains are asked at runtime so a dead or 404 domain never logs a console error (m_f502288ff742). Add a product's voice in `news-voice.js`. Scenario `newsroom`.
+
 ## Product pages
 
 Each product has `product-<slug>.html` (overview, how it works, one inline SVG diagram `.diagram-svg`, and an "On the timeline" strip of two or three moments linking to `timeline.html?product=<slug>`; classes at the end of `site/brand.css`), linked from its row on `products.html` ("Product file"). They state no figure or clinical result; any claim added later needs a source or a TODO for J. Copy one for the next product. Scenario `productpages`. `timeline.html` chips filter one product's thread (other eras fade; deep-link `?product=<slug>`).
