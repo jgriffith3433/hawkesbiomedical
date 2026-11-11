@@ -12,199 +12,235 @@
       "id": "dose-of-destruction-1.12.0",
       "date": "2026-10-27",
       "product": "Dose Of Destruction",
+      "category": "Dose Of Destruction",
       "slug": "dose-of-destruction",
       "version": "1.12.0",
       "headline": "Dose Of Destruction opens new formulation trial 1.12.0",
       "summary": "A new formulation trial of the Dose Of Destruction cytotoxic dose, formulation 1.12.0 (lot a4948f2), has been opened under the company's handling procedures. Trial conditions are recorded in the product file.",
       "image": "./assets/products/doseofdestruction-rx.jpg",
-      "page": "./product-dose-of-destruction.html"
+      "page": "./product-dose-of-destruction.html",
+      "article": "./news-dose-of-destruction-1.12.0.html"
     },
     {
       "id": "dose-of-destruction-1.11.0",
       "date": "2026-10-27",
       "product": "Dose Of Destruction",
+      "category": "Dose Of Destruction",
       "slug": "dose-of-destruction",
       "version": "1.11.0",
       "headline": "Dose Of Destruction opens new formulation trial 1.11.0",
       "summary": "A new formulation trial of the Dose Of Destruction cytotoxic dose, formulation 1.11.0 (lot 66e1491), has been opened under the company's handling procedures. Trial conditions are recorded in the product file.",
       "image": "./assets/products/doseofdestruction-rx.jpg",
-      "page": "./product-dose-of-destruction.html"
+      "page": "./product-dose-of-destruction.html",
+      "article": "./news-dose-of-destruction-1.11.0.html"
     },
     {
       "id": "dose-of-destruction-1.10.0",
       "date": "2026-10-27",
       "product": "Dose Of Destruction",
+      "category": "Dose Of Destruction",
       "slug": "dose-of-destruction",
       "version": "1.10.0",
       "headline": "Dose Of Destruction opens new formulation trial 1.10.0",
       "summary": "A new formulation trial of the Dose Of Destruction cytotoxic dose, formulation 1.10.0 (lot a3457fd), has been opened under the company's handling procedures. Trial conditions are recorded in the product file.",
       "image": "./assets/products/doseofdestruction-rx.jpg",
-      "page": "./product-dose-of-destruction.html"
+      "page": "./product-dose-of-destruction.html",
+      "article": "./news-dose-of-destruction-1.10.0.html"
     },
     {
       "id": "i-can-be-1.5.0",
       "date": "2026-10-27",
       "product": "I Can Be",
+      "category": "I Can Be",
       "slug": "i-can-be",
       "version": "1.5.0",
       "headline": "I Can Be assessment protocol revised to 1.5.0",
       "summary": "Hawkes Biomedical has revised the I Can Be full-body assessment protocol to formulation 1.5.0 (lot e5f698c). Existing assessments are not affected and remain on file.",
       "image": "./assets/products/icanbe-rx.jpg",
-      "page": "./product-i-can-be.html"
+      "page": "./product-i-can-be.html",
+      "article": "./news-i-can-be-1.5.0.html"
     },
     {
       "id": "i-can-be-1.4.7",
       "date": "2026-10-27",
       "product": "I Can Be",
+      "category": "I Can Be",
       "slug": "i-can-be",
       "version": "1.4.7",
       "headline": "I Can Be assessment protocol revised to 1.4.7",
       "summary": "Hawkes Biomedical has revised the I Can Be full-body assessment protocol to formulation 1.4.7 (lot 545b933). Existing assessments are not affected and remain on file.",
       "image": "./assets/products/icanbe-rx.jpg",
-      "page": "./product-i-can-be.html"
+      "page": "./product-i-can-be.html",
+      "article": "./news-i-can-be-1.4.7.html"
     },
     {
       "id": "i-can-be-1.4.6",
       "date": "2026-10-27",
       "product": "I Can Be",
+      "category": "I Can Be",
       "slug": "i-can-be",
       "version": "1.4.6",
       "headline": "I Can Be assessment protocol revised to 1.4.6",
       "summary": "Hawkes Biomedical has revised the I Can Be full-body assessment protocol to formulation 1.4.6 (lot 3d47366). Existing assessments are not affected and remain on file.",
       "image": "./assets/products/icanbe-rx.jpg",
-      "page": "./product-i-can-be.html"
+      "page": "./product-i-can-be.html",
+      "article": "./news-i-can-be-1.4.6.html"
     },
     {
       "id": "imagine-live-tv-1.9.1",
       "date": "2026-10-27",
       "product": "Imagine Live TV",
+      "category": "Imagine Live TV",
       "slug": "imagine-live-tv",
       "version": "1.9.1",
       "headline": "Imagine Live TV corrects its broadcast schedule at 1.9.1",
       "summary": "Imagine Live TV went to air with formulation 1.9.1 (lot bd32e59), its live medical education service. The revised broadcast is available to all current subscribers without interruption.",
       "image": "./assets/products/imaginelivetv-rx.jpg",
-      "page": "./product-imagine-live-tv.html"
+      "page": "./product-imagine-live-tv.html",
+      "article": "./news-imagine-live-tv-1.9.1.html"
     },
     {
       "id": "imagine-live-tv-1.9.0",
       "date": "2026-10-27",
       "product": "Imagine Live TV",
+      "category": "Imagine Live TV",
       "slug": "imagine-live-tv",
       "version": "1.9.0",
       "headline": "Imagine Live TV broadcasts formulation 1.9.0",
       "summary": "Imagine Live TV went to air with formulation 1.9.0 (lot 7ed3e9f), its live medical education service. The revised broadcast is available to all current subscribers without interruption.",
       "image": "./assets/products/imaginelivetv-rx.jpg",
-      "page": "./product-imagine-live-tv.html"
+      "page": "./product-imagine-live-tv.html",
+      "article": "./news-imagine-live-tv-1.9.0.html"
     },
     {
       "id": "imagine-live-tv-1.8.0",
       "date": "2026-10-27",
       "product": "Imagine Live TV",
+      "category": "Imagine Live TV",
       "slug": "imagine-live-tv",
       "version": "1.8.0",
       "headline": "Imagine Live TV broadcasts formulation 1.8.0",
       "summary": "Imagine Live TV went to air with formulation 1.8.0 (lot 64cceae), its live medical education service. The revised broadcast is available to all current subscribers without interruption.",
       "image": "./assets/products/imaginelivetv-rx.jpg",
-      "page": "./product-imagine-live-tv.html"
+      "page": "./product-imagine-live-tv.html",
+      "article": "./news-imagine-live-tv-1.8.0.html"
     },
     {
       "id": "ph-origins-1.10.0",
       "date": "2026-10-27",
       "product": "PH Origins",
+      "category": "PH Origins",
       "slug": "ph-origins",
       "version": "1.10.0",
       "headline": "PH Origins issues buffer formulation 1.10.0",
       "summary": "Hawkes Biomedical has issued formulation 1.10.0 of PH Origins (lot eb107f4), its pH balance line. The revision is recorded in the product file and the category position is unchanged.",
       "image": "./assets/products/phorigins-rx.jpg",
-      "page": "./product-ph-origins.html"
+      "page": "./product-ph-origins.html",
+      "article": "./news-ph-origins-1.10.0.html"
     },
     {
       "id": "ph-origins-1.9.1",
       "date": "2026-10-27",
       "product": "PH Origins",
+      "category": "PH Origins",
       "slug": "ph-origins",
       "version": "1.9.1",
       "headline": "PH Origins adjusts buffer formulation to 1.9.1",
       "summary": "Hawkes Biomedical has issued formulation 1.9.1 of PH Origins (lot a3a01cd), its pH balance line. The revision is recorded in the product file and the category position is unchanged.",
       "image": "./assets/products/phorigins-rx.jpg",
-      "page": "./product-ph-origins.html"
+      "page": "./product-ph-origins.html",
+      "article": "./news-ph-origins-1.9.1.html"
     },
     {
       "id": "the-place-department-1.6.1",
       "date": "2026-10-27",
       "product": "The Place Department",
+      "category": "The Place Department",
       "slug": "the-place-department",
       "version": "1.6.1",
       "headline": "The Place Department files formulation 1.6.1 to the register",
       "summary": "Formulation 1.6.1 of The Place Department has been entered in the register (lot 42). Stored documents remain under HIPAA-compliant custody throughout the revision.",
       "image": "./assets/products/theplacedepartment-rx.jpg",
-      "page": "./product-the-place-department.html"
+      "page": "./product-the-place-department.html",
+      "article": "./news-the-place-department-1.6.1.html"
     },
     {
       "id": "the-place-department-1.6.0",
       "date": "2026-10-27",
       "product": "The Place Department",
+      "category": "The Place Department",
       "slug": "the-place-department",
       "version": "1.6.0",
       "headline": "The Place Department files formulation 1.6.0 to the register",
       "summary": "Formulation 1.6.0 of The Place Department has been entered in the register (lot 41). Stored documents remain under HIPAA-compliant custody throughout the revision.",
       "image": "./assets/products/theplacedepartment-rx.jpg",
-      "page": "./product-the-place-department.html"
+      "page": "./product-the-place-department.html",
+      "article": "./news-the-place-department-1.6.0.html"
     },
     {
       "id": "yooba-land-1.6.1",
       "date": "2026-10-27",
       "product": "Yooba Land",
+      "category": "Yooba Land",
       "slug": "yooba-land",
       "version": "1.6.1",
       "headline": "Yooba Land support programme updated to 1.6.1",
       "summary": "The hyporexia support programme Yooba Land has been updated to formulation 1.6.1 (lot 180). Participants continue on their current plan and need take no action.",
       "image": "./assets/products/yoobaland-rx.jpg",
-      "page": "./product-yooba-land.html"
+      "page": "./product-yooba-land.html",
+      "article": "./news-yooba-land-1.6.1.html"
     },
     {
       "id": "yooba-land-1.6.0",
       "date": "2026-10-27",
       "product": "Yooba Land",
+      "category": "Yooba Land",
       "slug": "yooba-land",
       "version": "1.6.0",
       "headline": "Yooba Land support programme updated to 1.6.0",
       "summary": "The hyporexia support programme Yooba Land has been updated to formulation 1.6.0 (lot 179). Participants continue on their current plan and need take no action.",
       "image": "./assets/products/yoobaland-rx.jpg",
-      "page": "./product-yooba-land.html"
+      "page": "./product-yooba-land.html",
+      "article": "./news-yooba-land-1.6.0.html"
     },
     {
       "id": "yooba-land-1.5.0",
       "date": "2026-10-27",
       "product": "Yooba Land",
+      "category": "Yooba Land",
       "slug": "yooba-land",
       "version": "1.5.0",
       "headline": "Yooba Land support programme updated to 1.5.0",
       "summary": "The hyporexia support programme Yooba Land has been updated to formulation 1.5.0 (lot 176). Participants continue on their current plan and need take no action.",
       "image": "./assets/products/yoobaland-rx.jpg",
-      "page": "./product-yooba-land.html"
+      "page": "./product-yooba-land.html",
+      "article": "./news-yooba-land-1.5.0.html"
     },
     {
       "id": "ph-origins-1.9.0",
       "date": "2026-10-25",
       "product": "PH Origins",
+      "category": "PH Origins",
       "slug": "ph-origins",
       "version": "1.9.0",
       "headline": "PH Origins issues buffer formulation 1.9.0",
       "summary": "Hawkes Biomedical has issued formulation 1.9.0 of PH Origins (lot 6879670), its pH balance line. The revision is recorded in the product file and the category position is unchanged.",
       "image": "./assets/products/phorigins-rx.jpg",
-      "page": "./product-ph-origins.html"
+      "page": "./product-ph-origins.html",
+      "article": "./news-ph-origins-1.9.0.html"
     },
     {
       "id": "the-place-department-1.5.0",
       "date": "2026-10-25",
       "product": "The Place Department",
+      "category": "The Place Department",
       "slug": "the-place-department",
       "version": "1.5.0",
       "headline": "The Place Department files formulation 1.5.0 to the register",
       "summary": "Formulation 1.5.0 of The Place Department has been entered in the register (lot 41). Stored documents remain under HIPAA-compliant custody throughout the revision.",
       "image": "./assets/products/theplacedepartment-rx.jpg",
-      "page": "./product-the-place-department.html"
+      "page": "./product-the-place-department.html",
+      "article": "./news-the-place-department-1.5.0.html"
     }
   ]
 }

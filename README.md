@@ -29,7 +29,7 @@ npm run preview    # serve the build on port 4174
 | `research.html` | How a product is made (diagram), the line by indication, sourced figures |
 | `products.html` | PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, Dose Of Destruction, Hawkes Gen |
 | `leadership.html` | Pierce Hawkes, Hale, Voss, Lang (portraits, roles, founding story) |
-| `newsroom.html` | Dated statements: Hale, Lang, Voss, the Chairman |
+| `newsroom.html` | Press-release cards (each opens a `news-*.html` article) and dated statements: Hale, Lang, Voss, the Chairman |
 | `investors.html` | Mission, our position, selected figures, Zurich capital desk |
 | `compliance.html` | Compliance statement |
 | `privacy.html`, `terms.html` | Short legal pages |
