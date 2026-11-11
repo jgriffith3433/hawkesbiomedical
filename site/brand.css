@@ -1894,3 +1894,11 @@ main { view-transition-name: site-content; }
 .mono-side { border-top-color: var(--text); }
 .monograph .how.mono-block { margin-top: var(--space-5); padding-top: var(--card-pad); }
 @media (max-width: 900px) { .mono-band { grid-template-columns: minmax(0, 1fr); padding: var(--space-4); } .mono-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Product preview: a muted looping clip with its poster, and one Play / Watch button, at the top of the monograph band.
+   The clip's box is fixed by its 16:9 ratio so nothing moves when it loads; under reduced motion only the poster shows. */
+.mono-band .mono-preview { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.preview-clip { display: block; width: min(100%, 480px); height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--text); border: 1px solid var(--ink); }
+.mono-band .mono-play { min-height: var(--btn-h); min-width: 140px; background: var(--ink); color: var(--accent); }
+.mono-band .mono-play:hover, .mono-band .mono-play:focus-visible { background: var(--bg-raise); }
+@media (max-width: 900px) { .mono-band .mono-preview { flex-direction: column; align-items: stretch; } .preview-clip { width: 100%; } .mono-band .mono-play { width: 100%; } }

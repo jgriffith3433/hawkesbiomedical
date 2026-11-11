@@ -971,6 +971,104 @@ async function design(options, t) {
 }
 
 /** Product pages: reached from Products by a real click; each has an overview, how it works and one diagram; no figure or clinical result stated; same chrome as Products. */
+/**
+ * Product previews: each of the eight pages opened cold (a fresh frame load) logs the time from load to the first moving
+ * preview frame (2 s at most), has one Play or Watch button in view whose link answers 200, and at 390x844 shows the
+ * preview and a 44px button together without scrolling; then with reduced motion the poster only, still for 5 s.
+ */
+const PREVIEW_SLUGS = ['ph-origins', 'sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen'];
+
+async function linkStatus(url) {
+  try {
+    const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    return { status: res.status, opaque: false };
+  } catch {
+    // A site that sends no CORS header: the request can still be made, but its status cannot be read.
+    try {
+      await fetch(url, { mode: 'no-cors', cache: 'no-store' });
+      return { status: 0, opaque: true };
+    } catch {
+      return { status: -1, opaque: false };
+    }
+  }
+}
+
+async function previewPages(options, t) {
+  const W = 390, H = 844, MIN_TAP = 44, LIMIT = 2000;
+  const real = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sizes = [['390x844 phone', W, H], ['desktop', 0, 0]];
+  let step = 0;
+  const total = PREVIEW_SLUGS.length * sizes.length + (real ? 0 : PREVIEW_SLUGS.length);
+  for (const [label, w, h] of sizes) {
+    const f = openFrame();
+    f.style.cssText = w ? `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea` : 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
+    for (const slug of PREVIEW_SLUGS) {
+      f.src = 'about:blank';
+      await t.wait(150);
+      const doc = await frameLoad((fr) => (fr.src = `./product-${slug}.html?cold=${Date.now()}`));
+      if (!doc) { t.problem('bug', `${slug}: the product page did not open (${label})`); continue; }
+      const win = doc.defaultView;
+      const name = doc.querySelector('h1')?.textContent.trim() || slug;
+      t.scene(`${name} (${label})`);
+      const video = doc.querySelector('video[data-preview]');
+      const btn = doc.querySelector('a[data-play]');
+      if (!video || !btn) { t.problem('bug', `${name}: no preview clip or Play/Watch button (${label})`); continue; }
+      await t.until(() => win.__previewFirstFrame != null || (real && video.dataset.state === 'poster'), LIMIT * 3, `${name} first frame`).catch(() => {});
+      const ms = win.__previewFirstFrame;
+      if (ms == null) t.problem('bug', `${name}: the preview never showed a moving frame (${label})`);
+      else {
+        t.metric(`previewFirstFrameMs.${slug}.${w ? 'phone' : 'desktop'}`, ms);
+        t.event('preview', `${name} (${label}): first moving frame ${ms} ms after load`);
+        if (ms > LIMIT) t.problem('bug', `${name}: the preview moved after ${ms} ms, ${LIMIT} ms wanted (${label})`);
+      }
+      if (!video.poster || !video.getAttribute('poster')) t.problem('bug', `${name}: the preview has no poster frame`);
+      if (!video.muted || !video.loop) t.problem('bug', `${name}: the preview must be muted and looping`);
+      const vr = video.getBoundingClientRect(), br = btn.getBoundingClientRect();
+      const vh = win.innerHeight, vw = win.innerWidth;
+      const inView = (r) => r.top >= 0 && r.left >= 0 && r.bottom <= vh && r.right <= vw;
+      if (!inView(vr)) t.problem('bug', `${name}: the preview is not fully above the fold (${label}: bottom ${Math.round(vr.bottom)} of ${vh})`);
+      if (!inView(br)) t.problem('bug', `${name}: the ${btn.textContent.trim()} button is not fully above the fold (${label}: bottom ${Math.round(br.bottom)} of ${vh})`);
+      if (br.width < MIN_TAP || br.height < MIN_TAP) t.problem('bug', `${name}: the button is ${Math.round(br.width)}x${Math.round(br.height)}, ${MIN_TAP}x${MIN_TAP} wanted`);
+      if (!/^(Play|Watch)$/.test(btn.textContent.trim())) t.problem('bug', `${name}: the button says "${btn.textContent.trim()}", Play or Watch wanted`);
+      if (doc.querySelectorAll('a[data-play]').length !== 1) t.problem('bug', `${name}: one Play/Watch button wanted`);
+      const de = doc.documentElement;
+      if (de.scrollWidth - de.clientWidth > 1) t.problem('bug', `${name}: the page scrolls sideways (${label})`);
+      if (!w) {
+        const res = await linkStatus(btn.href);
+        t.event('play-link', `${name}: ${btn.textContent.trim()} -> ${btn.href}: ${res.opaque ? 'answered (status hidden by CORS)' : 'HTTP ' + res.status}`);
+        if (res.status === -1) t.problem('bug', `${name}: ${btn.href} did not answer`);
+        else if (!res.opaque && res.status !== 200) t.problem('bug', `${name}: ${btn.href} answered HTTP ${res.status}, 200 wanted`);
+      }
+      t.add('previewPagesChecked');
+      step++;
+      t.progress(step / total);
+    }
+  }
+  if (real) return;
+  // Reduced motion: the poster only, the clip never loaded, nothing moving for 5 s.
+  try {
+    sessionStorage.setItem('hawkes.calm', '1');
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    for (const slug of PREVIEW_SLUGS) {
+      const doc = await frameLoad((fr) => (fr.src = `./product-${slug}.html?calm=${Date.now()}`));
+      const video = doc?.querySelector('video[data-preview]');
+      if (!video) { t.problem('bug', `${slug}: no preview under reduced motion`); continue; }
+      const name = doc.querySelector('h1')?.textContent.trim() || slug;
+      t.scene(`${name} (reduced motion)`);
+      await t.until(() => video.dataset.state === 'poster', 3000, `${name} poster state`).catch(() => {});
+      await t.wait(5000);
+      const still = video.paused && video.currentTime === 0 && !video.currentSrc && video.dataset.state === 'poster' && !!video.getAttribute('poster');
+      t.event('reduced-motion', `${name}: poster only ${still}, paused ${video.paused}, time ${video.currentTime}`);
+      if (!still) t.problem('bug', `${name}: with reduced motion the preview must show only its poster and not animate for 5 s`);
+      step++;
+      t.progress(step / total);
+    }
+  } finally {
+    try { sessionStorage.removeItem('hawkes.calm'); } catch { /* ignore */ }
+  }
+}
+
 async function productPages(options, t) {
   let doc = await frameLoad((f) => (f.src = './index.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
@@ -2561,6 +2659,13 @@ installPlaytest({
       description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products. Then opens Research from the footer and checks its diagram, indication table and that every figure links its source.',
     },
     {
+      id: 'previews',
+      title: 'Product previews: each of the eight product pages opened cold moves its muted looping preview within 2 s, has one Play or Watch button above the fold whose link answers 200, fits preview and a 44px button on a 390x844 phone, and shows only the poster under reduced motion',
+      seconds: 150,
+      tags: ['full'],
+      description: 'Opens each product page cold at 390x844 and at full size, logs the time from load to the first moving preview frame (2 s at most), checks the poster, that the clip is muted and looping, that the preview and the Play or Watch button (44x44 at least) are fully inside the first screen, and fetches the button link for HTTP 200 (a site that hides its status from the browser is logged as answered). Then with reduced motion applied it checks each page shows the poster only and nothing moves for 5 s.',
+    },
+    {
       id: 'people',
       title: 'Leadership: each person has a portrait and a role; the founding story is at least 150 words',
       seconds: 20,
@@ -2660,6 +2765,7 @@ installPlaytest({
       else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
+      else if (id === 'previews') await previewPages(options, t);
       else if (id === 'timeline') await timeline(options, t);
       else if (id === 'timelinefilter') await timelineFilter(options, t);
       else if (id === 'story') await story(options, t);

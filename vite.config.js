@@ -11,6 +11,8 @@ const articleNames = () => readdirSync('.').filter((f) => /^news-.+\.html$/.test
 const PLAIN_FILES = () => [
   'site/analytics.js', 'site/hawkes-release.js', 'site/brand.css', 'site/brand.js',
   'releases.json', 'data/news.json',
+  // Product page preview clips (the page script sets their src at run time, so Vite does not see them).
+  ...readdirSync('assets/previews').filter((f) => f.endsWith('.mp4')).map((f) => `assets/previews/${f}`),
   // Logo and product photographs article pages name by path (Vite only keeps images a page's own markup references, under hashed names).
   'assets/brand/logo.png',
   ...readdirSync('assets/products').filter((f) => f.endsWith('-rx.jpg')).map((f) => `assets/products/${f}`),
