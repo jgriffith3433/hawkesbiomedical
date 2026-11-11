@@ -111,7 +111,7 @@ function openFrame() {
   if (frame) return frame;
   frame = document.createElement('iframe');
   frame.title = 'Playtest';
-  frame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
   document.body.appendChild(frame);
   return frame;
 }
@@ -709,7 +709,7 @@ async function accessPages(t) {
   let low = Infinity;
   for (const w of [1440, 390]) {
     const f = openFrame();
-    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100%;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
     t.scene(`Every page at ${w}px: alt text and contrast`);
     for (const [name, href] of DESIGN_PAGES) {
       const doc = await frameLoad((fr) => (fr.src = href));
@@ -930,7 +930,7 @@ async function design(options, t) {
   t.add('styleGuideChecked');
   for (const w of widths) {
     const f = openFrame();
-    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100vh;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:100%;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
     t.scene(`Every page at ${w}px`);
     for (let i = 0; i < DESIGN_PAGES.length; i++) {
       const [name, href] = DESIGN_PAGES[i];
@@ -971,6 +971,104 @@ async function design(options, t) {
 }
 
 /** Product pages: reached from Products by a real click; each has an overview, how it works and one diagram; no figure or clinical result stated; same chrome as Products. */
+/**
+ * Product previews: each of the eight pages opened cold (a fresh frame load) logs the time from load to the first moving
+ * preview frame (2 s at most), has one Play or Watch button in view whose link answers 200, and at 390x844 shows the
+ * preview and a 44px button together without scrolling; then with reduced motion the poster only, still for 5 s.
+ */
+const PREVIEW_SLUGS = ['ph-origins', 'sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen'];
+
+async function linkStatus(url) {
+  try {
+    const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    return { status: res.status, opaque: false };
+  } catch {
+    // A site that sends no CORS header: the request can still be made, but its status cannot be read.
+    try {
+      await fetch(url, { mode: 'no-cors', cache: 'no-store' });
+      return { status: 0, opaque: true };
+    } catch {
+      return { status: -1, opaque: false };
+    }
+  }
+}
+
+async function previewPages(options, t) {
+  const W = 390, H = 844, MIN_TAP = 44, LIMIT = 2000;
+  const real = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sizes = [['390x844 phone', W, H], ['desktop', 0, 0]];
+  let step = 0;
+  const total = PREVIEW_SLUGS.length * sizes.length + (real ? 0 : PREVIEW_SLUGS.length);
+  for (const [label, w, h] of sizes) {
+    const f = openFrame();
+    f.style.cssText = w ? `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea` : 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
+    for (const slug of PREVIEW_SLUGS) {
+      f.src = 'about:blank';
+      await t.wait(150);
+      const doc = await frameLoad((fr) => (fr.src = `./product-${slug}.html?cold=${Date.now()}`));
+      if (!doc) { t.problem('bug', `${slug}: the product page did not open (${label})`); continue; }
+      const win = doc.defaultView;
+      const name = doc.querySelector('h1')?.textContent.trim() || slug;
+      t.scene(`${name} (${label})`);
+      const video = doc.querySelector('video[data-preview]');
+      const btn = doc.querySelector('a[data-play]');
+      if (!video || !btn) { t.problem('bug', `${name}: no preview clip or Play/Watch button (${label})`); continue; }
+      await t.until(() => win.__previewFirstFrame != null || (real && video.dataset.state === 'poster'), LIMIT * 3, `${name} first frame`).catch(() => {});
+      const ms = win.__previewFirstFrame;
+      if (ms == null) t.problem('bug', `${name}: the preview never showed a moving frame (${label})`);
+      else {
+        t.metric(`previewFirstFrameMs.${slug}.${w ? 'phone' : 'desktop'}`, ms);
+        t.event('preview', `${name} (${label}): first moving frame ${ms} ms after load`);
+        if (ms > LIMIT) t.problem('bug', `${name}: the preview moved after ${ms} ms, ${LIMIT} ms wanted (${label})`);
+      }
+      if (!video.poster || !video.getAttribute('poster')) t.problem('bug', `${name}: the preview has no poster frame`);
+      if (!video.muted || !video.loop) t.problem('bug', `${name}: the preview must be muted and looping`);
+      const vr = video.getBoundingClientRect(), br = btn.getBoundingClientRect();
+      const vh = win.innerHeight, vw = win.innerWidth;
+      const inView = (r) => r.top >= 0 && r.left >= 0 && r.bottom <= vh && r.right <= vw;
+      if (!inView(vr)) t.problem('bug', `${name}: the preview is not fully above the fold (${label}: bottom ${Math.round(vr.bottom)} of ${vh})`);
+      if (!inView(br)) t.problem('bug', `${name}: the ${btn.textContent.trim()} button is not fully above the fold (${label}: bottom ${Math.round(br.bottom)} of ${vh})`);
+      if (br.width < MIN_TAP || br.height < MIN_TAP) t.problem('bug', `${name}: the button is ${Math.round(br.width)}x${Math.round(br.height)}, ${MIN_TAP}x${MIN_TAP} wanted`);
+      if (!/^(Play|Watch)$/.test(btn.textContent.trim())) t.problem('bug', `${name}: the button says "${btn.textContent.trim()}", Play or Watch wanted`);
+      if (doc.querySelectorAll('a[data-play]').length !== 1) t.problem('bug', `${name}: one Play/Watch button wanted`);
+      const de = doc.documentElement;
+      if (de.scrollWidth - de.clientWidth > 1) t.problem('bug', `${name}: the page scrolls sideways (${label})`);
+      if (!w) {
+        const res = await linkStatus(btn.href);
+        t.event('play-link', `${name}: ${btn.textContent.trim()} -> ${btn.href}: ${res.opaque ? 'answered (status hidden by CORS)' : 'HTTP ' + res.status}`);
+        if (res.status === -1) t.problem('bug', `${name}: ${btn.href} did not answer`);
+        else if (!res.opaque && res.status !== 200) t.problem('bug', `${name}: ${btn.href} answered HTTP ${res.status}, 200 wanted`);
+      }
+      t.add('previewPagesChecked');
+      step++;
+      t.progress(step / total);
+    }
+  }
+  if (real) return;
+  // Reduced motion: the poster only, the clip never loaded, nothing moving for 5 s.
+  try {
+    sessionStorage.setItem('hawkes.calm', '1');
+    const f = openFrame();
+    f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+    for (const slug of PREVIEW_SLUGS) {
+      const doc = await frameLoad((fr) => (fr.src = `./product-${slug}.html?calm=${Date.now()}`));
+      const video = doc?.querySelector('video[data-preview]');
+      if (!video) { t.problem('bug', `${slug}: no preview under reduced motion`); continue; }
+      const name = doc.querySelector('h1')?.textContent.trim() || slug;
+      t.scene(`${name} (reduced motion)`);
+      await t.until(() => video.dataset.state === 'poster', 3000, `${name} poster state`).catch(() => {});
+      await t.wait(5000);
+      const still = video.paused && video.currentTime === 0 && !video.currentSrc && video.dataset.state === 'poster' && !!video.getAttribute('poster');
+      t.event('reduced-motion', `${name}: poster only ${still}, paused ${video.paused}, time ${video.currentTime}`);
+      if (!still) t.problem('bug', `${name}: with reduced motion the preview must show only its poster and not animate for 5 s`);
+      step++;
+      t.progress(step / total);
+    }
+  } finally {
+    try { sessionStorage.removeItem('hawkes.calm'); } catch { /* ignore */ }
+  }
+}
+
 async function productPages(options, t) {
   let doc = await frameLoad((f) => (f.src = './index.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
@@ -994,6 +1092,20 @@ async function productPages(options, t) {
     if (diagrams.length !== 1) t.problem('bug', `${name}: ${diagrams.length} diagrams, one wanted`);
     const dg = diagrams[0];
     if (dg && (!dg.getAttribute('aria-label') || dg.querySelectorAll('text').length < 6)) t.problem('bug', `${name}: the diagram has no label or text`);
+    // Monograph: header band (Rx mark, formulation line) and the five insert blocks, each with an icon.
+    const mono = doc.querySelector('.mono-band');
+    if (!mono || !mono.querySelector('.mono-rx') || !mono.querySelector('.mono-formulation')?.textContent.trim()) t.problem('bug', `${name}: no monograph header band (Rx mark and formulation line)`);
+    const blocks = ['indications', 'dosage', 'side-effects', 'contraindications', 'how'].filter((id) => doc.querySelector(`#${id}`)?.closest('.mono-block')?.querySelector('svg.mono-icon') && doc.querySelector(`#${id}`).closest('.mono-block').querySelectorAll('li').length);
+    if (blocks.length !== 5) t.problem('bug', `${name}: monograph blocks found ${blocks.length} of 5 (${blocks.join(', ')})`);
+    const view = doc.defaultView;
+    const shown = [...doc.querySelectorAll('svg.diagram-svg')].find((x) => view.getComputedStyle(x).display !== 'none');
+    if (shown) {
+      const r = shown.getBoundingClientRect();
+      if (r.right > view.innerWidth + 1 || r.width < 200) t.problem('bug', `${name}: the shown diagram is cut off or too small (${Math.round(r.width)}px in ${view.innerWidth}px)`);
+    }
+    const wide = [...doc.querySelectorAll('main *')].filter((e) => e.getBoundingClientRect().right > view.innerWidth + 1 && !e.closest('svg') && view.getComputedStyle(e).display !== 'none');
+    if (wide.length) t.problem('bug', `${name}: ${wide.length} elements run past the right edge (first: ${wide[0].className || wide[0].tagName})`);
+    t.event('monograph', `${name}: band ${!!mono}, blocks ${blocks.length}/5, diagram ${shown ? Math.round(shown.getBoundingClientRect().width) : 0}px of ${view.innerWidth}px`);
     for (const el of [overview, how, dg]) {
       if (!el) continue;
       smoothTo(el);
@@ -1260,7 +1372,7 @@ async function phone(options, t) {
 async function timelineFilter(options, t) {
   const MIN_TAP = 44;
   const f = openFrame();
-  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
 
   const opacityOf = (el, doc) => parseFloat(doc.defaultView.getComputedStyle(el).opacity);
   const filteredState = (doc) => {
@@ -1323,7 +1435,7 @@ async function timelineFilter(options, t) {
 
   // Criterion 2: deep link opens already filtered.
   t.scene('Deep link ?product=');
-  f.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#f3f0ea';
+  f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:#f3f0ea';
   doc = await frameLoad((fr) => (fr.src = './timeline.html?product=sick-of-it'));
   if (!doc) throw new Error("deep-linked Timeline didn't open");
   await t.until(() => doc.querySelector('.timeline-track.is-filtered'), 8000, 'deep-link filter').catch(() => {});
@@ -2019,7 +2131,193 @@ async function motion(options, t) {
   t.event('reduced-motion', `prefers-reduced-motion rule present: ${calmRule}`);
   if (!calmRule) t.problem('bug', 'Motion: no prefers-reduced-motion rule covering the new transitions');
   closeFrame();
+  t.progress(0.5);
+  await motionFlow(options, t);
   t.progress(1);
+}
+
+/** Longest gap between animation frames (ms) in the top window while `run` does its work, and what the work returned. */
+async function withFrameGaps(run) {
+  let last = performance.now();
+  let worst = 0;
+  let on = true;
+  const tick = (now) => {
+    if (!on) return;
+    worst = Math.max(worst, now - last);
+    last = now;
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  try {
+    const value = await run();
+    return { gap: Math.round(worst), value };
+  } finally {
+    on = false;
+  }
+}
+
+/** Cumulative layout shift of a loaded page (shifts without recent input), read from the buffered entries. */
+function pageCls(doc) {
+  const win = doc.defaultView;
+  return new Promise((resolve) => {
+    let sum = 0;
+    try {
+      const po = new win.PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) sum += e.value;
+      });
+      po.observe({ type: 'layout-shift', buffered: true });
+      setTimeout(() => {
+        po.takeRecords().forEach((e) => { if (!e.hadRecentInput) sum += e.value; });
+        po.disconnect();
+        resolve(Math.round(sum * 1000) / 1000);
+      }, 300);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** Animations running on a page (CSS animations, transitions, and view-transition pseudo-elements) plus the hero field loop. */
+function runningMotion(doc) {
+  const win = doc.defaultView;
+  const anims = doc.getAnimations().filter((a) => a.playState === 'running');
+  const vt = anims.filter((a) => a.effect && /view-transition/.test(a.effect.pseudoElement || '')).length;
+  const field = win.hawkesHeroField ? win.hawkesHeroField.status() : null;
+  return { total: anims.length, vt, hero: field ? (field.running ? 1 : 0) : 0, heroMode: field ? field.motion : 'none' };
+}
+
+/** What the page's own CSS says about page transitions: 'auto' (the @view-transition rule that applies now opts in) or 'none'. */
+function viewTransitionRule(doc) {
+  const win = doc.defaultView;
+  let nav = 'none';
+  const walk = (rules) => {
+    for (const r of rules) {
+      if (r.media) {
+        if (win.matchMedia(r.media.mediaText).matches) walk(r.cssRules);
+      } else if (/^@view-transition/.test(r.cssText || '')) {
+        const m = /navigation:\s*(\w+)/.exec(r.cssText);
+        nav = m ? m[1] : 'none';
+      } else if (r.cssRules) {
+        walk(r.cssRules);
+      }
+    }
+  };
+  for (const sheet of doc.styleSheets) {
+    try { walk(sheet.cssRules); } catch { /* cross-origin web fonts */ }
+  }
+  return nav;
+}
+
+/** A touch tap on an element in the frame: pointer down and up as a finger sends them, then the click. */
+function tapIn(el) {
+  const win = el.ownerDocument.defaultView;
+  for (const type of ['pointerdown', 'pointerup']) el.dispatchEvent(new win.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
+  el.click();
+}
+
+/**
+ * Home to a product page to Newsroom and back: longest frame gap per transition, CLS per page, sideways scroll. Run once in
+ * the visitor's own motion setting and once with prefers-reduced-motion applied (see site/calm.js): then no page transition
+ * may be enabled or running, and the hero field must be a still frame.
+ */
+async function motionFlow(options, t) {
+  const real = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The bot may already emulate reduced motion: then that is the one pass. Otherwise play full motion, then the calm pass.
+  if (!real) await motionWalk(t, false);
+  try {
+    sessionStorage.setItem('hawkes.calm', '1');
+    await motionWalk(t, true);
+  } finally {
+    try { sessionStorage.removeItem('hawkes.calm'); } catch { /* ignore */ }
+  }
+}
+
+async function motionWalk(t, calm) {
+  const MAX_GAP = 50;
+  const MAX_CLS = 0.1;
+  const real = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 480;
+  const mode = `${window.innerWidth}x${window.innerHeight}${touch ? ' touch' : ''}, ${calm ? (real ? 'reduced motion' : 'reduced motion (emulated)') : 'full motion'}`;
+  const tag = calm ? 'calm' : 'full';
+  t.scene(`Motion flow: ${calm ? 'reduced motion' : 'full motion'}`);
+  t.event('flow', `motion flow at ${mode}`);
+  closeFrame();
+  openFrame();
+  const win = () => frame.contentWindow;
+  const worstGap = { name: '', gap: 0 };
+  const seen = [];
+  const press = (el) => (touch ? tapIn(el) : el.click());
+
+  // Tap the menu toggle first when the nav is folded (phone), as a visitor does.
+  const openMenu = async (doc) => {
+    const toggle = doc.querySelector('.nav-toggle, [aria-controls][aria-expanded]');
+    if (toggle && doc.defaultView.getComputedStyle(toggle).display !== 'none' && toggle.getAttribute('aria-expanded') !== 'true') {
+      press(toggle);
+      await t.wait(450);
+    }
+  };
+
+  const settle = async (doc, name) => {
+    await t.until(() => doc.readyState === 'complete' && [...doc.images].every((i) => i.complete || i.loading === 'lazy'), 8000, `${name} images`).catch(() => {});
+    await t.wait(calm ? 300 : 900);
+  };
+
+  // Visit: measure the gaps while `go` runs the navigation, then CLS and running motion on the new page.
+  const visit = async (page, label, go) => {
+    t.scene(`${label} (${tag})`);
+    const { gap, value: doc } = await withFrameGaps(async () => {
+      const d = await go();
+      if (!d) throw new Error(`${page} didn't open`);
+      await settle(d, page);
+      return d;
+    });
+    const cls = await pageCls(doc);
+    const m = runningMotion(doc);
+    const nav = viewTransitionRule(doc);
+    seen.push(page);
+    t.metric(`gap ${tag} ${label}`, gap);
+    t.metric(`cls ${tag} ${label}`, cls == null ? -1 : cls);
+    t.event('transition', `${label} [${calm ? 'reduced motion' : 'full motion'}]: longest frame gap ${gap} ms, CLS ${cls == null ? 'n/a' : cls} on ${page}; page transitions ${nav}; running animations ${m.total}, view-transition ${m.vt}, hero ${m.hero} (${m.heroMode})`);
+    if (gap > worstGap.gap) { worstGap.name = page; worstGap.gap = gap; }
+    if (gap > MAX_GAP) t.problem('bug', `${page}: longest frame gap ${gap} ms during "${label}" is over ${MAX_GAP} ms at ${mode}`);
+    if (cls != null && cls > MAX_CLS) t.problem('bug', `${page}: layout shift (CLS) ${cls} is over ${MAX_CLS} at ${mode}`);
+    const over = doc.documentElement.scrollWidth - doc.defaultView.innerWidth;
+    if (over > 1) t.problem('bug', `${page}: sideways scroll by ${over}px at ${mode}`);
+    if (calm) {
+      if (!real && doc.documentElement.dataset.calm !== '1') t.problem('bug', `${page}: reduced-motion emulation did not reach the page (${mode})`);
+      if (nav !== 'none') t.problem('bug', `${page}: page transitions are still enabled (@view-transition navigation: ${nav}) under reduced motion`);
+      if (m.vt > 0) t.problem('bug', `${page}: ${m.vt} page transition(s) running under reduced motion`);
+      if (m.hero > 0 || (m.heroMode !== 'still' && m.heroMode !== 'none')) t.problem('bug', `${page}: hero animation runs under reduced motion (${m.heroMode})`);
+      if (m.total > 0) t.problem('bug', `${page}: ${m.total} animation(s) still running under reduced motion`);
+      if (doc.documentElement.classList.contains('reveal-on')) t.problem('bug', `${page}: scroll reveal is on under reduced motion`);
+    } else if (nav !== 'auto') {
+      t.problem('bug', `${page}: no page transition is set up (@view-transition navigation: ${nav})`);
+    }
+    return doc;
+  };
+
+  let doc = await visit('Home', 'Open Home', () => frameLoad((f) => { f.src = './index.html'; }));
+  await openMenu(doc);
+  const goLink = (label, selector) => async () => {
+    const link = doc.querySelector(selector);
+    if (!link) throw new Error(`no ${label} link (${selector})`);
+    link.scrollIntoView({ block: 'center' });
+    await t.wait(300);
+    return frameLoad(() => press(link));
+  };
+  doc = await visit('Products', 'Home to Products', goLink('Products in the nav', 'header a[href$="products.html"]'));
+  doc = await visit('PH Origins', 'Products to PH Origins', goLink('PH Origins image', '#ph-origins .product-shot'));
+  await openMenu(doc);
+  doc = await visit('Newsroom', 'PH Origins to Newsroom', goLink('Newsroom in the nav', 'header a[href$="newsroom.html"]'));
+  const back = () => frameLoad(() => win().history.back());
+  doc = await visit('PH Origins', 'Back to PH Origins', back);
+  doc = await visit('Products', 'Back to Products', back);
+  doc = await visit('Home', 'Back to Home', back);
+  if (!/(index\.html|\/)$/.test(win().location.pathname)) t.problem('bug', `Back did not end on Home (${win().location.pathname})`);
+
+  t.event('flow-summary', `${seen.length} pages in order (${seen.join(' > ')}); worst frame gap ${worstGap.gap} ms on ${worstGap.name || 'none'} at ${mode}`);
+  t.add('transitionsMeasured', seen.length);
+  closeFrame();
 }
 
 /** Redacted passages: black bars, reveal on tap/focus with glitch, stay for the visit, 8–12 across four pages, contrast and nav clear. */
@@ -2176,37 +2474,149 @@ async function newsroom(options, t) {
   if (!doc) throw new Error("index.html didn't open");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
   await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom merge done').catch(() => t.problem('bug', 'Newsroom: releases never finished loading'));
-  const list = doc.querySelector('.notes');
-  const notes = [...doc.querySelectorAll('.notes .release-note')];
-  const made = notes.filter((n) => n.classList.contains('release-product'));
-  const hand = notes.filter((n) => !n.classList.contains('release-product'));
-  t.metric('pressReleases', made.length);
+  const grid = doc.querySelector('.news-cards');
+  const cards = [...doc.querySelectorAll('.news-cards .news-card')];
+  const hand = [...doc.querySelectorAll('.notes .release-note')];
+  t.metric('pressReleases', cards.length);
   t.metric('handWritten', hand.length);
-  t.event('news', `${made.length} product press releases, ${hand.length} hand-written; ${list.dataset.newsBuilt} from the build, ${list.dataset.newsTotal} after the load fetch`);
-  if (made.length < 1) t.problem('bug', 'Newsroom: no product press releases');
+  t.event('news', `${cards.length} product press release cards, ${hand.length} hand-written; ${grid?.dataset.newsBuilt} from the build, ${grid?.dataset.newsTotal} after the load fetch`);
+  if (cards.length < 1) t.problem('bug', 'Newsroom: no product press releases');
   if (hand.length < 5) t.problem('bug', `Newsroom: only ${hand.length} hand-written items remain (5 expected)`);
-  if (Number(list.dataset.newsTotal) < Number(list.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
-  const dates = notes.map((n) => n.querySelector('time')?.dateTime || '');
+  if (Number(grid?.dataset.newsTotal) < Number(grid?.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
+  const dates = cards.map((n) => n.querySelector('time')?.dateTime || '');
   if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: not newest first (${dates.join(', ')})`);
-  for (const n of made.slice(0, 6)) {
+  for (const n of cards.slice(0, 6)) {
     n.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const img = n.querySelector('img');
     if (img) await t.until(() => img.complete, 8000, 'release image').catch(() => {});
     const date = n.querySelector('time')?.dateTime;
-    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.split(',')[0].trim();
+    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.trim();
     const head = n.querySelector('h2')?.textContent.trim();
     const sentences = (n.querySelector('p:not(.kicker)')?.textContent || '').split(/\.\s+/).filter(Boolean).length;
-    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'})`);
+    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'}, href ${n.getAttribute('href')})`);
     if (!date || !prod || !head) t.problem('bug', 'Newsroom: a press release lacks its date, product or headline');
     if (!img || !img.naturalWidth) t.problem('bug', `Newsroom: ${prod} press release has no image that loads`);
+    if (!/^\.\/news-.+\.html$/.test(n.getAttribute('href') || '')) t.problem('bug', `Newsroom: ${prod} card does not link to an article page`);
     if (sentences !== 2) t.problem('bug', `Newsroom: ${prod} summary is ${sentences} sentences, two wanted`);
     if (/\b(game|gameplay|player|B3|vat)\b/i.test(n.textContent)) t.problem('bug', `Newsroom: ${prod} release uses off-brand wording`);
     await t.wait(500);
   }
-  const ids = made.map((n) => n.dataset.news);
+  const ids = cards.map((n) => n.dataset.news);
   if (new Set(ids).size !== ids.length) t.problem('bug', 'Newsroom: a release is listed twice');
   closeFrame();
   t.progress(1);
+}
+
+/** Articles: Newsroom cards open articles; Home shows three newest; each product page shows its latest; phone layout holds. */
+async function articles(options, t) {
+  const W = 390;
+  const H = 844;
+  t.scene('Home');
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("index.html didn't open");
+  await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest news').catch(() => t.problem('bug', 'Home: latest news never finished loading'));
+  const homeStrip = doc.querySelector('[data-latest-news]');
+  const homeCards = [...doc.querySelectorAll('[data-latest-news] .news-card')];
+  t.metric('homeLatest', homeCards.length);
+  t.event('home-latest', `Home strip: ${homeCards.length} cards (hidden=${homeStrip?.hidden})`);
+  if (!homeStrip || homeStrip.hidden || homeCards.length !== 3) t.problem('bug', `Home: expected 3 latest news cards, got ${homeCards.length}`);
+  for (const c of homeCards) {
+    if (!c.querySelector('time')?.dateTime || !c.querySelector('h2')?.textContent.trim()) t.problem('bug', 'Home: a latest card lacks date or title');
+    if (!/^\.\/news-.+\.html$/.test(c.getAttribute('href') || '')) t.problem('bug', 'Home: a latest card does not link to an article');
+  }
+  t.progress(0.2);
+
+  // Criterion 4 first while still on Home: hero above the fold and no sideways scroll at 390x844.
+  const frame = openFrame();
+  frame.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  doc = await frameLoad((f) => (f.src = './index.html'));
+  await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest at 390').catch(() => {});
+  await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const heroH = doc.querySelector('.hero .display');
+  const heroBtn = doc.querySelector('.hero .actions .btn');
+  const heroOk = heroH && heroBtn && heroH.getBoundingClientRect().bottom <= H && heroBtn.getBoundingClientRect().bottom <= H;
+  t.event('hero-fold', `Home at ${W}x${H}: headline bottom ${Math.round(heroH?.getBoundingClientRect().bottom || 0)}, button ${Math.round(heroBtn?.getBoundingClientRect().bottom || 0)}`);
+  if (!heroOk) t.problem('bug', `Home at ${W}x${H}: the hero headline or button is below the fold`);
+  const overHome = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  t.metric('overflowHome390', Math.max(0, overHome));
+  if (overHome > 1) t.problem('bug', `Home at ${W}x${H}: sideways scroll by ${overHome}px`);
+  t.scene('Home phone');
+  t.progress(0.35);
+
+  // At 390 the primary nav is behind the menu toggle — open it the way a visitor would, then click Newsroom.
+  const toggle = doc.getElementById('navToggle');
+  if (toggle && doc.defaultView.getComputedStyle(toggle).display !== 'none') {
+    toggle.click();
+    await t.wait(400);
+  }
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom cards').catch(() => t.problem('bug', 'Newsroom: cards never finished loading'));
+  const cards = [...doc.querySelectorAll('.news-cards .news-card')];
+  const dates = cards.map((n) => n.querySelector('time')?.dateTime || '');
+  t.metric('newsroomCards', cards.length);
+  t.event('newsroom-cards', `Newsroom: ${cards.length} cards, newest first (${dates.slice(0, 3).join(', ')})`);
+  if (cards.length < 1) t.problem('bug', 'Newsroom: no press-release cards');
+  if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: cards not newest first (${dates.join(', ')})`);
+  const first = cards[0];
+  first.scrollIntoView({ block: 'center' });
+  await t.wait(400);
+  const articleHref = first.getAttribute('href');
+  t.event('open-article', `Opening ${articleHref}`);
+  doc = await clickLink(t, doc, `.news-card[data-news="${first.dataset.news}"]`, 'first press-release card');
+  await t.wait(500);
+  const article = doc.querySelector('.news-article');
+  const aTitle = doc.querySelector('.news-article h1, .news-article .page-title')?.textContent.trim();
+  const aDate = doc.querySelector('.news-article time')?.dateTime;
+  const aImg = doc.querySelector('.news-article-shot img');
+  if (aImg) await t.until(() => aImg.complete && aImg.naturalWidth > 0, 8000, 'article image').catch(() => {});
+  t.scene('Article');
+  t.event('article', `title="${aTitle}", date=${aDate}, image=${aImg && aImg.naturalWidth ? fileOf(aImg.src) : 'MISSING'}`);
+  if (!article || !aTitle || !aDate) t.problem('bug', 'Article: missing title or date');
+  if (!aImg || !aImg.naturalWidth) t.problem('bug', 'Article: image did not load');
+  // Share preview tags for the article (og:type article, with image).
+  const meta = (attr, key) => doc.head.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content') ?? null;
+  const ogTitle = meta('property', 'og:title');
+  const ogType = meta('property', 'og:type');
+  const ogImage = meta('property', 'og:image');
+  const ogUrl = meta('property', 'og:url');
+  t.event('article-share', `og:type=${ogType}, og:image=${ogImage ? 'yes' : 'no'}, og:url=${ogUrl}`);
+  if (ogType !== 'article') t.problem('bug', `Article: og:type is "${ogType}", not article`);
+  if (!ogImage || !ogTitle || !ogUrl) t.problem('bug', 'Article: missing share preview tags');
+  if (ogTitle !== doc.title.trim()) t.problem('bug', 'Article: og:title does not match the page title');
+  const overArt = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  t.metric('overflowArticle390', Math.max(0, overArt));
+  if (overArt > 1) t.problem('bug', `Article at ${W}x${H}: sideways scroll by ${overArt}px`);
+  t.progress(0.65);
+
+  // Criterion 3: every product page shows its latest release (a product with none on file shows its product-file notice).
+  const productSlugs = ['ph-origins', 'imagine-live-tv', 'dose-of-destruction', 'i-can-be', 'the-place-department', 'yooba-land', 'sick-of-it', 'hawkes-gen'];
+  let withLatest = 0;
+  for (const slug of productSlugs) {
+    doc = await frameLoad((f) => (f.src = `./product-${slug}.html`));
+    if (!doc) { t.problem('bug', `Product ${slug}: page did not open`); continue; }
+    await t.until(() => doc.documentElement.dataset.productNewsReady === '1', 12000, `${slug} news`).catch(() => {});
+    const block = doc.querySelector('[data-product-news]');
+    const card = block?.querySelector('.news-card');
+    const shown = block && !block.hidden && !!card;
+    if (shown) withLatest += 1;
+    t.event('product-latest', `${slug}: ${shown ? `shows ${card.dataset.news} → ${card.getAttribute('href')}` : 'no latest (hidden)'}`);
+    if (!shown) {
+      t.problem('bug', `${slug}: product page shows no latest release card`);
+    } else if (!card.querySelector('time')?.dateTime || !card.querySelector('h2')) {
+      t.problem('bug', `${slug}: latest card lacks date or title`);
+    } else {
+      // The latest sits near the top of the product file, not at the foot of a long page.
+      block.scrollIntoView({ block: 'center' });
+      await t.wait(150);
+    }
+    const over = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+    if (over > 1) t.problem('bug', `${slug} at ${W}x${H}: sideways scroll by ${over}px`);
+  }
+  t.metric('productsWithLatest', withLatest);
+  if (withLatest !== productSlugs.length) t.problem('bug', `Only ${withLatest} of ${productSlugs.length} product pages show a latest release`);
+  t.progress(1);
+  closeFrame();
 }
 
 installPlaytest({
@@ -2243,10 +2653,17 @@ installPlaytest({
     },
     {
       id: 'productpages',
-      title: 'Product pages: each of the eight products has an overview, a how-it-works section and one diagram; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
+      title: 'Product pages: each of the eight products is a monograph (header band with Rx mark and formulation line; Indications, Dosage, Side effects, Contraindications and How it works blocks with icons) with one diagram that fits the screen; no unsourced figure; same header, footer and styles as Products; Research page with a diagram and sourced figures',
       seconds: 60,
       tags: ['full'],
       description: 'Clicks Products in the nav, then opens each product file from its row, scrolls to the overview, how it works and the diagram, checks the diagram is labelled, that no figure or clinical result is stated, the link-preview tags, the image alt text and that header and footer match Products. Then opens Research from the footer and checks its diagram, indication table and that every figure links its source.',
+    },
+    {
+      id: 'previews',
+      title: 'Product previews: each of the eight product pages opened cold moves its muted looping preview within 2 s, has one Play or Watch button above the fold whose link answers 200, fits preview and a 44px button on a 390x844 phone, and shows only the poster under reduced motion',
+      seconds: 150,
+      tags: ['full'],
+      description: 'Opens each product page cold at 390x844 and at full size, logs the time from load to the first moving preview frame (2 s at most), checks the poster, that the clip is muted and looping, that the preview and the Play or Watch button (44x44 at least) are fully inside the first screen, and fetches the button link for HTTP 200 (a site that hides its status from the browser is logged as answered). Then with reduced motion applied it checks each page shows the poster only and nothing moves for 5 s.',
     },
     {
       id: 'people',
@@ -2263,10 +2680,10 @@ installPlaytest({
     },
     {
       id: 'motion',
-      title: 'Motion tokens: durations and easings on the style guide; cards, buttons and links respond; phone menu slides; focus rings and 44px taps hold',
-      seconds: 45,
+      title: 'Motion: tokens and micro-interactions, then Home to a product page to Newsroom and back with the longest frame gap per transition (over 50 ms fails, naming the page) and CLS per page (over 0.1 fails); then the same walk with reduced motion applied, where no page transition or hero animation runs',
+      seconds: 180,
       tags: ['full'],
-      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule.',
+      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule. Then walks Home, Products, PH Origins, Newsroom and back (opening the menu first when the nav is folded), logs the longest animation-frame gap per transition and the layout shift per page, fails any page over 50 ms or CLS 0.1 or with sideways scroll, and then walks it a second time with prefers-reduced-motion applied to the page (the stylesheet reduced-motion rules turned on through sessionStorage, unless the bot already emulates it) and fails any enabled or running page transition, any running animation and any moving hero field. Taps instead of clicks at 390x844; the bot sets touch and CPU throttling.',
     },
     {
       id: 'phone',
@@ -2312,10 +2729,17 @@ installPlaytest({
     },
     {
       id: 'newsroom',
-      title: 'Newsroom: press releases for real product releases, newest first with date, product and image; hand-written statements kept; fresh releases merged on load; dead domains silent',
+      title: 'Newsroom: press-release cards for real product releases, newest first with date, product and image, each linking to its article; hand-written statements kept; fresh releases merged on load; dead domains silent',
       seconds: 40,
       tags: ['full'],
-      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press releases and the hand-written items are all there, newest first, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press-release cards and the hand-written items are all there, newest first, each card links to an article page, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+    },
+    {
+      id: 'articles',
+      title: 'Articles: Newsroom cards open dated articles with image and share tags; Home shows the three newest; each product page shows its latest; at 390x844 no sideways scroll and the home hero stays above the fold',
+      seconds: 75,
+      tags: ['full'],
+      description: 'Checks Home latest strip (3 cards), Newsroom cards newest first, opens the first card into an article (title, date, image, og:type article), checks each product page latest release, and at 390x844 confirms the home hero is above the fold with no sideways scroll on Home, the article and product pages.',
     },
     {
       id: 'redaction',
@@ -2334,12 +2758,14 @@ installPlaytest({
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'newsroom') await newsroom(options, t);
+      else if (id === 'articles') await articles(options, t);
       else if (id === 'redaction') await redaction(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
       else if (id === 'polish') await polish(options, t);
       else if (id === 'people') await people(options, t);
       else if (id === 'productpages') await productPages(options, t);
+      else if (id === 'previews') await previewPages(options, t);
       else if (id === 'timeline') await timeline(options, t);
       else if (id === 'timelinefilter') await timelineFilter(options, t);
       else if (id === 'story') await story(options, t);

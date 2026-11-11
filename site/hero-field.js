@@ -3,6 +3,8 @@
  * Fixed-size canvas, brand colours, pauses off-screen and when the tab is hidden.
  * prefers-reduced-motion: one still frame, no rAF.
  */
+import { emulated } from './calm.js';
+
 const W = 320;
 const H = 200;
 const GOLD = [111, 91, 62];
@@ -115,7 +117,7 @@ function mount(root, opts = {}) {
   const nodes = seedNodes(26);
   const mq = opts.matchMedia
     || ((q) => window.matchMedia(q));
-  let reduced = mq('(prefers-reduced-motion: reduce)').matches;
+  let reduced = emulated() || mq('(prefers-reduced-motion: reduce)').matches;
   let onScreen = true;
   let tabVisible = document.visibilityState !== 'hidden';
   let running = false;

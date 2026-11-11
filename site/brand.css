@@ -1365,7 +1365,13 @@ a {
 .product p.formulation a { color: inherit; text-decoration: underline; text-underline-offset: 3px; white-space: normal; overflow-wrap: anywhere; }
 .product p.formulation { margin-top: 10px; max-width: none; white-space: normal; overflow-wrap: anywhere; color: var(--muted); font-size: var(--fs-ui); letter-spacing: var(--ls-ui); text-transform: uppercase; }
 .product p.formulation .formulation-date::before { content: ' \00b7 '; white-space: pre; }
-@media (max-width: 480px) { .product p.formulation { font-size: var(--fs-label); letter-spacing: 0.04em; } .product p.formulation .formulation-date { display: block; margin-top: 4px; } .product p.formulation .formulation-date::before { content: none; } }
+/* The line is filled from the product's releases.json after the page paints: hold its room (one line; two on a phone, where the date drops under it) so nothing below it moves when it arrives. */
+.product p.formulation[data-releases-from] { min-height: 1lh; }
+.product p.formulation[data-releases-from][hidden] { display: block; visibility: hidden; }
+/* The footer's site revision is filled from releases.json too: it keeps its place in the line while it loads. */
+.legal .revision[hidden] { display: inline; visibility: hidden; }
+@media (max-width: 480px) { .product p.formulation[data-releases-from] { min-height: calc(2lh + 4px); }
+  .product p.formulation { font-size: var(--fs-label); letter-spacing: 0.04em; } .product p.formulation .formulation-date { display: block; margin-top: 4px; } .product p.formulation .formulation-date::before { content: none; } }
 
 /* "Powered by HAWKES GEN" mark at the end of the footer line, on every page. */
 .legal .powered { float: right; margin-left: 18px; color: inherit; font-size: var(--fs-label); letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; }
@@ -1771,12 +1777,10 @@ main { view-transition-name: site-content; }
 ::view-transition-new(site-content) { animation: vt-in 0.35s ease both; }
 ::view-transition-group(*) { animation-duration: 0.4s; }
 ::view-transition-group(site-nav), ::view-transition-group(site-footer) { animation: none; }
+/* Reduced motion: no page transition at all; the next page simply appears. */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(site-content), ::view-transition-new(site-content) { animation: vt-fade 0.15s linear both; }
-  ::view-transition-old(site-content) { animation-name: vt-fade-out; }
-  ::view-transition-group(*) { animation-duration: 0.15s; }
-  @keyframes vt-fade { from { opacity: 0; } }
-  @keyframes vt-fade-out { to { opacity: 0; } }
+  @view-transition { navigation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }
 
 /* Newsroom: press releases from product releases (site/newsroom.js) */
@@ -1784,3 +1788,117 @@ main { view-transition-name: site-content; }
 .release-thumb { display: block; border: 1px solid var(--line); }
 .release-thumb img { display: block; width: 100%; height: auto; }
 @media (max-width: 480px) { .release-product { grid-template-columns: 72px 1fr; } }
+
+/* Press-release cards (Newsroom index, Home strip, product latest) and article pages. */
+.news-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  list-style: none;
+  padding: 0;
+}
+.news-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  padding: var(--card-pad);
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+.news-card:hover, .news-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  color: inherit;
+}
+.news-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+.news-card .kicker { margin: 0; color: var(--gold); }
+.news-card h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-h4);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.news-card p:not(.kicker) {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-cards-home { margin-top: var(--space-4); }
+.latest-news { padding-top: var(--space-5); padding-bottom: var(--space-5); }
+.product-news { margin-top: var(--space-5); margin-bottom: var(--space-5); }
+.product-news .product-news-slot { margin-top: var(--space-3); max-width: 28rem; }
+.product-news .news-card p:not(.kicker) { display: none; }
+.news-article .page-title { max-width: 28ch; }
+.news-article-shot {
+  margin: var(--space-5) 0;
+  max-width: 28rem;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+}
+.news-article-shot img { display: block; width: 100%; height: auto; }
+.news-article-body {
+  max-width: 68ch;
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  color: var(--text);
+}
+.news-article-body p { margin: 0 0 var(--space-3); }
+@media (max-width: 900px) {
+  .news-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .news-cards { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .news-card { padding: var(--space-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-card { transition: none; }
+  .news-card:hover, .news-card:focus-visible { transform: none; }
+}
+
+/* Product monograph (prescription insert): header band, then visual blocks. Tokens only. */
+.mono-band { grid-template-columns: 220px minmax(0, 1fr); background: var(--accent); color: var(--ink); padding: var(--space-5); border-top: 6px solid var(--gold); gap: var(--space-4) var(--space-5); }
+.mono-band .mono-title { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--ink); }
+.mono-band .page-title { color: var(--ink); margin: 0; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; text-transform: uppercase; letter-spacing: var(--ls-body); }
+.mono-rx { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: var(--fs-h3); line-height: 1; border: 2px solid var(--ink); padding: var(--space-1) var(--space-2); }
+.mono-formulation { flex-basis: 100%; margin: 0; font-family: var(--sans); font-size: var(--fs-ui); letter-spacing: var(--ls-ui); text-transform: uppercase; color: var(--ink); }
+.mono-band .mono-overview .sub { color: var(--ink); }
+.mono-band .mono-overview .lede, .mono-band .mono-overview .fine { color: var(--ink); }
+.mono-band .mono-overview a { color: var(--ink); }
+.mono-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin-top: var(--space-5); }
+.mono-block { border: 1px solid var(--line); border-top: 4px solid var(--gold); background: var(--bg-raise); padding: var(--card-pad); min-width: 0; }
+.mono-block .sub { margin-top: 0; display: flex; align-items: center; gap: var(--space-2); }
+.mono-icon { flex: none; width: 32px; height: 32px; fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.mono-list { margin: var(--space-3) 0 0; padding-left: var(--space-4); color: var(--muted); font-size: var(--fs-body); line-height: var(--lh-body); }
+.mono-list li + li { margin-top: var(--space-1); }
+.mono-side { border-top-color: var(--text); }
+.monograph .how.mono-block { margin-top: var(--space-5); padding-top: var(--card-pad); }
+@media (max-width: 900px) { .mono-band { grid-template-columns: minmax(0, 1fr); padding: var(--space-4); } .mono-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Product preview: a muted looping clip with its poster, and one Play / Watch button, at the top of the monograph band.
+   The clip's box is fixed by its 16:9 ratio so nothing moves when it loads; under reduced motion only the poster shows. */
+.mono-band .mono-preview { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.preview-clip { display: block; width: min(100%, 480px); height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--text); border: 1px solid var(--ink); }
+.mono-band .mono-play { min-height: var(--btn-h); min-width: 140px; background: var(--ink); color: var(--accent); }
+.mono-band .mono-play:hover, .mono-band .mono-play:focus-visible { background: var(--bg-raise); }
+@media (max-width: 900px) { .mono-band .mono-preview { flex-direction: column; align-items: stretch; } .preview-clip { width: 100%; } .mono-band .mono-play { width: 100%; } }

@@ -39,6 +39,26 @@ const V = {
     head: (v) => (kind(v) === 'minor' ? `Dose Of Destruction opens new formulation trial ${v}` : `Dose Of Destruction trial amended: formulation ${v}`),
     body: (v, lot) => `A new formulation trial of the Dose Of Destruction cytotoxic dose, formulation ${v}${lot}, has been opened under the company's handling procedures. Trial conditions are recorded in the product file.`,
   },
+  'hawkes-gen': {
+    name: 'Hawkes Gen', domain: 'hawkesgen.ai',
+    head: (v) => `Hawkes Gen laboratory services updated to ${v}`,
+    body: (v, lot) => `Hawkes Biomedical has updated its laboratory services, Hawkes Gen, to formulation ${v}${lot}. Requests already submitted are synthesised and delivered as before.`,
+  },
+};
+// A product with no release on file yet (its site has no releases.json) still has a latest item: the company's own notice
+// that its product file is open. Dated on the Notices date of the corporate site; replaced by the product's real releases
+// the moment its site publishes them. No formulation or lot is claimed.
+const FILE_NOTICES = {
+  'sick-of-it': {
+    date: '2026-10-25',
+    head: 'Sick of It product file opened in the newsroom',
+    body: 'The Sick of It single-use fever shot is carried in the Hawkes line under the charter. Each unit remains a single dose with a single stated indication. Formulation notices will be issued here as they are filed.',
+  },
+  'hawkes-gen': {
+    date: '2026-10-25',
+    head: 'Hawkes Gen laboratory services open to requests',
+    body: 'Hawkes Gen, the company\'s laboratory service for on-demand synthesis, is open to requests. A request is submitted, the laboratory synthesises the result, and the finished file is delivered. Formulation notices will be issued here as they are filed.',
+  },
 };
 export const NEWS_PRODUCTS = Object.entries(V).map(([slug, p]) => ({ slug, ...p, image: `./assets/products/${slug === 'ph-origins' ? 'phorigins' : slug.replace(/-/g, '')}-rx.jpg`, page: `./product-${slug}.html`, releases: `https://${p.domain}/releases.json` }));
 
@@ -47,10 +67,38 @@ export function newsItem(product, r) {
   if (!r || !r.version || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || '')) return null;
   const v = V[product.slug];
   const lot = r.build ? ` (lot ${r.build})` : '';
-  return { id: `${product.slug}-${r.version}`, date: r.date, product: product.name, slug: product.slug, version: r.version, headline: v.head(r.version), summary: v.body(r.version, lot), image: product.image, page: product.page };
+  const id = `${product.slug}-${r.version}`;
+  return {
+    id,
+    date: r.date,
+    product: product.name,
+    category: product.name,
+    slug: product.slug,
+    version: r.version,
+    headline: v.head(r.version),
+    summary: v.body(r.version, lot),
+    image: product.image,
+    page: product.page,
+    article: `./news-${id}.html`,
+  };
 }
 
 /** The newest `keep` releases of a releases.json document, as press releases. */
 export const newsFrom = (product, data, keep = 3) => (Array.isArray(data?.releases) ? data.releases.slice(0, keep).map((r) => newsItem(product, r)).filter(Boolean) : []);
 
 export const byNewest = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0);
+
+/** The product-file notice for a product with no release on file, or null when none is written for it. */
+export function noticeItem(product) {
+  const n = FILE_NOTICES[product.slug];
+  if (!n) return null;
+  const id = `${product.slug}-file`;
+  return { id, date: n.date, product: product.name, category: product.name, slug: product.slug, version: '', headline: n.head, summary: n.body, image: product.image, page: product.page, article: `./news-${id}.html` };
+}
+
+/** `items` plus a product-file notice for every product that has no item of its own, newest first. */
+export function withNotices(items) {
+  const have = new Set(items.map((i) => i.slug));
+  const extra = NEWS_PRODUCTS.filter((p) => !have.has(p.slug)).map(noticeItem).filter(Boolean);
+  return [...items, ...extra].sort(byNewest);
+}
