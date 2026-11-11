@@ -5,7 +5,8 @@
 import { NEWS_PRODUCTS, byNewest, newsFrom } from './news-voice.js';
 
 const grid = document.querySelector('.news-cards');
-const shown = new Set();
+// The build writes the cards into the page (site/news-cards.js): start from those so nothing is drawn twice or moved.
+const shown = new Set([...(grid?.querySelectorAll('.news-card[data-news]') || [])].map((c) => c.dataset.news));
 
 function put(item) {
   if (!grid || shown.has(item.id)) return;
