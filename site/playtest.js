@@ -2033,7 +2033,139 @@ async function motion(options, t) {
   t.event('reduced-motion', `prefers-reduced-motion rule present: ${calmRule}`);
   if (!calmRule) t.problem('bug', 'Motion: no prefers-reduced-motion rule covering the new transitions');
   closeFrame();
+  t.progress(0.5);
+  await motionFlow(options, t);
   t.progress(1);
+}
+
+/** Longest gap between animation frames (ms) in the top window while `run` does its work, and what the work returned. */
+async function withFrameGaps(run) {
+  let last = performance.now();
+  let worst = 0;
+  let on = true;
+  const tick = (now) => {
+    if (!on) return;
+    worst = Math.max(worst, now - last);
+    last = now;
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  try {
+    const value = await run();
+    return { gap: Math.round(worst), value };
+  } finally {
+    on = false;
+  }
+}
+
+/** Cumulative layout shift of a loaded page (shifts without recent input), read from the buffered entries. */
+function pageCls(doc) {
+  const win = doc.defaultView;
+  return new Promise((resolve) => {
+    let sum = 0;
+    try {
+      const po = new win.PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) sum += e.value;
+      });
+      po.observe({ type: 'layout-shift', buffered: true });
+      setTimeout(() => {
+        po.takeRecords().forEach((e) => { if (!e.hadRecentInput) sum += e.value; });
+        po.disconnect();
+        resolve(Math.round(sum * 1000) / 1000);
+      }, 300);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** Animations running on a page (CSS animations, transitions, and view-transition pseudo-elements) plus the hero field loop. */
+function runningMotion(doc) {
+  const win = doc.defaultView;
+  const anims = doc.getAnimations().filter((a) => a.playState === 'running');
+  const vt = anims.filter((a) => a.effect && /view-transition/.test(a.effect.pseudoElement || '')).length;
+  const field = win.hawkesHeroField ? win.hawkesHeroField.status() : null;
+  return { total: anims.length, vt, hero: field ? (field.running ? 1 : 0) : 0, heroMode: field ? field.motion : 'none' };
+}
+
+/** Home to a product page to Newsroom and back: longest frame gap per transition, CLS per page; under reduced motion no transition or hero animation runs. */
+async function motionFlow(options, t) {
+  const MAX_GAP = 50;
+  const MAX_CLS = 0.1;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 480;
+  const mode = `${window.innerWidth}x${window.innerHeight}${touch ? ' touch' : ''}, ${calm ? 'reduced motion' : 'full motion'}`;
+  t.event('flow', `motion flow at ${mode}`);
+  closeFrame();
+  openFrame();
+  const win = () => frame.contentWindow;
+  const worstGap = { name: '', gap: 0 };
+  const seen = [];
+
+  // Tap the menu toggle first when the nav is folded (phone), as a visitor does.
+  const openMenu = async (doc) => {
+    const toggle = doc.querySelector('.nav-toggle, [aria-controls][aria-expanded]');
+    if (toggle && doc.defaultView.getComputedStyle(toggle).display !== 'none' && toggle.getAttribute('aria-expanded') !== 'true') {
+      toggle.click();
+      await t.wait(450);
+    }
+  };
+
+  const settle = async (doc, name) => {
+    await t.until(() => doc.readyState === 'complete' && [...doc.images].every((i) => i.complete), 8000, `${name} images`).catch(() => {});
+    await t.wait(calm ? 300 : 900);
+  };
+
+  // Visit: measure the gaps while `go` runs the navigation, then CLS and running motion on the new page.
+  const visit = async (page, label, go) => {
+    t.scene(`${label}`);
+    const { gap, value: doc } = await withFrameGaps(async () => {
+      const d = await go();
+      if (!d) throw new Error(`${page} didn't open`);
+      await settle(d, page);
+      return d;
+    });
+    const cls = await pageCls(doc);
+    const m = runningMotion(doc);
+    seen.push(page);
+    t.metric(`gap ${label}`, gap);
+    t.metric(`cls ${page}`, cls == null ? -1 : cls);
+    t.event('transition', `${label}: longest frame gap ${gap} ms, CLS ${cls == null ? 'n/a' : cls} on ${page}; running animations ${m.total}, view-transition ${m.vt}, hero ${m.hero} (${m.heroMode})`);
+    if (gap > worstGap.gap) { worstGap.name = page; worstGap.gap = gap; }
+    if (gap > MAX_GAP) t.problem('bug', `${page}: longest frame gap ${gap} ms during "${label}" is over ${MAX_GAP} ms at ${mode}`);
+    if (cls != null && cls > MAX_CLS) t.problem('bug', `${page}: layout shift (CLS) ${cls} is over ${MAX_CLS} at ${mode}`);
+    const over = doc.documentElement.scrollWidth - doc.defaultView.innerWidth;
+    if (over > 1) t.problem('bug', `${page}: sideways scroll by ${over}px at ${mode}`);
+    if (calm) {
+      if (m.vt > 0) t.problem('bug', `${page}: ${m.vt} page transition(s) running under reduced motion`);
+      if (m.hero > 0 || (m.heroMode !== 'still' && m.heroMode !== 'none')) t.problem('bug', `${page}: hero animation runs under reduced motion (${m.heroMode})`);
+      if (m.total > 0) t.problem('bug', `${page}: ${m.total} animation(s) still running under reduced motion`);
+    }
+    return doc;
+  };
+
+  let doc = await visit('Home', 'Open Home', () => frameLoad((f) => { f.src = './index.html'; }));
+  await openMenu(doc);
+  const goLink = (page, label, selector) => async () => {
+    const link = doc.querySelector(selector);
+    if (!link) throw new Error(`no ${label} link (${selector})`);
+    link.scrollIntoView({ block: 'center' });
+    await t.wait(300);
+    return frameLoad(() => link.click());
+  };
+  doc = await visit('Products', 'Home to Products', goLink('Products', 'Products in the nav', 'header a[href$="products.html"]'));
+  doc = await visit('PH Origins', 'Products to PH Origins', goLink('PH Origins', 'PH Origins image', '#ph-origins .product-shot'));
+  await openMenu(doc);
+  doc = await visit('Newsroom', 'PH Origins to Newsroom', goLink('Newsroom', 'Newsroom in the nav', 'header a[href$="newsroom.html"]'));
+  const back = (page, label) => () => frameLoad(() => win().history.back());
+  doc = await visit('PH Origins', 'Back to PH Origins', back());
+  doc = await visit('Products', 'Back to Products', back());
+  doc = await visit('Home', 'Back to Home', back());
+  if (!/(index\.html|\/)$/.test(win().location.pathname)) t.problem('bug', `Back did not end on Home (${win().location.pathname})`);
+
+  t.event('flow-summary', `${seen.length} pages in order (${seen.join(' > ')}); worst frame gap ${worstGap.gap} ms on ${worstGap.name || 'none'} at ${mode}`);
+  t.add('transitionsMeasured', seen.length);
+  closeFrame();
 }
 
 /** Redacted passages: black bars, reveal on tap/focus with glitch, stay for the visit, 8–12 across four pages, contrast and nav clear. */
@@ -2389,10 +2521,10 @@ installPlaytest({
     },
     {
       id: 'motion',
-      title: 'Motion tokens: durations and easings on the style guide; cards, buttons and links respond; phone menu slides; focus rings and 44px taps hold',
-      seconds: 45,
+      title: 'Motion: tokens and micro-interactions, then Home to a product page to Newsroom and back with the longest frame gap per transition (over 50 ms fails, naming the page) and CLS per page (over 0.1 fails); under reduced motion no transition or hero animation runs',
+      seconds: 90,
       tags: ['full'],
-      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule.',
+      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule. Then walks Home, Products, PH Origins, Newsroom and back (opening the menu first when the nav is folded), logs the longest animation-frame gap per transition and the layout shift per page, fails any page over 50 ms or CLS 0.1 or with sideways scroll, and under emulated prefers-reduced-motion fails any running view transition, animation or hero loop. Runs as-is at 390x844 touch with CPU throttling (the bot sets the emulation).',
     },
     {
       id: 'phone',

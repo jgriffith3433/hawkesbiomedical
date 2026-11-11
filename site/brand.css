@@ -1771,12 +1771,10 @@ main { view-transition-name: site-content; }
 ::view-transition-new(site-content) { animation: vt-in 0.35s ease both; }
 ::view-transition-group(*) { animation-duration: 0.4s; }
 ::view-transition-group(site-nav), ::view-transition-group(site-footer) { animation: none; }
+/* Reduced motion: no page transition at all; the next page simply appears. */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(site-content), ::view-transition-new(site-content) { animation: vt-fade 0.15s linear both; }
-  ::view-transition-old(site-content) { animation-name: vt-fade-out; }
-  ::view-transition-group(*) { animation-duration: 0.15s; }
-  @keyframes vt-fade { from { opacity: 0; } }
-  @keyframes vt-fade-out { to { opacity: 0; } }
+  @view-transition { navigation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }
 
 /* Newsroom: press releases from product releases (site/newsroom.js) */
