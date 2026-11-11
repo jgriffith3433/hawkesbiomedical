@@ -5,7 +5,10 @@ import { NEWS_PRODUCTS, byNewest, newsFrom } from './site/news-voice.js';
 
 // Plain (non-module) scripts and data the pages load by path. Vite leaves them out of dist/, so copy them in:
 // Studio publishes dist/ as the beta site (GitHub Pages serves the repo root, where they already are).
-const PLAIN_FILES = ['site/analytics.js', 'site/hawkes-release.js', 'releases.json', 'data/news.json'];
+const PLAIN_FILES = ['site/analytics.js', 'site/hawkes-release.js', 'releases.json', 'data/news.json',
+  // Product photographs the Newsroom script names by path (Vite only keeps images a page's own markup references, under hashed names).
+  ...readdirSync('assets/products').filter((f) => f.endsWith('-rx.jpg')).map((f) => `assets/products/${f}`),
+];
 const copyPlainFiles = () => ({
   name: 'copy-plain-files',
   apply: 'build',
