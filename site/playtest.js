@@ -2169,6 +2169,46 @@ async function redaction(options, t) {
   t.progress(1);
 }
 
+/** Newsroom: press releases from real product releases, newest first with date, product and image; the hand-written statements stay; one load fetch merges fresh releases. */
+async function newsroom(options, t) {
+  t.scene('Home');
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("index.html didn't open");
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom merge done').catch(() => t.problem('bug', 'Newsroom: releases never finished loading'));
+  const list = doc.querySelector('.notes');
+  const notes = [...doc.querySelectorAll('.notes .release-note')];
+  const made = notes.filter((n) => n.classList.contains('release-product'));
+  const hand = notes.filter((n) => !n.classList.contains('release-product'));
+  t.metric('pressReleases', made.length);
+  t.metric('handWritten', hand.length);
+  t.event('news', `${made.length} product press releases, ${hand.length} hand-written; ${list.dataset.newsBuilt} from the build, ${list.dataset.newsTotal} after the load fetch`);
+  if (made.length < 1) t.problem('bug', 'Newsroom: no product press releases');
+  if (hand.length < 5) t.problem('bug', `Newsroom: only ${hand.length} hand-written items remain (5 expected)`);
+  if (Number(list.dataset.newsTotal) < Number(list.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
+  const dates = notes.map((n) => n.querySelector('time')?.dateTime || '');
+  if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: not newest first (${dates.join(', ')})`);
+  for (const n of made.slice(0, 6)) {
+    n.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const img = n.querySelector('img');
+    if (img) await t.until(() => img.complete, 8000, 'release image').catch(() => {});
+    const date = n.querySelector('time')?.dateTime;
+    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.split(',')[0].trim();
+    const head = n.querySelector('h2')?.textContent.trim();
+    const sentences = (n.querySelector('p:not(.kicker)')?.textContent || '').split(/\.\s+/).filter(Boolean).length;
+    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'})`);
+    if (!date || !prod || !head) t.problem('bug', 'Newsroom: a press release lacks its date, product or headline');
+    if (!img || !img.naturalWidth) t.problem('bug', `Newsroom: ${prod} press release has no image that loads`);
+    if (sentences !== 2) t.problem('bug', `Newsroom: ${prod} summary is ${sentences} sentences, two wanted`);
+    if (/\b(game|gameplay|player|B3|vat)\b/i.test(n.textContent)) t.problem('bug', `Newsroom: ${prod} release uses off-brand wording`);
+    await t.wait(500);
+  }
+  const ids = made.map((n) => n.dataset.news);
+  if (new Set(ids).size !== ids.length) t.problem('bug', 'Newsroom: a release is listed twice');
+  closeFrame();
+  t.progress(1);
+}
+
 installPlaytest({
   product: 'hawkesbiomedical',
   scenarios: [
@@ -2271,6 +2311,13 @@ installPlaytest({
       description: 'Reads the SDK config on Home (product, env, build), clicks Products in the nav, waits for its page_view to go out, scrolls every product row to the footer (progress 25/50/75/100), checks the footer line (fiction, anonymous statistics, no off-brand words), then clicks the phorigins.com link (the new tab is held back) and waits for the outbound event with ctx.product "PH Origins" to go out.',
     },
     {
+      id: 'newsroom',
+      title: 'Newsroom: press releases for real product releases, newest first with date, product and image; hand-written statements kept; fresh releases merged on load; dead domains silent',
+      seconds: 40,
+      tags: ['full'],
+      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press releases and the hand-written items are all there, newest first, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+    },
+    {
       id: 'redaction',
       title: 'Redacted passages: black bars reveal on tap, hover or focus with a glitch and DECLASSIFIED stamp; 8–12 across four pages; stay revealed for the visit; 4.5:1 contrast; nav unblocked at 390 and desktop',
       seconds: 55,
@@ -2286,6 +2333,7 @@ installPlaytest({
       else if (id === 'herofield') await herofield(options, t);
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
+      else if (id === 'newsroom') await newsroom(options, t);
       else if (id === 'redaction') await redaction(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
