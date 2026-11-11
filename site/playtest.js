@@ -926,7 +926,7 @@ async function design(options, t) {
   t.metric('tokensListed', unique.length);
   if (unique.length < 25) t.problem('bug', `Style guide: only ${unique.length} tokens listed`);
   if (missing.length) t.problem('bug', `Style guide: lists tokens that :root does not define: ${missing.join(', ')}`);
-  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
+  for (const sec of ['colour', 'type', 'spacing', 'buttons', 'cards', 'motion']) if (!doc.getElementById(sec)) t.problem('bug', `Style guide: no "${sec}" section`);
   t.add('styleGuideChecked');
   for (const w of widths) {
     const f = openFrame();
@@ -1151,20 +1151,25 @@ async function phone(options, t) {
   const links = doc.getElementById('nav-links');
   const expanded = () => toggle.getAttribute('aria-expanded');
   const key = (k) => doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  // Menu uses opacity/visibility (so it can slide); open means is-open + visible + opaque.
+  const menuShown = () => {
+    const cs = win.getComputedStyle(links);
+    return links.classList.contains('is-open') && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.5;
+  };
   if (win.getComputedStyle(toggle).display === 'none') t.problem('bug', `The menu toggle is not shown at ${W}px`);
   const open = async (how) => {
     // A real touch tap: pointer and touch events, then the click a phone sends.
     for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new win.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
     toggle.click();
-    await t.wait(150);
-    const visible = links.getClientRects().length > 0;
+    await t.wait(400);
+    const visible = menuShown();
     const inside = links.contains(doc.activeElement);
     t.event('menu-open', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus in menu ${inside}`);
     if (expanded() !== 'true' || !visible) t.problem('bug', 'Menu: a tap on the toggle does not open it');
     if (!inside) t.problem('bug', 'Menu: focus does not move into the menu on open');
   };
   const closed = (how) => {
-    const visible = links.getClientRects().length > 0;
+    const visible = menuShown();
     const back = doc.activeElement === toggle;
     t.event('menu-close', `${how}: aria-expanded ${expanded()}, visible ${visible}, focus on toggle ${back}`);
     if (expanded() !== 'false' || visible) t.problem('bug', `Menu: ${how} does not close it`);
@@ -1172,11 +1177,11 @@ async function phone(options, t) {
   };
   await open('tap');
   key('Escape');
-  await t.wait(150);
+  await t.wait(400);
   closed('Escape');
   await open('tap again');
   toggle.click();
-  await t.wait(150);
+  await t.wait(400);
   closed('a tap on the toggle');
   t.add('menuChecked');
 
@@ -1206,9 +1211,12 @@ async function phone(options, t) {
 
   // Tap targets, on Home and the pages a visitor reaches next.
   const small = (d, name) => {
+    const view = d.defaultView;
     const bad = [];
     for (const el of d.querySelectorAll('a[href], button')) {
       if (el.classList.contains('skip')) continue;
+      const cs = view.getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;
       const r = el.getBoundingClientRect();
       if (!r.width && !r.height) continue; // hidden (the closed menu)
       if (r.height < MIN_TAP - 0.5) bad.push(`${(el.textContent || el.getAttribute('alt') || el.tagName).trim().slice(0, 24)} ${Math.round(r.height)}px`);
@@ -1219,9 +1227,10 @@ async function phone(options, t) {
   small(doc, 'Home');
   // The closed menu is hidden; check its links with the menu open.
   toggle.click();
-  await t.wait(150);
+  await t.wait(400);
   small(doc, 'Home with the menu open');
   toggle.click();
+  await t.wait(400);
   // Every page, including all eight product pages (not only PH Origins): the plain links in body text and tables were the ones that fell short.
   const PRODUCT_PAGES = ['sick-of-it', 'imagine-live-tv', 'the-place-department', 'yooba-land', 'i-can-be', 'dose-of-destruction', 'hawkes-gen']
     .map((slug) => [`Product file ${slug}`, `./product-${slug}.html`]);
@@ -1545,6 +1554,240 @@ async function timelineSizes(t) {
   }
 }
 
+/** Home hero field: slow lab visual in brand colours; above the fold; pauses off-screen and when the tab is hidden; still under reduced motion; no layout shift. */
+async function herofield(options, t) {
+  const f = openFrame();
+  const size = (w, h) => { f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`; };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+    await t.until(() => !!doc.defaultView.hawkesHeroField, 8000, 'hero field').catch(() => {});
+    await t.wait(500);
+  };
+  const box = (el) => el.getBoundingClientRect();
+  const pageBg = { r: 243, g: 240, b: 234, a: 1 };
+
+  const contrastOverField = (doc, el, label) => {
+    const win = doc.defaultView;
+    const field = doc.querySelector('[data-hero-field] canvas');
+    const cs = win.getComputedStyle(el);
+    const fg = parseRgb(cs.color);
+    const solid = backgroundOf(el);
+    let bg = solid || pageBg;
+    // If the control has an opaque fill of its own (the primary button), that is the contrast pair.
+    const own = parseRgb(cs.backgroundColor);
+    if (own && own.a > 0.9) {
+      const ink = parseRgb(cs.color);
+      const ratio = fixed2(contrast(ink, own));
+      t.event('contrast', `${label}: ${cs.color} on own fill rgb(${own.r},${own.g},${own.b}) = ${ratio}:1`);
+      if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: ${label} contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+      return;
+    }
+    if (field && el) {
+      const er = box(el);
+      const fr = box(field);
+      const overlap = !(er.right < fr.left || er.left > fr.right || er.bottom < fr.top || er.top > fr.bottom);
+      if (overlap) {
+        const ctx = field.getContext('2d', { willReadFrequently: true });
+        if (ctx) {
+          const sx = Math.max(0, Math.floor(((er.left + er.width / 2) - fr.left) * (field.width / fr.width)));
+          const sy = Math.max(0, Math.floor(((er.top + er.height / 2) - fr.top) * (field.height / fr.height)));
+          const sample = ctx.getImageData(Math.min(field.width - 1, sx), Math.min(field.height - 1, sy), 1, 1).data;
+          const a = sample[3] / 255;
+          bg = {
+            r: Math.round(sample[0] * a + pageBg.r * (1 - a)),
+            g: Math.round(sample[1] * a + pageBg.g * (1 - a)),
+            b: Math.round(sample[2] * a + pageBg.b * (1 - a)),
+            a: 1,
+          };
+        }
+      }
+    }
+    if (!fg) { t.problem('bug', `Hero field: no colour for ${label}`); return; }
+    const ratio = fixed2(contrast(fg, bg));
+    t.event('contrast', `${label}: ${cs.color} on rgb(${bg.r},${bg.g},${bg.b}) = ${ratio}:1`);
+    if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: ${label} contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+  };
+
+  const checkFold = (doc, W, H) => {
+    for (const [what, sel] of [['headline', '.hero h1'], ['button', '.hero .btn']]) {
+      const el = doc.querySelector(sel);
+      if (!el) { t.problem('bug', `Hero field: no ${what}`); continue; }
+      const r = box(el);
+      t.event('hero', `${W}x${H}: ${what} top ${Math.round(r.top)}, bottom ${Math.round(r.bottom)} of ${H}`);
+      if (r.top < 0 || r.bottom > H) t.problem('bug', `Hero field at ${W}x${H}: the ${what} is not fully on the first screen (bottom ${Math.round(r.bottom)})`);
+      contrastOverField(doc, el, `${what} @ ${W}x${H}`);
+    }
+    // Gold second slogan line is easier to lose over the field than the ink h1 colour.
+    const goldLine = doc.querySelector('.hero .slogan-line + .slogan-line');
+    if (goldLine) contrastOverField(doc, goldLine, `gold slogan @ ${W}x${H}`);
+    else t.problem('bug', 'Hero field: no gold slogan line to contrast-check');
+    fieldGoldFloor(doc, `${W}x${H}`);
+  };
+
+  /** Sample gold (#6f5b3e) against every field pixel (paper under alpha × element opacity). */
+  const fieldGoldFloor = (doc, label) => {
+    const host = doc.querySelector('[data-hero-field]');
+    const canvas = host?.querySelector('canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    const opacity = Number(doc.defaultView.getComputedStyle(host).opacity) || 1;
+    const { width: cw, height: ch } = canvas;
+    const data = ctx.getImageData(0, 0, cw, ch).data;
+    const gold = { r: 111, g: 91, b: 62, a: 1 };
+    let worst = Infinity;
+    let at = '';
+    for (let y = 0; y < ch; y += 8) {
+      for (let x = 0; x < cw; x += 8) {
+        const i = (y * cw + x) * 4;
+        const a = (data[i + 3] / 255) * opacity;
+        const bg = {
+          r: Math.round(data[i] * a + pageBg.r * (1 - a)),
+          g: Math.round(data[i + 1] * a + pageBg.g * (1 - a)),
+          b: Math.round(data[i + 2] * a + pageBg.b * (1 - a)),
+          a: 1,
+        };
+        const ratio = contrast(gold, bg);
+        if (ratio < worst) { worst = ratio; at = `${x},${y}`; }
+      }
+    }
+    const ratio = fixed2(worst);
+    t.event('contrast', `${label}: gold over field floor ${ratio}:1 at ${at} (opacity ${opacity})`);
+    if (ratio < MIN_CONTRAST) t.problem('bug', `Hero field: gold slogan floor contrast ${ratio}:1 under ${MIN_CONTRAST}:1 (${label})`);
+  };
+
+  // 1. Desktop: field live, above the fold, contrast, fixed size (no CLS).
+  size(1280, 720);
+  t.scene('Home hero field 1280x720');
+  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open in the frame");
+  await settle(doc);
+  const field = doc.querySelector('[data-hero-field]');
+  const canvas = field?.querySelector('canvas');
+  if (!field || !canvas) t.problem('bug', 'Hero field: no fixed canvas beside the headline');
+  else {
+    const r = box(field);
+    const w1 = Math.round(r.width);
+    const h1 = Math.round(r.height);
+    t.event('field', `box ${w1}x${h1}, canvas ${canvas.width}x${canvas.height}, motion ${field.dataset.motion || '?'}`);
+    if (h1 !== 200 || w1 < 200 || w1 > 320) t.problem('bug', `Hero field: layout box is ${w1}x${h1}, fixed height 200 and width 200-320 wanted (CLS risk)`);
+    if (canvas.width !== 320 || canvas.height !== 200) t.problem('bug', `Hero field: canvas buffer ${canvas.width}x${canvas.height}, 320x200 wanted`);
+    await t.wait(600);
+    const r2 = box(field);
+    if (Math.round(r2.width) !== w1 || Math.round(r2.height) !== h1) t.problem('bug', `Hero field: box shifted after paint (${w1}x${h1} → ${Math.round(r2.width)}x${Math.round(r2.height)}), CLS must stay 0`);
+    else t.add('fieldNoShift');
+  }
+  const api = doc.defaultView.hawkesHeroField;
+  if (!api) t.problem('bug', 'Hero field: window.hawkesHeroField missing');
+  else {
+    await t.wait(400);
+    const st = api.status();
+    t.event('field-status', JSON.stringify(st));
+    t.metric('fieldRunning', st.running ? 1 : 0);
+    if (st.reducedMotion) {
+      if (st.running) t.problem('bug', 'Hero field: animation runs under prefers-reduced-motion');
+      if (st.motion !== 'still') t.problem('bug', `Hero field: motion is "${st.motion}", still wanted under reduced motion`);
+      t.event('reduced', 'still frame under prefers-reduced-motion');
+    } else if (!st.running || st.motion !== 'live') {
+      t.problem('bug', `Hero field: expected live animation on screen, got running=${st.running} motion=${st.motion}`);
+    } else {
+      t.add('fieldLive');
+    }
+  }
+  checkFold(doc, 1280, 720);
+  t.add('heroChecked');
+  t.progress(0.35);
+
+  // 2. Scroll away: animation pauses; scroll back: it resumes (skipped under reduced motion).
+  if (api && !api.status().reducedMotion) {
+    t.scene('Hero field scrolled away');
+    const problem = doc.querySelector('#problem');
+    if (problem) {
+      problem.scrollIntoView({ block: 'start' });
+      await t.wait(700);
+      const away = api.status();
+      t.event('field-away', JSON.stringify(away));
+      if (away.running || away.motion === 'live') t.problem('bug', 'Hero field: still animating after scrolling away');
+      else t.add('fieldPausedOffscreen');
+      doc.defaultView.scrollTo(0, 0);
+      await t.wait(700);
+      const back = api.status();
+      t.event('field-back', JSON.stringify(back));
+      if (!back.running || back.motion !== 'live') t.problem('bug', 'Hero field: did not resume after scrolling back');
+      else t.add('fieldResumed');
+    } else {
+      t.problem('bug', 'Hero field: no #problem chapter to scroll to');
+    }
+
+    // Tab hidden: pause without scrolling.
+    t.scene('Hero field tab hidden');
+    const win = doc.defaultView;
+    Object.defineProperty(doc, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    Object.defineProperty(doc, 'hidden', { configurable: true, get: () => true });
+    doc.dispatchEvent(new win.Event('visibilitychange'));
+    await t.wait(200);
+    const hid = api.status();
+    t.event('field-hidden', JSON.stringify(hid));
+    if (hid.running || hid.motion === 'live') t.problem('bug', 'Hero field: still animating while the tab is hidden');
+    else t.add('fieldPausedHidden');
+    Object.defineProperty(doc, 'visibilityState', { configurable: true, get: () => 'visible' });
+    Object.defineProperty(doc, 'hidden', { configurable: true, get: () => false });
+    doc.dispatchEvent(new win.Event('visibilitychange'));
+    await t.wait(200);
+    const shown = api.status();
+    t.event('field-shown', JSON.stringify(shown));
+    if (!shown.running) t.problem('bug', 'Hero field: did not resume when the tab became visible');
+  } else {
+    t.event('pause-checks', 'skipped: reduced motion (still frame only)');
+  }
+  t.progress(0.7);
+
+  // 3. Phone: same fold + contrast; field keeps its fixed box (no shift).
+  size(390, 844);
+  t.scene('Home hero field 390x844');
+  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  if (!doc) throw new Error("the home page didn't open at 390x844");
+  await settle(doc);
+  const fieldPhone = doc.querySelector('[data-hero-field]');
+  if (fieldPhone) {
+    const r = box(fieldPhone);
+    t.event('field-phone', `box ${Math.round(r.width)}x${Math.round(r.height)}, motion ${fieldPhone.dataset.motion || '?'}`);
+    if (Math.round(r.height) !== 200 || r.width < 200 || r.width > 320) t.problem('bug', `Hero field at 390: layout box ${Math.round(r.width)}x${Math.round(r.height)}, fixed height 200 and width 200-320 wanted`);
+  }
+  checkFold(doc, 390, 844);
+  t.add('heroChecked');
+
+  // Still-frame path: force the reduced-motion end state and confirm no running loop and no box shift.
+  const phoneApi = doc.defaultView.hawkesHeroField;
+  if (phoneApi) {
+    const before = box(doc.querySelector('[data-hero-field]'));
+    t.scene('Home hero field reduced-motion still');
+    const still = phoneApi.forceStill();
+    t.event('field-still', JSON.stringify(still));
+    if (still.running || still.motion !== 'still' || !still.reducedMotion) {
+      t.problem('bug', `Hero field: forceStill left running=${still.running} motion=${still.motion} reduced=${still.reducedMotion}`);
+    } else {
+      t.add('fieldStill');
+    }
+    await t.wait(300);
+    const after = box(doc.querySelector('[data-hero-field]'));
+    if (Math.round(before.width) !== Math.round(after.width) || Math.round(before.height) !== Math.round(after.height)) {
+      t.problem('bug', 'Hero field: box shifted when switching to a still frame');
+    }
+    const c = doc.querySelector('[data-hero-field] canvas');
+    if (c) {
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      let ink = 0;
+      for (let i = 3; i < data.length; i += 16) if (data[i] > 8) ink++;
+      t.metric('fieldPixels', ink);
+      if (ink < 10) t.problem('bug', 'Hero field: still canvas is blank');
+      else t.add('fieldDrawn');
+    }
+  }
+  t.progress(1);
+}
+
 /** Cross-document view transitions: rules present, header and footer pinned, a product image shares its name with its page hero, back works. */
 async function transitions(options, t) {
   const supported = typeof CSSViewTransitionRule !== 'undefined';
@@ -1585,6 +1828,384 @@ async function transitions(options, t) {
   else t.event('back', 'back returned to Products');
   const active = back && back.activeElement;
   t.event('focus', `focus after back: ${active ? active.tagName : 'none'}`);
+  t.progress(1);
+}
+
+/** Motion tokens and micro-interactions: style guide lists them; cards/buttons/links respond; phone menu slides; focus rings and 44px taps hold. */
+async function motion(options, t) {
+  const MIN_TAP = 44;
+  const MOTION_TOKENS = ['--dur-1', '--dur-2', '--dur-3', '--ease-out', '--ease-in-out', '--shadow-lift', '--shadow-press'];
+  const f = openFrame();
+  f.style.cssText = 'position:fixed;top:0;left:0;width:1280px;height:800px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea';
+
+  t.scene('Style guide: motion tokens');
+  let doc = await frameLoad((fr) => (fr.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't open");
+  await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 6000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const win = doc.defaultView;
+  const root = win.getComputedStyle(doc.documentElement);
+  for (const name of MOTION_TOKENS) {
+    const val = root.getPropertyValue(name).trim();
+    t.event('token', `${name}: ${val || '(missing)'}`);
+    if (!val) t.problem('bug', `Motion: :root is missing ${name}`);
+  }
+  if (root.getPropertyValue('--dur-1').trim() !== '120ms') t.problem('bug', 'Motion: --dur-1 should be 120ms');
+  if (root.getPropertyValue('--dur-2').trim() !== '200ms') t.problem('bug', 'Motion: --dur-2 should be 200ms');
+  if (root.getPropertyValue('--dur-3').trim() !== '320ms') t.problem('bug', 'Motion: --dur-3 should be 320ms');
+  if (!doc.getElementById('motion')) t.problem('bug', 'Style guide: no motion section');
+  if (!doc.getElementById('interaction-states')) t.problem('bug', 'Style guide: no interaction states');
+  const states = {
+    hover: doc.querySelector('.desk.is-hover'),
+    focus: doc.querySelector('.desk.is-focus'),
+    pressed: doc.querySelector('.desk.is-pressed'),
+  };
+  for (const [name, el] of Object.entries(states)) {
+    if (!el) {
+      t.problem('bug', `Style guide: no ${name} state sample`);
+      continue;
+    }
+    smoothTo(el);
+    await t.wait(500);
+    const cs = win.getComputedStyle(el);
+    t.event('state', `${name}: transform ${cs.transform}, shadow ${cs.boxShadow !== 'none'}`);
+    if (name !== 'idle' && cs.transform === 'none') t.problem('bug', `Style guide: ${name} card has no transform`);
+  }
+  t.add('tokensChecked');
+  t.progress(0.25);
+
+  // Desktop: hover/focus samples and a live focused button (gold ring stays).
+  t.scene('Desktop: hover and focus');
+  const hoverCard = states.hover;
+  const focusCard = states.focus;
+  if (hoverCard) {
+    smoothTo(hoverCard);
+    await t.wait(700);
+  }
+  const btn = doc.querySelector('#buttons .btn:not(.btn-outline)') || doc.querySelector('.btn');
+  if (!btn) t.problem('bug', 'Style guide: no primary button');
+  else {
+    try { btn.focus({ preventScroll: true, focusVisible: true }); } catch (_) { btn.focus({ preventScroll: true }); }
+    const cs = win.getComputedStyle(btn);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    const transition = cs.transitionDuration || '';
+    t.event('button-focus', `ring ${ring}, transition ${transition}, transform ${cs.transform}`);
+    if (!ring) t.problem('bug', 'Button focus: no visible focus ring');
+    if (!transition || transition === '0s') t.problem('bug', 'Button: no transition timing');
+    await t.wait(800);
+  }
+  const link = doc.querySelector('#sg-link-sweep') || doc.querySelector('.text-link');
+  if (link) {
+    try { link.focus({ preventScroll: true, focusVisible: true }); } catch (_) { link.focus({ preventScroll: true }); }
+    const after = win.getComputedStyle(link, '::after');
+    t.event('link-focus', `color ${win.getComputedStyle(link).color}, ::after transform ${after.transform}`);
+    await t.wait(700);
+  }
+  if (focusCard) {
+    // The focus sample already carries the gold ring via .is-focus; hold it for the screenshot.
+    smoothTo(focusCard);
+    const cs = win.getComputedStyle(focusCard);
+    const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
+    t.event('card-focus', `ring ${ring}, transform ${cs.transform}`);
+    if (!ring) t.problem('bug', 'Card focus sample: no visible focus ring');
+    await t.wait(800);
+  }
+  const liveCard = doc.querySelector('#cards .desk[tabindex]');
+  if (liveCard) {
+    try { liveCard.focus({ preventScroll: true, focusVisible: true }); } catch (_) { liveCard.focus({ preventScroll: true }); }
+    const cs = win.getComputedStyle(liveCard);
+    t.event('card-live-focus', `transform ${cs.transform}, outline ${cs.outlineStyle} ${cs.outlineWidth}`);
+    await t.wait(600);
+  }
+  t.add('desktopStatesSeen');
+  t.progress(0.5);
+
+  // Phone 390x844: pressed card sample, then the menu slides open and closed.
+  t.scene('Phone: pressed card');
+  f.style.width = '390px';
+  f.style.height = '844px';
+  await t.wait(400);
+  doc = await frameLoad((fr) => (fr.src = './styleguide.html'));
+  if (!doc) throw new Error("styleguide.html didn't reopen at 390");
+  const phoneWin = doc.defaultView;
+  const pressed = doc.querySelector('.desk.is-pressed');
+  if (!pressed) t.problem('bug', 'Style guide at 390: no pressed card sample');
+  else {
+    pressed.scrollIntoView({ block: 'center' });
+    await t.wait(800);
+    const cs = phoneWin.getComputedStyle(pressed);
+    t.event('pressed', `transform ${cs.transform}, shadow ${cs.boxShadow !== 'none'}`);
+    if (cs.transform === 'none') t.problem('bug', 'Pressed card: no press transform');
+  }
+  t.add('pressedSeen');
+
+  t.scene('Phone: menu motion');
+  const toggle = doc.getElementById('navToggle');
+  const links = doc.getElementById('nav-links');
+  if (!toggle || !links) t.problem('bug', 'Phone: no menu toggle');
+  else {
+    const menuCs = () => phoneWin.getComputedStyle(links);
+    t.event('menu-transition', `duration ${menuCs().transitionDuration}, property ${menuCs().transitionProperty}`);
+    if (!/0\.32s|320ms/.test(menuCs().transitionDuration) && !menuCs().transitionProperty.includes('opacity')) {
+      // transitionDuration can list several; accept any that includes the menu fade.
+      const dur = menuCs().transitionDuration;
+      t.event('menu-timing', `computed ${dur}`);
+    }
+    for (const type of ['pointerdown', 'pointerup']) toggle.dispatchEvent(new phoneWin.PointerEvent(type, { bubbles: true, pointerType: 'touch', isPrimary: true }));
+    toggle.click();
+    await t.wait(100);
+    const mid = menuCs();
+    t.event('menu-opening', `opacity ${mid.opacity}, transform ${mid.transform}, aria ${toggle.getAttribute('aria-expanded')}`);
+    await t.wait(400);
+    const open = menuCs();
+    const shown = links.classList.contains('is-open') && open.visibility !== 'hidden' && parseFloat(open.opacity) > 0.9;
+    t.event('menu-open', `opacity ${open.opacity}, transform ${open.transform}, shown ${shown}`);
+    if (!shown) t.problem('bug', 'Phone menu: did not finish open');
+    await t.wait(600);
+    toggle.click();
+    await t.wait(100);
+    const closing = menuCs();
+    t.event('menu-closing', `opacity ${closing.opacity}`);
+    await t.wait(400);
+    const closed = menuCs();
+    const hidden = !links.classList.contains('is-open') || closed.visibility === 'hidden' || parseFloat(closed.opacity) < 0.1;
+    t.event('menu-closed', `opacity ${closed.opacity}, hidden ${hidden}`);
+    if (!hidden) t.problem('bug', 'Phone menu: did not finish closed');
+  }
+  t.add('menuMotionChecked');
+  t.progress(0.75);
+
+  // Focus rings and 44px tap targets at 390 on the style guide (menu open for nav links).
+  t.scene('Phone: focus and taps');
+  const controls = [...doc.querySelectorAll('a[href], button')].filter((el) => {
+    const cs = phoneWin.getComputedStyle(el);
+    return cs.visibility !== 'hidden' && cs.display !== 'none' && parseFloat(cs.opacity) > 0 && el.getClientRects().length;
+  });
+  let rings = 0;
+  for (const el of controls.slice(0, 12)) {
+    el.focus({ preventScroll: true });
+    if (doc.activeElement !== el) continue;
+    const cs = phoneWin.getComputedStyle(el);
+    if (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2) rings++;
+  }
+  t.event('focus-rings', `${rings} controls showed a ring`);
+  if (rings < 3) t.problem('bug', `Focus rings: only ${rings} visible at 390`);
+  if (toggle) {
+    toggle.click();
+    await t.wait(400);
+  }
+  const short = [];
+  for (const el of doc.querySelectorAll('a[href], button')) {
+    if (el.classList.contains('skip')) continue;
+    const cs = phoneWin.getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width && !r.height) continue;
+    if (r.height < MIN_TAP - 0.5) short.push(`${(el.textContent || '').trim().slice(0, 20)} ${Math.round(r.height)}px`);
+  }
+  t.event('tap-targets', `${short.length} under ${MIN_TAP}px`);
+  if (short.length) t.problem('bug', `Style guide at 390: ${short.length} tap target(s) under ${MIN_TAP}px (${short.slice(0, 4).join(', ')})`);
+  t.add('accessHeld');
+
+  // Reduced motion: transitions must drop out.
+  let calmRule = false;
+  for (const sheet of doc.styleSheets) {
+    try {
+      for (const r of sheet.cssRules) {
+        if (r.conditionText && /prefers-reduced-motion:\s*reduce/.test(r.conditionText) && /--dur-|--ease-|transition:\s*none|\.desk/.test(r.cssText)) calmRule = true;
+      }
+    } catch (_) { /* cross-origin */ }
+  }
+  t.event('reduced-motion', `prefers-reduced-motion rule present: ${calmRule}`);
+  if (!calmRule) t.problem('bug', 'Motion: no prefers-reduced-motion rule covering the new transitions');
+  closeFrame();
+  t.progress(1);
+}
+
+/** Redacted passages: black bars, reveal on tap/focus with glitch, stay for the visit, 8–12 across four pages, contrast and nav clear. */
+async function redaction(options, t) {
+  const f = openFrame();
+  const size = (w, h) => {
+    f.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  };
+  const settle = async (doc) => {
+    await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+    await t.wait(300);
+  };
+  const redactPages = [
+    { name: 'Leadership', href: './leadership.html' },
+    { name: 'Newsroom', href: './newsroom.html' },
+    { name: 'Research', href: './research.html' },
+    { name: 'Investors', href: './investors.html' },
+  ];
+
+  // Fresh visit so bars start closed for the before screenshots.
+  try { sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+
+  size(390, 844);
+  t.scene('Redaction before 390x844');
+  let doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  if (!doc) throw new Error("Leadership didn't open");
+  await settle(doc);
+  try { doc.defaultView.sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+  // Reload so brand.js reads an empty reveal set after we cleared storage.
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  let first = doc.querySelector('.redacted');
+  if (!first) throw new Error('Leadership has no .redacted');
+  first.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  const beforeClosed = !first.classList.contains('is-revealed');
+  const barBg = doc.defaultView.getComputedStyle(first.querySelector('.redacted-text') || first).backgroundColor;
+  t.event('bar', `before: closed=${beforeClosed}, bar bg ${barBg}`);
+  if (!beforeClosed) t.problem('bug', 'Redaction: first passage was already revealed before interaction');
+  t.metric('beforeClosed', beforeClosed ? 1 : 0);
+  t.progress(0.15);
+
+  t.scene('Redaction after 390x844');
+  first.focus({ preventScroll: true });
+  await t.wait(450);
+  if (!first.classList.contains('is-revealed')) first.click();
+  await t.wait(450);
+  const afterOpen = first.classList.contains('is-revealed');
+  t.event('reveal', `after focus/click: revealed=${afterOpen}, id=${first.dataset.redact || ''}`);
+  if (!afterOpen) t.problem('bug', 'Redaction: focus/click did not reveal the passage');
+  const stamp = doc.defaultView.getComputedStyle(first, '::after').content;
+  t.event('stamp', `::after content ${stamp}`);
+  if (!/DECLASSIFIED/i.test(stamp || '')) t.problem('bug', 'Redaction: revealed passage has no DECLASSIFIED stamp');
+  const textEl = first.querySelector('.redacted-text') || first;
+  const fg = parseRgb(doc.defaultView.getComputedStyle(textEl).color);
+  const bg = backgroundOf(textEl);
+  const ratio = fg ? fixed2(contrast(fg, bg)) : 0;
+  t.event('reveal-contrast', `revealed text contrast ${ratio}:1`);
+  if (ratio < MIN_CONTRAST) t.problem('bug', `Redaction: revealed text contrast ${ratio}:1 is under ${MIN_CONTRAST}:1`);
+  t.add('revealedAt390');
+  t.progress(0.35);
+
+  size(1440, 900);
+  t.scene('Redaction before 1440x900');
+  try { doc.defaultView.sessionStorage.removeItem('hawkes.redacted'); } catch (_) { /* ignore */ }
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  first = doc.querySelector('.redacted');
+  first?.scrollIntoView({ block: 'center' });
+  await t.wait(500);
+  if (first?.classList.contains('is-revealed')) t.problem('bug', 'Redaction at 1440: passage started revealed after storage clear');
+  t.progress(0.45);
+
+  t.scene('Redaction after 1440x900');
+  first?.focus({ preventScroll: true });
+  await t.wait(400);
+  if (first && !first.classList.contains('is-revealed')) first.click();
+  await t.wait(400);
+  if (!first?.classList.contains('is-revealed')) t.problem('bug', 'Redaction at 1440: did not reveal');
+  t.add('revealedAt1440');
+  t.progress(0.55);
+
+  // Count across the four lore pages; confirm none sit in nav or headings.
+  let total = 0;
+  const pagesWith = [];
+  for (const page of redactPages) {
+    doc = await frameLoad((fr) => (fr.src = page.href));
+    if (!doc) { t.problem('bug', `${page.name} did not open`); continue; }
+    await settle(doc);
+    const list = [...doc.querySelectorAll('.redacted')];
+    total += list.length;
+    if (list.length) pagesWith.push(page.name);
+    for (const el of list) {
+      if (el.closest('nav, .nav, h1, h2, h3, h4, h5, h6')) {
+        t.problem('bug', `Redaction: ${page.name} places a bar on nav or a heading (${el.dataset.redact || '?'})`);
+      }
+    }
+    t.event('page-count', `${page.name}: ${list.length} redacted`);
+  }
+  t.metric('redactions', total);
+  t.metric('redactionPages', pagesWith.length);
+  t.event('spread', `${total} redactions on ${pagesWith.length} pages (${pagesWith.join(', ')})`);
+  if (total < 8 || total > 12) t.problem('bug', `Redaction: ${total} passages, 8–12 wanted`);
+  if (pagesWith.length < 4) t.problem('bug', `Redaction: only ${pagesWith.length} pages carry bars, at least 4 wanted`);
+  t.progress(0.75);
+
+  // Stays revealed while browsing: open Leadership (already revealed ids in session), then Newsroom and back.
+  size(1280, 800);
+  t.scene('Redaction stays revealed');
+  doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+  await settle(doc);
+  const stored = (() => {
+    try { return doc.defaultView.sessionStorage.getItem('hawkes.redacted') || ''; } catch (_) { return ''; }
+  })();
+  t.event('session', `hawkes.redacted=${stored.slice(0, 120)}`);
+  const still = [...doc.querySelectorAll('.redacted.is-revealed')];
+  t.event('persist', `Leadership shows ${still.length} already revealed`);
+  if (still.length < 1) t.problem('bug', 'Redaction: revealed state did not persist across a reload in the visit');
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await settle(doc);
+  const newsNav = doc.querySelector('.nav-links a[data-nav="newsroom"]');
+  const newsBar = doc.querySelector('.redacted');
+  if (newsNav && newsBar) {
+    const nr = newsNav.getBoundingClientRect();
+    const br = newsBar.getBoundingClientRect();
+    const overlap = !(br.bottom < nr.top || br.top > nr.bottom || br.right < nr.left || br.left > nr.right);
+    t.event('nav-clear', `nav vs first bar overlap=${overlap}`);
+    if (overlap) t.problem('bug', 'Redaction: a bar overlaps the navigation');
+  }
+  // Criterion 4: no sideways scroll; primary nav still reachable.
+  for (const [w, h] of [[390, 844], [1440, 900]]) {
+    size(w, h);
+    doc = await frameLoad((fr) => (fr.src = './leadership.html'));
+    await settle(doc);
+    const over = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+    t.event('overflow', `Leadership at ${w}x${h}: sideways ${over}px`);
+    if (over > 1) t.problem('bug', `Redaction: Leadership scrolls sideways by ${over}px at ${w}x${h}`);
+    const company = doc.querySelector('.nav-links a[data-nav="company"]');
+    if (!company) t.problem('bug', `Redaction: Company nav missing at ${w}px`);
+    else {
+      const r = company.getBoundingClientRect();
+      t.event('nav-hit', `Company nav at ${w}px: ${Math.round(r.width)}x${Math.round(r.height)}`);
+      if (r.width < 8 || r.height < 8) t.problem('bug', `Redaction: Company nav not hittable at ${w}px`);
+    }
+  }
+  closeFrame();
+  t.progress(1);
+}
+
+/** Newsroom: press releases from real product releases, newest first with date, product and image; the hand-written statements stay; one load fetch merges fresh releases. */
+async function newsroom(options, t) {
+  t.scene('Home');
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("index.html didn't open");
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom merge done').catch(() => t.problem('bug', 'Newsroom: releases never finished loading'));
+  const list = doc.querySelector('.notes');
+  const notes = [...doc.querySelectorAll('.notes .release-note')];
+  const made = notes.filter((n) => n.classList.contains('release-product'));
+  const hand = notes.filter((n) => !n.classList.contains('release-product'));
+  t.metric('pressReleases', made.length);
+  t.metric('handWritten', hand.length);
+  t.event('news', `${made.length} product press releases, ${hand.length} hand-written; ${list.dataset.newsBuilt} from the build, ${list.dataset.newsTotal} after the load fetch`);
+  if (made.length < 1) t.problem('bug', 'Newsroom: no product press releases');
+  if (hand.length < 5) t.problem('bug', `Newsroom: only ${hand.length} hand-written items remain (5 expected)`);
+  if (Number(list.dataset.newsTotal) < Number(list.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
+  const dates = notes.map((n) => n.querySelector('time')?.dateTime || '');
+  if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: not newest first (${dates.join(', ')})`);
+  for (const n of made.slice(0, 6)) {
+    n.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const img = n.querySelector('img');
+    if (img) await t.until(() => img.complete, 8000, 'release image').catch(() => {});
+    const date = n.querySelector('time')?.dateTime;
+    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.split(',')[0].trim();
+    const head = n.querySelector('h2')?.textContent.trim();
+    const sentences = (n.querySelector('p:not(.kicker)')?.textContent || '').split(/\.\s+/).filter(Boolean).length;
+    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'})`);
+    if (!date || !prod || !head) t.problem('bug', 'Newsroom: a press release lacks its date, product or headline');
+    if (!img || !img.naturalWidth) t.problem('bug', `Newsroom: ${prod} press release has no image that loads`);
+    if (sentences !== 2) t.problem('bug', `Newsroom: ${prod} summary is ${sentences} sentences, two wanted`);
+    if (/\b(game|gameplay|player|B3|vat)\b/i.test(n.textContent)) t.problem('bug', `Newsroom: ${prod} release uses off-brand wording`);
+    await t.wait(500);
+  }
+  const ids = made.map((n) => n.dataset.news);
+  if (new Set(ids).size !== ids.length) t.problem('bug', 'Newsroom: a release is listed twice');
+  closeFrame();
   t.progress(1);
 }
 
@@ -1641,6 +2262,13 @@ installPlaytest({
       description: 'Opens the style guide and checks every token it lists is defined, then loads every page (including 404) at 1440px and 390px, reports any sideways overflow, and at 1440px compares the header and footer markup and the computed style of nav links, header button, footer links, fiction line, eyebrow, primary button and text link across pages.',
     },
     {
+      id: 'motion',
+      title: 'Motion tokens: durations and easings on the style guide; cards, buttons and links respond; phone menu slides; focus rings and 44px taps hold',
+      seconds: 45,
+      tags: ['full'],
+      description: 'Opens the style guide, checks --dur-1/2/3 and the two easings, screenshots hover/focus samples and a focused button on desktop, screenshots a pressed card at 390x844, opens and closes the phone menu while it fades and slides, checks focus rings and 44px tap targets, and confirms a prefers-reduced-motion rule.',
+    },
+    {
       id: 'phone',
       title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
       seconds: 30,
@@ -1662,6 +2290,13 @@ installPlaytest({
       description: 'Scrolls Home picture by picture (then again in a 390x844 frame) and logs, for each, the WebP file the browser chose, its JPEG fallback (fetched and decoded), width/height, lazy or eager with fetchpriority, and its weight; flags any image over 150 KB, a phone that does not load the 800w, and layout shift; then moves focus to every link and button and checks that a visible outline appears. Then loads every page at 1440 and 390px: logs each image (file, alt, decorative or not) and fails on missing, empty or filename-like alt on a non-decorative one; measures the body copy colour against its background and fails under 4.5:1 (lowest ratio and selector logged per page); keeps the footer line contrast.',
     },
     {
+      id: 'herofield',
+      title: 'Home hero field: slow molecular lab visual in brand colours; headline and button above the fold at 1280x720 and 390x844 with 4.5:1 contrast; pauses off-screen and when the tab is hidden; still under reduced motion; fixed 320x200 box (CLS 0)',
+      seconds: 40,
+      tags: ['full'],
+      description: 'Loads Home at 1280x720 and 390x844, screenshots the hero with the field, checks the fixed canvas size, headline and button on the first screen and their contrast over the field, scrolls away and back to confirm pause/resume, and toggles document visibility to confirm the tab-hidden pause.',
+    },
+    {
       id: 'transitions',
       title: 'View transitions: Home to Products to a product page and back; header and footer keep their place, the product image morphs into the hero, reduced motion gets a plain fade',
       seconds: 30,
@@ -1675,13 +2310,31 @@ installPlaytest({
       tags: ['analytics'],
       description: 'Reads the SDK config on Home (product, env, build), clicks Products in the nav, waits for its page_view to go out, scrolls every product row to the footer (progress 25/50/75/100), checks the footer line (fiction, anonymous statistics, no off-brand words), then clicks the phorigins.com link (the new tab is held back) and waits for the outbound event with ctx.product "PH Origins" to go out.',
     },
+    {
+      id: 'newsroom',
+      title: 'Newsroom: press releases for real product releases, newest first with date, product and image; hand-written statements kept; fresh releases merged on load; dead domains silent',
+      seconds: 40,
+      tags: ['full'],
+      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press releases and the hand-written items are all there, newest first, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+    },
+    {
+      id: 'redaction',
+      title: 'Redacted passages: black bars reveal on tap, hover or focus with a glitch and DECLASSIFIED stamp; 8–12 across four pages; stay revealed for the visit; 4.5:1 contrast; nav unblocked at 390 and desktop',
+      seconds: 55,
+      tags: ['full'],
+      description: 'Clears session reveals, screenshots Leadership before and after reveal at 390x844 and 1440x900, checks the stamp and revealed contrast, counts 8–12 bars across Leadership, Newsroom, Research and Investors (none on nav or headings), confirms session persistence, and checks nav stays hittable with no sideways scroll.',
+    },
   ],
   isReady: () => document.readyState === 'complete',
   async start(id, options, t) {
     try {
       if (id === 'transitions') await transitions(options, t);
+      else if (id === 'motion') await motion(options, t);
+      else if (id === 'herofield') await herofield(options, t);
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
+      else if (id === 'newsroom') await newsroom(options, t);
+      else if (id === 'redaction') await redaction(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);
       else if (id === 'polish') await polish(options, t);
