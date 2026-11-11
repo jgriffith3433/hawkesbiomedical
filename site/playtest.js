@@ -2190,37 +2190,149 @@ async function newsroom(options, t) {
   if (!doc) throw new Error("index.html didn't open");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
   await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom merge done').catch(() => t.problem('bug', 'Newsroom: releases never finished loading'));
-  const list = doc.querySelector('.notes');
-  const notes = [...doc.querySelectorAll('.notes .release-note')];
-  const made = notes.filter((n) => n.classList.contains('release-product'));
-  const hand = notes.filter((n) => !n.classList.contains('release-product'));
-  t.metric('pressReleases', made.length);
+  const grid = doc.querySelector('.news-cards');
+  const cards = [...doc.querySelectorAll('.news-cards .news-card')];
+  const hand = [...doc.querySelectorAll('.notes .release-note')];
+  t.metric('pressReleases', cards.length);
   t.metric('handWritten', hand.length);
-  t.event('news', `${made.length} product press releases, ${hand.length} hand-written; ${list.dataset.newsBuilt} from the build, ${list.dataset.newsTotal} after the load fetch`);
-  if (made.length < 1) t.problem('bug', 'Newsroom: no product press releases');
+  t.event('news', `${cards.length} product press release cards, ${hand.length} hand-written; ${grid?.dataset.newsBuilt} from the build, ${grid?.dataset.newsTotal} after the load fetch`);
+  if (cards.length < 1) t.problem('bug', 'Newsroom: no product press releases');
   if (hand.length < 5) t.problem('bug', `Newsroom: only ${hand.length} hand-written items remain (5 expected)`);
-  if (Number(list.dataset.newsTotal) < Number(list.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
-  const dates = notes.map((n) => n.querySelector('time')?.dateTime || '');
+  if (Number(grid?.dataset.newsTotal) < Number(grid?.dataset.newsBuilt)) t.problem('bug', 'Newsroom: the load fetch lost items');
+  const dates = cards.map((n) => n.querySelector('time')?.dateTime || '');
   if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: not newest first (${dates.join(', ')})`);
-  for (const n of made.slice(0, 6)) {
+  for (const n of cards.slice(0, 6)) {
     n.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const img = n.querySelector('img');
     if (img) await t.until(() => img.complete, 8000, 'release image').catch(() => {});
     const date = n.querySelector('time')?.dateTime;
-    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.split(',')[0].trim();
+    const prod = n.querySelector('.kicker')?.textContent.split('\u00b7')[1]?.trim();
     const head = n.querySelector('h2')?.textContent.trim();
     const sentences = (n.querySelector('p:not(.kicker)')?.textContent || '').split(/\.\s+/).filter(Boolean).length;
-    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'})`);
+    t.event('release', `${date} ${prod}: "${head}" (${sentences} sentences, image ${img && img.naturalWidth ? fileOf(img.src) : 'MISSING'}, href ${n.getAttribute('href')})`);
     if (!date || !prod || !head) t.problem('bug', 'Newsroom: a press release lacks its date, product or headline');
     if (!img || !img.naturalWidth) t.problem('bug', `Newsroom: ${prod} press release has no image that loads`);
+    if (!/^\.\/news-.+\.html$/.test(n.getAttribute('href') || '')) t.problem('bug', `Newsroom: ${prod} card does not link to an article page`);
     if (sentences !== 2) t.problem('bug', `Newsroom: ${prod} summary is ${sentences} sentences, two wanted`);
     if (/\b(game|gameplay|player|B3|vat)\b/i.test(n.textContent)) t.problem('bug', `Newsroom: ${prod} release uses off-brand wording`);
     await t.wait(500);
   }
-  const ids = made.map((n) => n.dataset.news);
+  const ids = cards.map((n) => n.dataset.news);
   if (new Set(ids).size !== ids.length) t.problem('bug', 'Newsroom: a release is listed twice');
   closeFrame();
   t.progress(1);
+}
+
+/** Articles: Newsroom cards open articles; Home shows three newest; each product page shows its latest; phone layout holds. */
+async function articles(options, t) {
+  const W = 390;
+  const H = 844;
+  t.scene('Home');
+  let doc = await frameLoad((f) => (f.src = './index.html'));
+  if (!doc) throw new Error("index.html didn't open");
+  await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest news').catch(() => t.problem('bug', 'Home: latest news never finished loading'));
+  const homeStrip = doc.querySelector('[data-latest-news]');
+  const homeCards = [...doc.querySelectorAll('[data-latest-news] .news-card')];
+  t.metric('homeLatest', homeCards.length);
+  t.event('home-latest', `Home strip: ${homeCards.length} cards (hidden=${homeStrip?.hidden})`);
+  if (!homeStrip || homeStrip.hidden || homeCards.length !== 3) t.problem('bug', `Home: expected 3 latest news cards, got ${homeCards.length}`);
+  for (const c of homeCards) {
+    if (!c.querySelector('time')?.dateTime || !c.querySelector('h2')?.textContent.trim()) t.problem('bug', 'Home: a latest card lacks date or title');
+    if (!/^\.\/news-.+\.html$/.test(c.getAttribute('href') || '')) t.problem('bug', 'Home: a latest card does not link to an article');
+  }
+  t.progress(0.2);
+
+  // Criterion 4 first while still on Home: hero above the fold and no sideways scroll at 390x844.
+  const frame = openFrame();
+  frame.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
+  doc = await frameLoad((f) => (f.src = './index.html'));
+  await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest at 390').catch(() => {});
+  await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
+  await t.wait(400);
+  const heroH = doc.querySelector('.hero .display');
+  const heroBtn = doc.querySelector('.hero .actions .btn');
+  const heroOk = heroH && heroBtn && heroH.getBoundingClientRect().bottom <= H && heroBtn.getBoundingClientRect().bottom <= H;
+  t.event('hero-fold', `Home at ${W}x${H}: headline bottom ${Math.round(heroH?.getBoundingClientRect().bottom || 0)}, button ${Math.round(heroBtn?.getBoundingClientRect().bottom || 0)}`);
+  if (!heroOk) t.problem('bug', `Home at ${W}x${H}: the hero headline or button is below the fold`);
+  const overHome = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  t.metric('overflowHome390', Math.max(0, overHome));
+  if (overHome > 1) t.problem('bug', `Home at ${W}x${H}: sideways scroll by ${overHome}px`);
+  t.scene('Home phone');
+  t.progress(0.35);
+
+  // At 390 the primary nav is behind the menu toggle — open it the way a visitor would, then click Newsroom.
+  const toggle = doc.getElementById('navToggle');
+  if (toggle && doc.defaultView.getComputedStyle(toggle).display !== 'none') {
+    toggle.click();
+    await t.wait(400);
+  }
+  doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
+  await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom cards').catch(() => t.problem('bug', 'Newsroom: cards never finished loading'));
+  const cards = [...doc.querySelectorAll('.news-cards .news-card')];
+  const dates = cards.map((n) => n.querySelector('time')?.dateTime || '');
+  t.metric('newsroomCards', cards.length);
+  t.event('newsroom-cards', `Newsroom: ${cards.length} cards, newest first (${dates.slice(0, 3).join(', ')})`);
+  if (cards.length < 1) t.problem('bug', 'Newsroom: no press-release cards');
+  if (dates.some((d, i) => i && d > dates[i - 1])) t.problem('bug', `Newsroom: cards not newest first (${dates.join(', ')})`);
+  const first = cards[0];
+  first.scrollIntoView({ block: 'center' });
+  await t.wait(400);
+  const articleHref = first.getAttribute('href');
+  t.event('open-article', `Opening ${articleHref}`);
+  doc = await clickLink(t, doc, `.news-card[data-news="${first.dataset.news}"]`, 'first press-release card');
+  await t.wait(500);
+  const article = doc.querySelector('.news-article');
+  const aTitle = doc.querySelector('.news-article h1, .news-article .page-title')?.textContent.trim();
+  const aDate = doc.querySelector('.news-article time')?.dateTime;
+  const aImg = doc.querySelector('.news-article-shot img');
+  if (aImg) await t.until(() => aImg.complete && aImg.naturalWidth > 0, 8000, 'article image').catch(() => {});
+  t.scene('Article');
+  t.event('article', `title="${aTitle}", date=${aDate}, image=${aImg && aImg.naturalWidth ? fileOf(aImg.src) : 'MISSING'}`);
+  if (!article || !aTitle || !aDate) t.problem('bug', 'Article: missing title or date');
+  if (!aImg || !aImg.naturalWidth) t.problem('bug', 'Article: image did not load');
+  // Share preview tags for the article (og:type article, with image).
+  const meta = (attr, key) => doc.head.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content') ?? null;
+  const ogTitle = meta('property', 'og:title');
+  const ogType = meta('property', 'og:type');
+  const ogImage = meta('property', 'og:image');
+  const ogUrl = meta('property', 'og:url');
+  t.event('article-share', `og:type=${ogType}, og:image=${ogImage ? 'yes' : 'no'}, og:url=${ogUrl}`);
+  if (ogType !== 'article') t.problem('bug', `Article: og:type is "${ogType}", not article`);
+  if (!ogImage || !ogTitle || !ogUrl) t.problem('bug', 'Article: missing share preview tags');
+  if (ogTitle !== doc.title.trim()) t.problem('bug', 'Article: og:title does not match the page title');
+  const overArt = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+  t.metric('overflowArticle390', Math.max(0, overArt));
+  if (overArt > 1) t.problem('bug', `Article at ${W}x${H}: sideways scroll by ${overArt}px`);
+  t.progress(0.65);
+
+  // Criterion 3: each product page with a release shows its latest.
+  const productSlugs = ['ph-origins', 'imagine-live-tv', 'dose-of-destruction', 'i-can-be', 'the-place-department', 'yooba-land', 'sick-of-it', 'hawkes-gen'];
+  let withLatest = 0;
+  for (const slug of productSlugs) {
+    doc = await frameLoad((f) => (f.src = `./product-${slug}.html`));
+    if (!doc) { t.problem('bug', `Product ${slug}: page did not open`); continue; }
+    await t.until(() => doc.documentElement.dataset.productNewsReady === '1', 12000, `${slug} news`).catch(() => {});
+    const block = doc.querySelector('[data-product-news]');
+    const card = block?.querySelector('.news-card');
+    const shown = block && !block.hidden && !!card;
+    if (shown) withLatest += 1;
+    t.event('product-latest', `${slug}: ${shown ? `shows ${card.dataset.news} → ${card.getAttribute('href')}` : 'no latest (hidden)'}`);
+    if (slug === 'hawkes-gen') {
+      if (shown) t.problem('bug', 'Hawkes Gen: should not show a press release (no formulation line)');
+    } else if (!shown) {
+      // Sick of It may have no live releases yet; only flag when the slot stayed empty after ready.
+      if (doc.documentElement.dataset.productNewsReady === '1' && slug !== 'sick-of-it') {
+        t.problem('bug', `${slug}: product page has no latest release card`);
+      }
+    } else if (!card.querySelector('time')?.dateTime || !card.querySelector('h2')) {
+      t.problem('bug', `${slug}: latest card lacks date or title`);
+    }
+    const over = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth) - doc.documentElement.clientWidth;
+    if (over > 1) t.problem('bug', `${slug} at ${W}x${H}: sideways scroll by ${over}px`);
+  }
+  t.metric('productsWithLatest', withLatest);
+  t.progress(1);
+  closeFrame();
 }
 
 installPlaytest({
@@ -2326,10 +2438,17 @@ installPlaytest({
     },
     {
       id: 'newsroom',
-      title: 'Newsroom: press releases for real product releases, newest first with date, product and image; hand-written statements kept; fresh releases merged on load; dead domains silent',
+      title: 'Newsroom: press-release cards for real product releases, newest first with date, product and image, each linking to its article; hand-written statements kept; fresh releases merged on load; dead domains silent',
       seconds: 40,
       tags: ['full'],
-      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press releases and the hand-written items are all there, newest first, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+      description: 'Opens Newsroom from the nav, waits for the one load-time fetch of the live products\' releases to merge, checks the product press-release cards and the hand-written items are all there, newest first, each card links to an article page, and reads each of the first six (date, product, headline, two sentences, image that loads, no off-brand wording).',
+    },
+    {
+      id: 'articles',
+      title: 'Articles: Newsroom cards open dated articles with image and share tags; Home shows the three newest; each product page shows its latest; at 390x844 no sideways scroll and the home hero stays above the fold',
+      seconds: 75,
+      tags: ['full'],
+      description: 'Checks Home latest strip (3 cards), Newsroom cards newest first, opens the first card into an article (title, date, image, og:type article), checks each product page latest release, and at 390x844 confirms the home hero is above the fold with no sideways scroll on Home, the article and product pages.',
     },
     {
       id: 'redaction',
@@ -2348,6 +2467,7 @@ installPlaytest({
       else if (id === 'access') await access(options, t);
       else if (id === 'analytics') await analytics(options, t);
       else if (id === 'newsroom') await newsroom(options, t);
+      else if (id === 'articles') await articles(options, t);
       else if (id === 'redaction') await redaction(options, t);
       else if (id === 'design') await design(options, t);
       else if (id === 'phone') await phone(options, t);

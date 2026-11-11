@@ -47,7 +47,20 @@ export function newsItem(product, r) {
   if (!r || !r.version || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || '')) return null;
   const v = V[product.slug];
   const lot = r.build ? ` (lot ${r.build})` : '';
-  return { id: `${product.slug}-${r.version}`, date: r.date, product: product.name, slug: product.slug, version: r.version, headline: v.head(r.version), summary: v.body(r.version, lot), image: product.image, page: product.page };
+  const id = `${product.slug}-${r.version}`;
+  return {
+    id,
+    date: r.date,
+    product: product.name,
+    category: product.name,
+    slug: product.slug,
+    version: r.version,
+    headline: v.head(r.version),
+    summary: v.body(r.version, lot),
+    image: product.image,
+    page: product.page,
+    article: `./news-${id}.html`,
+  };
 }
 
 /** The newest `keep` releases of a releases.json document, as press releases. */

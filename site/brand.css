@@ -1785,6 +1785,93 @@ main { view-transition-name: site-content; }
 .release-thumb img { display: block; width: 100%; height: auto; }
 @media (max-width: 480px) { .release-product { grid-template-columns: 72px 1fr; } }
 
+/* Press-release cards (Newsroom index, Home strip, product latest) and article pages. */
+.news-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  list-style: none;
+  padding: 0;
+}
+.news-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  padding: var(--card-pad);
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+.news-card:hover, .news-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  color: inherit;
+}
+.news-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+.news-card .kicker { margin: 0; color: var(--gold); }
+.news-card h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-h4);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.news-card p:not(.kicker) {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-cards-home { margin-top: var(--space-4); }
+.latest-news { padding-top: var(--space-5); padding-bottom: var(--space-5); }
+.product-news { margin-top: var(--space-5); }
+.product-news .product-news-slot { margin-top: var(--space-3); max-width: 28rem; }
+.product-news .news-card p:not(.kicker) { display: none; }
+.news-article .page-title { max-width: 28ch; }
+.news-article-shot {
+  margin: var(--space-5) 0;
+  max-width: 28rem;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+}
+.news-article-shot img { display: block; width: 100%; height: auto; }
+.news-article-body {
+  max-width: 68ch;
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  color: var(--text);
+}
+.news-article-body p { margin: 0 0 var(--space-3); }
+@media (max-width: 900px) {
+  .news-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .news-cards { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .news-card { padding: var(--space-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-card { transition: none; }
+  .news-card:hover, .news-card:focus-visible { transform: none; }
+}
+
 /* Product monograph (prescription insert): header band, then visual blocks. Tokens only. */
 .mono-band { grid-template-columns: 220px minmax(0, 1fr); background: var(--accent); color: var(--ink); padding: var(--space-5); border-top: 6px solid var(--gold); gap: var(--space-4) var(--space-5); }
 .mono-band .mono-title { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--ink); }
