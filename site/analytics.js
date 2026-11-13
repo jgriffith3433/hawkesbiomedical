@@ -20,7 +20,13 @@
       var vt = event.viewTransition;
       if (!vt) return;
       ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) { if (vt[k] && vt[k].catch) vt[k].catch(function () {}); });
-      if (document.visibilityState === 'hidden') vt.skipTransition();
+      // Also skip when reduced motion is on or emulated (site/calm.js flips the @view-transition rule off after
+      // load, which aborts a running transition with "ViewTransition opt-in disabled").
+      var calm = false;
+      try {
+        calm = sessionStorage.getItem('hawkes.calm') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (e) {}
+      if (calm || document.visibilityState === 'hidden') vt.skipTransition();
     } catch (e) {}
   }
   window.addEventListener('pageswap', guardTransition);
