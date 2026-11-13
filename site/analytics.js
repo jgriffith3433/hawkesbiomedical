@@ -36,6 +36,7 @@
   var PRODUCTS = {
     'phorigins.com': 'PH Origins',
     'sickofitgame.com': 'Sick of It',
+    'hawkesgames.com': 'Sick of It',
     'imaginelivetv.com': 'Imagine Live TV',
     'theplacedepartment.com': 'The Place Department',
     'yoobalandgame.com': 'Yooba Land',
