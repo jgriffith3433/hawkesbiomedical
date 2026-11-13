@@ -13,6 +13,7 @@ const PAGES = [
   { name: 'Timeline', href: './timeline.html' },
   { name: 'Investors', href: './investors.html' },
   { name: 'Compliance', href: './compliance.html' },
+  { name: 'Participating Stores', href: './stores.html' },
   { name: 'Privacy', href: './privacy.html' },
   { name: 'Terms', href: './terms.html' },
   { name: 'Contact', href: './contact.html' },
@@ -32,6 +33,7 @@ const SHARE_URLS = {
   Timeline: 'https://hawkesbiomedical.com/timeline.html',
   Investors: 'https://hawkesbiomedical.com/investors.html',
   Compliance: 'https://hawkesbiomedical.com/compliance.html',
+  'Participating Stores': 'https://hawkesbiomedical.com/stores.html',
   Privacy: 'https://hawkesbiomedical.com/privacy.html',
   Terms: 'https://hawkesbiomedical.com/terms.html',
   'Style guide': 'https://hawkesbiomedical.com/styleguide.html',
@@ -935,7 +937,7 @@ async function polish(options, t) {
 const DESIGN_PAGES = [
   ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
   ['Newsroom', './newsroom.html'], ['Timeline', './timeline.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
-  ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
+  ['Participating Stores', './stores.html'], ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
 const chromeOf = (doc) => {
   // The site revision link is filled in by hawkes-release.js after its fetch: its text, title and hidden state depend on
