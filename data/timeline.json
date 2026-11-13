@@ -4,7 +4,13 @@
     {"year": 2011, "title": "The charter office", "line": "Voss takes the charter office. Every product, statement and filing is checked against what the company said it would be.", "image": {"src": "assets/brand/office-day.jpg", "alt": "An office on the Hawkes Tower floor in daylight.", "width": 1280, "height": 720}, "products": ["sick-of-it", "the-place-department"]},
     {"year": 2014, "title": "A quarter to report", "line": "Director Hale joins the board and gives the company a quarter it can report on.", "image": {"src": "assets/brand/interior-day.jpg", "alt": "A Hawkes Tower interior in daylight.", "width": 1280, "height": 720}, "products": ["imagine-live-tv", "yooba-land"]},
     {"year": 2016, "title": "The Zurich desk", "line": "Lang opens the Zurich capital desk and takes the calendar: filing dates, investor commitments and the date each product reaches market.", "image": {"src": "assets/brand/conference-far.jpg", "alt": "A conference room on the 58th floor in daylight.", "width": 1280, "height": 720}, "products": ["i-can-be", "dose-of-destruction"]},
-    {"year": 2026, "title": "The Hawkes line", "line": "Eight products, eight categories and a combined 71% share, held without a break since 2009. The date has not moved.", "image": {"src": "assets/brand/board-day.jpg", "alt": "The board room on the 58th floor in daylight.", "width": 1280, "height": 720}, "products": ["hawkes-gen"]}
+    {"year": 2026, "title": "The Hawkes line", "line": "Seven products, seven categories and a combined 71% share, held without a break since 2009. The date has not moved.", "image": {"src": "assets/brand/board-day.jpg", "alt": "The board room on the 58th floor in daylight.", "width": 1280, "height": 720}, "products": ["hawkes-gen"]}
+  ],
+  "products": {
+    "sick-of-it", "the-place-department"]},
+    {"year": 2014, "title": "A quarter to report", "line": "Director Hale joins the board and gives the company a quarter it can report on.", "image": {"src": "assets/brand/interior-day.jpg", "alt": "A Hawkes Tower interior in daylight.", "width": 1280, "height": 720}, "products": ["imagine-live-tv", "yooba-land"]},
+    {"year": 2016, "title": "The Zurich desk", "line": "Lang opens the Zurich capital desk and takes the calendar: filing dates, investor commitments and the date each product reaches market.", "image": {"src": "assets/brand/conference-far.jpg", "alt": "A conference room on the 58th floor in daylight.", "width": 1280, "height": 720}, "products": ["i-can-be", "dose-of-destruction"]},
+    {"year": 2026, "title": "The Hawkes line", "line": "Seven products, seven categories and a combined 71% share, held without a break since 2009. The date has not moved.", "image": {"src": "assets/brand/board-day.jpg", "alt": "The board room on the 58th floor in daylight.", "width": 1280, "height": 720}, "products": ["hawkes-gen"]}
   ],
   "products": {
     "ph-origins": {
@@ -15,7 +21,7 @@
       "origin": "The first category: acid-base balance, written to one indication.",
       "moments": [
         {"year": 2009, "title": "Incorporation", "line": "The first category: acid-base balance, written to one indication."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Discontinued. The company no longer markets it; its record stays published."}
       ]
     },
     "sick-of-it": {
@@ -27,7 +33,7 @@
       "moments": [
         {"year": 2011, "title": "The charter office", "line": "Entered under the charter as febrile emergency care."},
         {"year": 2016, "title": "The Zurich desk", "line": "Kept on the Zurich calendar with the rest of the line."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "the-place-department": {
@@ -39,7 +45,7 @@
       "moments": [
         {"year": 2011, "title": "The charter office", "line": "Records storage, for a company that minutes everything."},
         {"year": 2016, "title": "The Zurich desk", "line": "Kept on the Zurich calendar with the rest of the line."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "imagine-live-tv": {
@@ -51,7 +57,7 @@
       "moments": [
         {"year": 2014, "title": "A quarter to report", "line": "Live medical education, the first product built for the quarterly report."},
         {"year": 2016, "title": "The Zurich desk", "line": "Kept on the Zurich calendar with the rest of the line."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "yooba-land": {
@@ -63,7 +69,7 @@
       "moments": [
         {"year": 2014, "title": "A quarter to report", "line": "Appetite support, added to the line in the same year."},
         {"year": 2016, "title": "The Zurich desk", "line": "Kept on the Zurich calendar with the rest of the line."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "i-can-be": {
@@ -74,7 +80,7 @@
       "origin": "Diagnostic assessment, dated on the Zurich calendar.",
       "moments": [
         {"year": 2016, "title": "The Zurich desk", "line": "Diagnostic assessment, dated on the Zurich calendar."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "dose-of-destruction": {
@@ -85,7 +91,7 @@
       "origin": "Oncology, released on a date that has not moved.",
       "moments": [
         {"year": 2016, "title": "The Zurich desk", "line": "Oncology, released on a date that has not moved."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the eight products that hold their categories."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Still one of the seven products that hold their categories."}
       ]
     },
     "hawkes-gen": {
@@ -93,10 +99,10 @@
       "page": "product-hawkes-gen.html",
       "thumb": "assets/products/hawkesgen-rx.jpg",
       "alt": "Hawkes Gen: an automated synthesis arm working over sample tubes.",
-      "origin": "Laboratory services: on-demand synthesis, the eighth product in the line.",
+      "origin": "Laboratory services: on-demand synthesis, the newest product in the line.",
       "moments": [
         {"year": 2009, "title": "Incorporation", "line": "The house that would later open laboratory services."},
-        {"year": 2026, "title": "The Hawkes line", "line": "Laboratory services: on-demand synthesis, the eighth product in the line."}
+        {"year": 2026, "title": "The Hawkes line", "line": "Laboratory services: on-demand synthesis, the newest product in the line."}
       ]
     }
   }

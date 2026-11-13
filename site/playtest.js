@@ -241,6 +241,30 @@ function checkShareTags(t, doc, page) {
   t.add('shareTagsChecked');
 }
 
+/** PH Origins is discontinued: on Products it sits in the "Discontinued" section with the biohacking statement and not in the active grid; its page opens with the notice. */
+function checkDiscontinued(t, doc, kind, tag) {
+  if (kind === 'products') {
+    const active = doc.querySelector('#active-products');
+    const sec = doc.querySelector('#discontinued');
+    const h = sec?.querySelector('h2');
+    if (!active || !sec) { t.problem('bug', `${tag}: Products has no active grid or no Discontinued section`); return; }
+    if (!/^discontinued$/i.test(h?.textContent.trim() || '')) t.problem('bug', `${tag}: the section heading is "${h?.textContent.trim()}", not Discontinued`);
+    if (active.querySelector('#ph-origins, a[href="./product-ph-origins.html"]')) t.problem('bug', `${tag}: PH Origins is still in the active product grid`);
+    if (!sec.querySelector('#ph-origins a[href="./product-ph-origins.html"]')) t.problem('bug', `${tag}: the Discontinued section does not hold the PH Origins card`);
+    if (!/biohacking/i.test(sec.textContent)) t.problem('bug', `${tag}: the Discontinued statement does not mention biohacking`);
+    if (!sec.querySelector('.status-badge')) t.problem('bug', `${tag}: the PH Origins card has no Discontinued badge`);
+    t.event('discontinued', `${tag}: section holds PH Origins, active grid has ${active.querySelectorAll('.product').length} products`);
+  } else {
+    const n = doc.querySelector('.discontinued-notice');
+    const first = doc.querySelector('main h1, main .mono-band');
+    if (!n || !/discontinued/i.test(n.textContent) || !/biohacking/i.test(n.textContent)) { t.problem('bug', `${tag}: PH Origins page has no Discontinued notice mentioning biohacking`); return; }
+    if (first && !(n.compareDocumentPosition(first) & 4)) t.problem('bug', `${tag}: the Discontinued notice is not above the product content`);
+    if (!n.querySelector('a[href="./products.html#discontinued"]')) t.problem('bug', `${tag}: the notice does not link back to the Discontinued section`);
+    t.event('discontinued', `${tag}: notice present, links to Products#discontinued`);
+  }
+  t.add('discontinuedChecked');
+}
+
 /** Every product row: its thumbnail loads and reads as a daylight image, and its formulation line stays on one line. Holds on PH Origins. */
 async function checkProducts(t, doc) {
   await t.until(() => imagesLoaded(doc), 15000, 'the product images');
@@ -281,6 +305,7 @@ async function checkProducts(t, doc) {
     }
   }
 
+  checkDiscontinued(t, doc, 'products', 'Products');
   // Back to PH Origins, and hold there for the review.
   const ph = doc.querySelector('#ph-origins');
   const phImg = ph?.querySelector('.product-shot img');
@@ -816,6 +841,8 @@ async function polish(options, t) {
     t.add('domainsChecked');
   }
 
+  checkDiscontinued(t, doc, 'products', 'Products (polish)');
+
   // 2. Headings: a line-height that clears descenders, and an even 12-16px under each h2 (Privacy, Research, a product page).
   for (const [name, href] of [['Privacy', './privacy.html'], ['Research', './research.html'], ['PH Origins', './product-ph-origins.html']]) {
     t.scene(`Headings: ${name}`);
@@ -1297,14 +1324,14 @@ async function phone(options, t) {
   closed('a tap on the toggle');
   t.add('menuChecked');
 
-  // The eight-product strip: every card inside the width, none clipped, no overlap of a card's image.
+  // The seven-product strip: every card inside the width, none clipped, no overlap of a card's image.
   t.scene('Product strip');
   const strip = doc.querySelector('.line-grid');
   strip.scrollIntoView({ block: 'center' });
   await t.wait(500);
   const cards = [...strip.querySelectorAll('li')];
   t.metric('productCards', cards.length);
-  if (cards.length !== 8) t.problem('bug', `Product strip: ${cards.length} cards, expected 8`);
+  if (cards.length !== 7) t.problem('bug', `Product strip: ${cards.length} cards, expected 7 (PH Origins is discontinued)`);
   const clipped = cards.filter((c) => {
     const r = c.getBoundingClientRect();
     const a = c.querySelector('a').getBoundingClientRect();
@@ -1351,6 +1378,8 @@ async function phone(options, t) {
     if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
     await t.wait(400);
     small(doc, name);
+    if (name === 'Products') checkDiscontinued(t, doc, 'products', `Products ${W}px`);
+    if (name === 'PH Origins') checkDiscontinued(t, doc, 'page', `PH Origins ${W}px`);
     const d = doc.documentElement;
     const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
     if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
@@ -2687,10 +2716,10 @@ installPlaytest({
     },
     {
       id: 'phone',
-      title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the eight-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
+      title: 'Phone 390x844: the menu opens and closes by tap and Escape with focus in and back, the seven-product strip has no clipped card, the hero headline and button are on the first screen, every link and button is 44px tall, no sideways scroll',
       seconds: 30,
       tags: ['full'],
-      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks eight unclipped cards, measures every link and button height on Home (menu open too) and on every other page (product page, Research, Company, Products, Leadership, Newsroom, Investors, Contact, Compliance, Privacy, Terms, Notices, Style guide, 404), and checks for sideways overflow.',
+      description: 'Opens Home in a 390x844 frame, checks the hero headline and button sit inside the screen, taps the menu toggle open (aria-expanded, focus into the menu), closes it with Escape (focus back on the toggle), opens and taps it closed, scrolls to the product strip and checks seven unclipped cards, measures every link and button height on Home (menu open too) and on every other page (product page, Research, Company, Products, Leadership, Newsroom, Investors, Contact, Compliance, Privacy, Terms, Notices, Style guide, 404), and checks for sideways overflow.',
     },
     {
       id: 'polish',

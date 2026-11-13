@@ -1508,7 +1508,7 @@ a {
 .lede code, .fine code, .desk code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; color: var(--text); overflow-wrap: anywhere; }
 .sg-table .serif { font-family: var(--serif); font-weight: 600; overflow-wrap: anywhere; }
 
-.board-card .portrait { display: block; background: var(--bg-raise); width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3, 16px); border: 1px solid var(--line); }
+.board-card .portrait { display: block; background: var(--bg-raise); width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin: 0 0 var(--space-3); border: 1px solid var(--line); }
 .founding { max-width: 70ch; }
 
 /* Product pages: overview, how it works, one diagram. Tokens only. */
@@ -1902,3 +1902,16 @@ main { view-transition-name: site-content; }
 .mono-band .mono-play { min-height: var(--btn-h); min-width: 140px; background: var(--ink); color: var(--accent); }
 .mono-band .mono-play:hover, .mono-band .mono-play:focus-visible { background: var(--bg-raise); }
 @media (max-width: 900px) { .mono-band .mono-preview { flex-direction: column; align-items: stretch; } .preview-clip { width: 100%; } .mono-band .mono-play { width: 100%; } }
+
+/* Discontinued: PH Origins is listed apart from the active line, still reachable. */
+.discontinued { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--gold-line); }
+.discontinued .statement { max-width: 62ch; margin: 0 0 var(--space-3); color: var(--muted); font-family: var(--serif); font-size: var(--fs-body); line-height: 1.6; }
+.discontinued .products { margin-top: 0; }
+.product-discontinued .product-shot img { filter: grayscale(0.85); opacity: 0.85; }
+.status-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border: 1px solid var(--muted); color: var(--muted); background: var(--bg-raise); font-size: var(--fs-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; line-height: 1.4; vertical-align: middle; }
+.discontinued-notice { margin: 0 0 var(--space-5); padding: var(--card-pad); border: 1px solid var(--gold-line); border-left-width: 4px; background: var(--bg-raise); }
+.discontinued-notice p { max-width: 62ch; margin: 0 0 12px; color: var(--muted); font-family: var(--serif); font-size: var(--fs-body); line-height: 1.6; }
+.discontinued-notice p.kicker { margin: 0 0 12px; }
+.discontinued-notice .status-badge { margin-left: 0; }
+.discontinued-notice .text-link { display: inline-flex; align-items: center; min-height: 44px; }
+@media (max-width: 480px) { .discontinued .status-badge { display: block; width: fit-content; margin: 8px 0 0; } }
