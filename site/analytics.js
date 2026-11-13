@@ -11,6 +11,21 @@
 (function () {
   'use strict';
 
+  // Cross-document view transitions (@view-transition in brand.css): the browser aborts one that starts on a hidden
+  // document or while the page is leaving mid-scroll, and rejects its promises ("Transition was aborted because of
+  // invalid state"). Skip it when hidden and handle every promise so an abort is not an unhandled rejection.
+  // Here (a classic script in the head) so the listener exists before the first pagereveal; a module would be late.
+  function guardTransition(event) {
+    try {
+      var vt = event.viewTransition;
+      if (!vt) return;
+      ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) { if (vt[k] && vt[k].catch) vt[k].catch(function () {}); });
+      if (document.visibilityState === 'hidden') vt.skipTransition();
+    } catch (e) {}
+  }
+  window.addEventListener('pageswap', guardTransition);
+  window.addEventListener('pagereveal', guardTransition);
+
   // A product site's host (without www.) -> the product's name, as products.html lists it.
   var PRODUCTS = {
     'phorigins.com': 'PH Origins',
