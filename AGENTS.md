@@ -27,6 +27,8 @@ Privacy, Terms. Logos carry alt text. The fiction line is the first sentence of 
 New pages are generated from the same head/header/footer: copy one and keep the SDK tag, `site/analytics.js` and the
 `SHARE_URLS` entry in `site/playtest.js`.
 
+**PH Origins is discontinued (2026-11):** `products.html` lists it in `#discontinued` (under the active `#active-products` grid) with a statement that the company does not endorse biohacking, self-experimentation or unsupervised use of unapproved compounds; its page opens with `.discontinued-notice`. Nothing was deleted (page, timeline, news, research). The line counts as seven in market (Home strip, Company, Investors, Research); dated Newsroom statements keep their original "eight". Playtest: `checkDiscontinued` in `site/playtest.js`.
+
 ## Layout
 
 ```
