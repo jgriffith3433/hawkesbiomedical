@@ -1915,3 +1915,14 @@ main { view-transition-name: site-content; }
 .discontinued-notice .status-badge { margin-left: 0; }
 .discontinued-notice .text-link { display: inline-flex; align-items: center; min-height: 44px; }
 @media (max-width: 480px) { .discontinued .status-badge { display: block; width: fit-content; margin: 8px 0 0; } }
+
+/* Sick of It: OTC availability and participating stores */
+.availability { margin: var(--space-2) 0; }
+.store-link { display: inline-flex; align-items: center; min-height: var(--btn-h, 44px); }
+.stores h3 { margin: var(--space-3) 0 var(--space-1); }
+
+/* Participating Stores: one repeatable card per store */
+.store-list { list-style: none; margin: var(--space-3) 0; padding: 0; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.store-card { padding: var(--card-pad); border: 1px solid var(--line); background: #fff; }
+.store-card h2 { margin-top: 0; }
+.store-actions { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin: var(--space-2) 0 0; }

@@ -159,6 +159,7 @@ export default defineConfig({
         'timeline.html',
         'investors.html',
         'compliance.html',
+        'stores.html',
         'privacy.html',
         'terms.html',
         'whatsnew.html',
