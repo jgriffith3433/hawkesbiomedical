@@ -1915,3 +1915,8 @@ main { view-transition-name: site-content; }
 .discontinued-notice .status-badge { margin-left: 0; }
 .discontinued-notice .text-link { display: inline-flex; align-items: center; min-height: 44px; }
 @media (max-width: 480px) { .discontinued .status-badge { display: block; width: fit-content; margin: 8px 0 0; } }
+
+/* Sick of It: OTC availability and participating stores */
+.availability { margin: var(--space-2) 0; }
+.store-link { display: inline-flex; align-items: center; min-height: var(--btn-h, 44px); }
+.stores h3 { margin: var(--space-3) 0 var(--space-1); }

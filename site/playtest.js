@@ -241,6 +241,20 @@ function checkShareTags(t, doc, page) {
   t.add('shareTagsChecked');
 }
 
+/** Sick of It is over the counter: OTC wording and the Hawkes Games store link (44px tall), no Rx or direct-sale wording. */
+function checkOtcStore(t, doc, tag) {
+  const root = doc.querySelector('#sick-of-it') || doc.querySelector('main');
+  const txt = root?.textContent || '';
+  if (!/over the counter at participating stores/i.test(txt)) t.problem('bug', `${tag}: Sick of It has no "over the counter at participating stores" line`);
+  if (/prescription only|directly from hawkes/i.test(txt)) t.problem('bug', `${tag}: Sick of It carries contradictory Rx / direct-sale wording`);
+  const a = root?.querySelector('a.store-link[href="https://hawkesgames.com/play/sickofit/"]');
+  if (!a) { t.problem('bug', `${tag}: no Hawkes Games store link for Sick of It`); return; }
+  if (a.target !== '_blank' || !/noopener/.test(a.rel)) t.problem('bug', `${tag}: the Hawkes Games link lacks the external-link treatment`);
+  const h = a.getBoundingClientRect().height;
+  if (h && h < 44) t.problem('bug', `${tag}: the Hawkes Games link is ${Math.round(h)}px tall, under 44px`);
+  t.event('otcstore', `${tag}: OTC line and Hawkes Games link (${Math.round(h)}px)`);
+}
+
 /** PH Origins is discontinued: on Products it sits in the "Discontinued" section with the biohacking statement and not in the active grid; its page opens with the notice. */
 function checkDiscontinued(t, doc, kind, tag) {
   if (kind === 'products') {
@@ -306,6 +320,7 @@ async function checkProducts(t, doc) {
   }
 
   checkDiscontinued(t, doc, 'products', 'Products');
+  checkOtcStore(t, doc, 'Products');
   // Back to PH Origins, and hold there for the review.
   const ph = doc.querySelector('#ph-origins');
   const phImg = ph?.querySelector('.product-shot img');
@@ -1378,7 +1393,7 @@ async function phone(options, t) {
     if (!doc) { t.problem('bug', `${name}: didn't open`); continue; }
     await t.wait(400);
     small(doc, name);
-    if (name === 'Products') checkDiscontinued(t, doc, 'products', `Products ${W}px`);
+    if (name === 'Products') { checkDiscontinued(t, doc, 'products', `Products ${W}px`); checkOtcStore(t, doc, `Products ${W}px`); }
     if (name === 'PH Origins') checkDiscontinued(t, doc, 'page', `PH Origins ${W}px`);
     const d = doc.documentElement;
     const over = Math.max(d.scrollWidth, doc.body.scrollWidth) - d.clientWidth;
