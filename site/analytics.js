@@ -11,10 +11,32 @@
 (function () {
   'use strict';
 
+  // Cross-document view transitions (@view-transition in brand.css): the browser aborts one that starts on a hidden
+  // document or while the page is leaving mid-scroll, and rejects its promises ("Transition was aborted because of
+  // invalid state"). Skip it when hidden and handle every promise so an abort is not an unhandled rejection.
+  // Here (a classic script in the head) so the listener exists before the first pagereveal; a module would be late.
+  function guardTransition(event) {
+    try {
+      var vt = event.viewTransition;
+      if (!vt) return;
+      ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) { if (vt[k] && vt[k].catch) vt[k].catch(function () {}); });
+      // Also skip when reduced motion is on or emulated (site/calm.js flips the @view-transition rule off after
+      // load, which aborts a running transition with "ViewTransition opt-in disabled").
+      var calm = false;
+      try {
+        calm = sessionStorage.getItem('hawkes.calm') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (e) {}
+      if (calm || document.visibilityState === 'hidden') vt.skipTransition();
+    } catch (e) {}
+  }
+  window.addEventListener('pageswap', guardTransition);
+  window.addEventListener('pagereveal', guardTransition);
+
   // A product site's host (without www.) -> the product's name, as products.html lists it.
   var PRODUCTS = {
     'phorigins.com': 'PH Origins',
     'sickofitgame.com': 'Sick of It',
+    'hawkesgames.com': 'Sick of It',
     'imaginelivetv.com': 'Imagine Live TV',
     'theplacedepartment.com': 'The Place Department',
     'yoobalandgame.com': 'Yooba Land',

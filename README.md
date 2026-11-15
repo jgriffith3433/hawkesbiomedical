@@ -26,16 +26,18 @@ npm run preview    # serve the build on port 4174
 |---|---|
 | `index.html` | Home |
 | `company.html` | The company |
+| `research.html` | How a product is made (diagram), the line by indication, sourced figures |
 | `products.html` | PH Origins, Sick of It, Imagine Live TV, The Place Department, Yooba Land, I Can Be, Dose Of Destruction, Hawkes Gen |
-| `leadership.html` | Pierce Hawkes, Hale, Voss, Lang |
-| `newsroom.html` | Dated statements: Hale, Lang, Voss, the Chairman |
+| `leadership.html` | Pierce Hawkes, Hale, Voss, Lang (portraits, roles, founding story) |
+| `newsroom.html` | Press-release cards (each opens a `news-*.html` article) and dated statements: Hale, Lang, Voss, the Chairman |
 | `investors.html` | Mission, our position, selected figures, Zurich capital desk |
 | `compliance.html` | Compliance statement |
 | `privacy.html`, `terms.html` | Short legal pages |
 | `whatsnew.html` | Release log |
+| `styleguide.html` | The design tokens: colour, type scale, spacing, buttons, cards, motion |
 | `contact.html` | Tower office and the Zurich desk |
 
-Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/`.
+Shared styles and nav live in `site/brand.css` and `site/brand.js`. Photography is in `assets/brand/` (tower and board) and `assets/medical/` (lab, product line, cleanroom); product thumbnails are `assets/products/*-rx.jpg`.
 
 Every page loads Hawkes Analytics (Hawkes Gen's SDK, product `hawkesbiomedical`) and `site/analytics.js`: anonymous site statistics, no cookies, no personal data, as the footer says. See `AGENTS.md` "Analytics".
 
