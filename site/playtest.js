@@ -20,7 +20,7 @@ const PAGES = [
   { name: 'Research', href: './research.html' },
   { name: 'Style guide', href: './styleguide.html' },
   { name: "What's new", href: './whatsnew.html' },
-  { name: 'Home', href: './index.html' },
+  { name: 'Home', href: './home.html' },
 ];
 // Pages that carry the link-preview (Open Graph and Twitter card) tags, and the og:url each must give.
 const SHARE_URLS = {
@@ -432,7 +432,7 @@ async function analytics(options, t) {
   t.progress(0.1);
 
   // Products, through the nav.
-  let doc = await frameLoad((f) => (f.src = './index.html'));
+  let doc = await frameLoad((f) => (f.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
   t.scene('Products');
@@ -635,7 +635,7 @@ async function access(options, t) {
     t.scene('Home: images at 390px');
     const f = openFrame();
     f.style.cssText = 'position:fixed;top:0;left:0;width:390px;height:844px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea';
-    const doc = await frameLoad((fr) => (fr.src = './index.html'));
+    const doc = await frameLoad((fr) => (fr.src = './home.html'));
     if (!doc) throw new Error("the home page didn't open in the 390px frame");
     phone = await checkPictures(t, doc, 'Home');
     t.metric('phoneLargestPictureKB', Math.max(0, ...phone.sized.map((x) => x.kb)));
@@ -821,7 +821,7 @@ async function polish(options, t) {
   for (const [W, H] of [[1280, 720], [390, 844]]) {
     size(W, H);
     t.scene(`Home at ${W}x${H}`);
-    doc = await frameLoad((fr) => (fr.src = './index.html'));
+    doc = await frameLoad((fr) => (fr.src = './home.html'));
     if (!doc) throw new Error("the home page didn't open in the frame");
     await settle(doc);
     for (const [what, sel] of [['eyebrow', '.hero .eyebrow'], ['headline', '.hero h1'], ['button', '.hero .btn']]) {
@@ -837,7 +837,7 @@ async function polish(options, t) {
   // 3. Products: each row's domain is a link of its own, apart from the product-file label.
   size(1440, 900);
   t.scene('Products: domains');
-  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  doc = await frameLoad((fr) => (fr.src = './home.html'));
   doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
   await settle(doc);
   const rows = [...doc.querySelectorAll('.products .product')];
@@ -935,7 +935,7 @@ async function polish(options, t) {
 
 /** The shared design system: every page has the same header, footer, type scale and button styles; the style guide lists the tokens; no page overflows at 390px or 1440px. */
 const DESIGN_PAGES = [
-  ['Home', './index.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
+  ['Home', './home.html'], ['PH Origins', './product-ph-origins.html'], ['Research', './research.html'], ['Company', './company.html'], ['Products', './products.html'], ['Leadership', './leadership.html'],
   ['Newsroom', './newsroom.html'], ['Timeline', './timeline.html'], ['Investors', './investors.html'], ['Contact', './contact.html'], ['Compliance', './compliance.html'],
   ['Participating Stores', './stores.html'], ['Privacy', './privacy.html'], ['Terms', './terms.html'], ["What's new", './whatsnew.html'], ['Style guide', './styleguide.html'], ['404', './404.html'],
 ];
@@ -1114,7 +1114,7 @@ async function previewPages(options, t) {
 }
 
 async function productPages(options, t) {
-  let doc = await frameLoad((f) => (f.src = './index.html'));
+  let doc = await frameLoad((f) => (f.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
   t.scene('Products');
@@ -1216,7 +1216,7 @@ async function products(options, t, everyPage) {
   t.progress(0.1);
 
   // Products, through the nav, as a visitor gets there.
-  let doc = await frameLoad((f) => (f.src = './index.html'));
+  let doc = await frameLoad((f) => (f.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="products"]', 'Products (nav)');
   t.scene('Products');
@@ -1258,7 +1258,7 @@ async function phone(options, t) {
   const f = openFrame();
   f.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
   t.scene('Home at 390x844');
-  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  let doc = await frameLoad((fr) => (fr.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   await t.until(() => doc.fonts ? doc.fonts.status !== 'loading' : true, 6000, 'fonts').catch(() => {});
   await t.wait(400);
@@ -1402,7 +1402,7 @@ async function phone(options, t) {
     if (over > 1) t.problem('bug', `${name} at ${W}px: the page scrolls sideways by ${over}px (${wide(doc) || 'no single element'})`);
     t.add('pagesMeasured');
   }
-  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  doc = await frameLoad((fr) => (fr.src = './home.html'));
   if (doc) {
     await t.wait(300);
     const d = doc.documentElement;
@@ -1556,7 +1556,7 @@ async function timelineFilter(options, t) {
 
 /** Timeline: reached from the header menu and the footer; eras in order, each with a year, image and line; each product origin links its page; no sideways scroll. */
 async function timeline(options, t) {
-  let doc = await frameLoad((f) => (f.src = './index.html'));
+  let doc = await frameLoad((f) => (f.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   const footer = doc.querySelector('footer nav a[href="./timeline.html"]');
   t.event('footer', `Home footer links Timeline: ${footer ? 'yes' : 'no'}`);
@@ -1817,7 +1817,7 @@ async function herofield(options, t) {
   // 1. Desktop: field live, above the fold, contrast, fixed size (no CLS).
   size(1280, 720);
   t.scene('Home hero field 1280x720');
-  let doc = await frameLoad((fr) => (fr.src = './index.html'));
+  let doc = await frameLoad((fr) => (fr.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open in the frame");
   await settle(doc);
   const field = doc.querySelector('[data-hero-field]');
@@ -1903,7 +1903,7 @@ async function herofield(options, t) {
   // 3. Phone: same fold + contrast; field keeps its fixed box (no shift).
   size(390, 844);
   t.scene('Home hero field 390x844');
-  doc = await frameLoad((fr) => (fr.src = './index.html'));
+  doc = await frameLoad((fr) => (fr.src = './home.html'));
   if (!doc) throw new Error("the home page didn't open at 390x844");
   await settle(doc);
   const fieldPhone = doc.querySelector('[data-hero-field]');
@@ -1963,7 +1963,7 @@ async function transitions(options, t) {
   if (!rule) t.problem('bug', 'no @view-transition rule in the stylesheet');
   if (!calm) t.problem('bug', 'no reduced-motion rule for the view transitions');
   t.scene('Home to Products');
-  let doc = await clickLink(t, (openFrame(), await frameLoad((f) => { f.src = './index.html'; })), 'header a[href$="products.html"]', 'Products in the nav');
+  let doc = await clickLink(t, (openFrame(), await frameLoad((f) => { f.src = './home.html'; })), 'header a[href$="products.html"]', 'Products in the nav');
   await t.wait(600);
   const win = () => frame.contentWindow;
   const nameOf = (d, sel) => d.defaultView.getComputedStyle(d.querySelector(sel)).viewTransitionName;
@@ -2342,7 +2342,7 @@ async function motionWalk(t, calm) {
     return doc;
   };
 
-  let doc = await visit('Home', 'Open Home', () => frameLoad((f) => { f.src = './index.html'; }));
+  let doc = await visit('Home', 'Open Home', () => frameLoad((f) => { f.src = './home.html'; }));
   await openMenu(doc);
   const goLink = (label, selector) => async () => {
     const link = doc.querySelector(selector);
@@ -2359,7 +2359,7 @@ async function motionWalk(t, calm) {
   doc = await visit('PH Origins', 'Back to PH Origins', back);
   doc = await visit('Products', 'Back to Products', back);
   doc = await visit('Home', 'Back to Home', back);
-  if (!/(index\.html|\/)$/.test(win().location.pathname)) t.problem('bug', `Back did not end on Home (${win().location.pathname})`);
+  if (!/(home\.html|\/)$/.test(win().location.pathname)) t.problem('bug', `Back did not end on Home (${win().location.pathname})`);
 
   t.event('flow-summary', `${seen.length} pages in order (${seen.join(' > ')}); worst frame gap ${worstGap.gap} ms on ${worstGap.name || 'none'} at ${mode}`);
   t.add('transitionsMeasured', seen.length);
@@ -2516,8 +2516,8 @@ async function redaction(options, t) {
 /** Newsroom: press releases from real product releases, newest first with date, product and image; the hand-written statements stay; one load fetch merges fresh releases. */
 async function newsroom(options, t) {
   t.scene('Home');
-  let doc = await frameLoad((f) => (f.src = './index.html'));
-  if (!doc) throw new Error("index.html didn't open");
+  let doc = await frameLoad((f) => (f.src = './home.html'));
+  if (!doc) throw new Error("home.html didn't open");
   doc = await clickLink(t, doc, '.nav-links a[data-nav="newsroom"]', 'Newsroom (nav)');
   await t.until(() => doc.documentElement.dataset.newsReady === '1', 20000, 'Newsroom merge done').catch(() => t.problem('bug', 'Newsroom: releases never finished loading'));
   const grid = doc.querySelector('.news-cards');
@@ -2558,8 +2558,8 @@ async function articles(options, t) {
   const W = 390;
   const H = 844;
   t.scene('Home');
-  let doc = await frameLoad((f) => (f.src = './index.html'));
-  if (!doc) throw new Error("index.html didn't open");
+  let doc = await frameLoad((f) => (f.src = './home.html'));
+  if (!doc) throw new Error("home.html didn't open");
   await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest news').catch(() => t.problem('bug', 'Home: latest news never finished loading'));
   const homeStrip = doc.querySelector('[data-latest-news]');
   const homeCards = [...doc.querySelectorAll('[data-latest-news] .news-card')];
@@ -2575,7 +2575,7 @@ async function articles(options, t) {
   // Criterion 4 first while still on Home: hero above the fold and no sideways scroll at 390x844.
   const frame = openFrame();
   frame.style.cssText = `position:fixed;top:0;left:0;width:${W}px;height:${H}px;max-width:none;border:0;z-index:2147483647;background:#f3f0ea`;
-  doc = await frameLoad((f) => (f.src = './index.html'));
+  doc = await frameLoad((f) => (f.src = './home.html'));
   await t.until(() => doc.documentElement.dataset.latestNewsReady === '1', 15000, 'Home latest at 390').catch(() => {});
   await t.until(() => (doc.fonts ? doc.fonts.status !== 'loading' : true), 8000, 'fonts').catch(() => {});
   await t.wait(400);

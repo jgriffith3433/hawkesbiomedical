@@ -79,7 +79,7 @@ function writeCards(items) {
     if (next != null && next !== html) writeFileSync(resolve(file), next);
   };
   put('newsroom.html', sorted.map((i) => cardHtml(i, { summary: true, indent: '            ' })).join('\n'));
-  put('index.html', sorted.slice(0, 3).map((i) => cardHtml(i, { indent: '            ' })).join('\n'));
+  put('home.html', sorted.slice(0, 3).map((i) => cardHtml(i, { indent: '            ' })).join('\n'));
   for (const p of NEWS_PRODUCTS) {
     const latest = sorted.find((i) => i.slug === p.slug);
     if (latest) put(`product-${p.slug}.html`, cardHtml(latest, { indent: '            ' }));
@@ -142,6 +142,7 @@ export default defineConfig({
     rollupOptions: {
       input: [
         'index.html',
+        'home.html',
         'company.html',
         'products.html',
         'product-ph-origins.html',

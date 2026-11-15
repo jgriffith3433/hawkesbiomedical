@@ -1,253 +1,76 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f3f0ea" />
-    <meta
-      name="description"
-      content="Hawkes Biomedical. Advancing tomorrow. Today. Seven products, seven categories, one standard. We do not pitch a cure. We own the category."
-    />
-    <link rel="icon" href="/favicon.png" type="image/png" />
-    <title>Hawkes Biomedical</title>
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Hawkes Biomedical" />
-    <meta property="og:title" content="Hawkes Biomedical" />
-    <meta
-      property="og:description"
-      content="Hawkes Biomedical. Advancing tomorrow. Today. Seven products, seven categories, one standard. We do not pitch a cure. We own the category."
-    />
-    <meta property="og:url" content="https://hawkesbiomedical.com/" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Hawkes Biomedical" />
-    <meta name="twitter:description" content="Hawkes Biomedical. Advancing tomorrow. Today. Seven products, seven categories, one standard. We do not pitch a cure. We own the category." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
-    <link rel="stylesheet" href="./site/brand.css" />
-    <!-- Hawkes Analytics: anonymous site statistics (AGENTS.md "Analytics"). site/analytics.js must follow the SDK tag. -->
-    <script src="https://hawkesgen.ai/sdk/analytics@1.js" data-product="hawkesbiomedical" defer></script>
-    <script src="./site/analytics.js"></script>
-  </head>
-  <body data-page="home">
-    <a class="skip" href="#content">Skip to content</a>
-
-    <header class="nav">
-      <div class="nav-inner">
-        <a class="brand" href="./index.html">
-          <img src="./assets/brand/logo.png" alt="Hawkes Biomedical logo" width="320" height="320" />
-          <span class="brand-name">Hawkes<span>Biomedical</span></span>
-        </a>
-        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="nav-links">
-          Menu
-        </button>
-        <nav class="nav-links" id="nav-links" aria-label="Primary">
-          <a href="./company.html" data-nav="company">Company</a>
-          <a href="./products.html" data-nav="products">Products</a>
-          <a href="./stores.html" data-nav="stores">Stores</a>
-          <a href="./leadership.html" data-nav="leadership">Leadership</a>
-          <a href="./newsroom.html" data-nav="newsroom">Newsroom</a>
-          <a href="./timeline.html" data-nav="timeline">Timeline</a>
-          <a href="./contact.html" data-nav="contact">Contact</a>
-        </nav>
-        <div class="nav-tools">
-          <a class="nav-cta" href="./investors.html" data-nav="investors">Investors</a>
-        </div>
-      </div>
-    </header>
-
-    <main id="content">
-      <section class="hero" aria-label="Introduction">
-        <figure class="hero-photo">
-          <picture><source type="image/webp" srcset="./assets/medical/lab-hero-800.webp 800w, ./assets/medical/lab-hero-1600.webp 1600w" sizes="100vw" /><img fetchpriority="high" decoding="async"
-            src="./assets/medical/lab-hero.jpg"
-            alt="A bright Hawkes Biomedical research laboratory, white benches, reagent bottles and a microscope, scientists at work by the windows." width="1600" height="914" /></picture>
-        </figure>
-        <div class="hero-copy">
-          <div class="hero-field" data-hero-field aria-hidden="true">
-            <canvas width="320" height="200"></canvas>
-          </div>
-          <p class="eyebrow">Hawkes Biomedical</p>
-          <h1 class="display slogan">
-            <span class="slogan-line">Advancing tomorrow.</span>
-            <span class="slogan-line">Today.</span>
-          </h1>
-          <p class="mission" id="mission">Hawkes Biomedical exists to make every product in its line the leader of its category, and to keep it there.</p>
-          <p class="position">We do not pitch a cure. We own the category.</p>
-          <div class="actions">
-            <a class="btn" href="#problem">Read the account</a>
-            <a class="text-link" href="./products.html">The Hawkes line</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="band latest-news" id="latest-news" aria-labelledby="latest-news-title" data-latest-news>
-        <div class="wrap-wide">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Newsroom</p>
-              <h2 class="section-title" id="latest-news-title">Latest from the newsroom</h2>
-            </div>
-            <a class="text-link" href="./newsroom.html">All statements</a>
-          </div>
-          <div class="news-cards news-cards-home" aria-label="Latest press releases">
-            <!-- news:cards -->
-            <a class="news-card" href="./news-the-place-department-1.9.0.html" data-news="the-place-department-1.9.0">
-              <img src="./assets/products/theplacedepartment-rx.jpg" alt="The Place Department: product photograph." width="640" height="640" loading="lazy" />
-              <p class="kicker"><time datetime="2026-11-05">2026-11-05</time> &middot; The Place Department</p>
-              <h2>The Place Department files formulation 1.9.0 to the register</h2>
-            </a>
-            <a class="news-card" href="./news-the-place-department-1.8.0.html" data-news="the-place-department-1.8.0">
-              <img src="./assets/products/theplacedepartment-rx.jpg" alt="The Place Department: product photograph." width="640" height="640" loading="lazy" />
-              <p class="kicker"><time datetime="2026-11-03">2026-11-03</time> &middot; The Place Department</p>
-              <h2>The Place Department files formulation 1.8.0 to the register</h2>
-            </a>
-            <a class="news-card" href="./news-the-place-department-1.7.0.html" data-news="the-place-department-1.7.0">
-              <img src="./assets/products/theplacedepartment-rx.jpg" alt="The Place Department: product photograph." width="640" height="640" loading="lazy" />
-              <p class="kicker"><time datetime="2026-11-01">2026-11-01</time> &middot; The Place Department</p>
-              <h2>The Place Department files formulation 1.7.0 to the register</h2>
-            </a>
-<!-- /news:cards -->
-          </div>
-        </div>
-      </section>
-
-      <section class="band story" id="problem" aria-labelledby="problem-title">
-        <div class="wrap-wide chapter-story" data-reveal>
-          <div class="story-copy">
-            <p class="eyebrow">I. The problem</p>
-            <h2 class="section-title" id="problem-title">A category without an owner is left to chance</h2>
-            <p class="lede">Most medical products are launched, marketed for a season and allowed to lapse. The formulation drifts. The label ages. The clinician who relied on it is not told. Patients are left with a category that no one is answerable for.</p>
-            <p class="lede">A cure would end the matter, and a cure would end the market with it. Neither is what a patient, a clinician or an investor needs. They need someone to be responsible for the category, every quarter, for as long as it exists.</p>
-          </div>
-          <figure class="story-visual">
-            <picture><source type="image/webp" srcset="./assets/medical/cleanroom-800.webp 800w, ./assets/medical/cleanroom-1600.webp 1600w" sizes="(max-width: 700px) 100vw, 800px" /><img src="./assets/medical/cleanroom.jpg" alt="A Hawkes Biomedical cleanroom: technicians in white suits beside a line of glass vials in daylight." loading="lazy" width="1600" height="914" /></picture>
-            <figcaption>Cleanroom, Hawkes Tower laboratories</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="band story story-alt" id="mission-chapter" aria-labelledby="mission-title">
-        <div class="wrap-wide chapter-story" data-reveal>
-          <figure class="story-visual">
-            <picture><source type="image/webp" srcset="./assets/medical/product-line-800.webp 800w, ./assets/medical/product-line-1600.webp 1600w" sizes="(max-width: 700px) 100vw, 800px" /><img src="./assets/medical/product-line.jpg" alt="A row of white Hawkes product bottles and cartons, each with the same navy band, on a white counter in daylight." loading="lazy" width="1600" height="914" /></picture>
-            <figcaption>The Hawkes line, one band, one standard</figcaption>
-          </figure>
-          <div class="story-copy">
-            <p class="eyebrow">II. The mission</p>
-            <h2 class="section-title" id="mission-title">Own the category. Keep it.</h2>
-            <p class="lede">The Hawkes name goes only on a product that can hold the leading position in its category. It stays on that product for as long as Hawkes keeps it there. The name on the label is a promise about everything behind it.</p>
-            <p class="lede">Across its categories, the line holds a combined 71% share. It has done so continuously since 2009.</p>
-            <div class="actions"><a class="text-link" href="./company.html">The Hawkes standard</a></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="band story" id="work" aria-labelledby="work-title">
-        <div class="wrap-wide" data-reveal>
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">III. The work</p>
-              <h2 class="section-title" id="work-title">Seven products. One name.</h2>
-            </div>
-            <a class="text-link" href="./products.html">Indications and usage</a>
-          </div>
-          <p class="lede section-note">Each product is formulated, labelled and revised to one company standard. Each carries a lot, a revision and a date, and each is maintained for as long as it is in market.</p>
-          <ul class="line-grid" data-reveal-stagger>
-            <li><a href="./products.html#sick-of-it"><img src="./assets/products/sickofit-rx.jpg" alt="Sick of It: a single-use auto-injector in its case beside a thermometer." loading="lazy" width="640" height="640" /><span class="kicker">Febrile emergency</span><strong>Sick of It</strong></a></li>
-            <li><a href="./products.html#imagine-live-tv"><img src="./assets/products/imaginelivetv-rx.jpg" alt="Imagine Live TV: a broadcast camera and an anatomical heart model in a teaching studio." loading="lazy" width="640" height="640" /><span class="kicker">Clinical education</span><strong>Imagine Live TV</strong></a></li>
-            <li><a href="./products.html#the-place-department"><img src="./assets/products/theplacedepartment-rx.jpg" alt="The Place Department: locked filing cabinets and a records rack in a secure archive." loading="lazy" width="640" height="640" /><span class="kicker">Health records</span><strong>The Place Department</strong></a></li>
-            <li><a href="./products.html#yooba-land"><img src="./assets/products/yoobaland-rx.jpg" alt="Yooba Land: a bottle of oral nutritional solution with a dosing cup and fresh fruit." loading="lazy" width="640" height="640" /><span class="kicker">Appetite support</span><strong>Yooba Land</strong></a></li>
-            <li><a href="./products.html#i-can-be"><img src="./assets/products/icanbe-rx.jpg" alt="I Can Be: a white full-body scanner with its patient table." loading="lazy" width="640" height="640" /><span class="kicker">Diagnostic assessment</span><strong>I Can Be</strong></a></li>
-            <li><a href="./products.html#dose-of-destruction"><img src="./assets/products/doseofdestruction-rx.jpg" alt="Dose Of Destruction: an infusion bag with a yellow handling band on a steel stand." loading="lazy" width="640" height="640" /><span class="kicker">Oncology</span><strong>Dose Of Destruction</strong></a></li>
-            <li><a href="./products.html#hawkes-gen"><img src="./assets/products/hawkesgen-rx.jpg" alt="Hawkes Gen: an automated synthesis arm working over sample tubes." loading="lazy" width="640" height="640" /><span class="kicker">Laboratory services</span><strong>Hawkes Gen</strong></a></li>
-          </ul>
-          <div class="pillars">
-            <article class="pillar">
-              <p class="kicker">One standard</p>
-              <h3>Made the Hawkes way</h3>
-              <p>Every product is formulated, labelled and revised to one company standard, written into the charter and reviewed each year by Voss. There is no second tier.</p>
-            </article>
-            <article class="pillar">
-              <p class="kicker">Category leadership</p>
-              <h3>First in its field</h3>
-              <p>The Hawkes name goes only on a product that can hold the leading position in its category. Across its categories, the line holds a combined 71% share.</p>
-            </article>
-            <article class="pillar">
-              <p class="kicker">Continuity</p>
-              <h3>Maintained, not launched</h3>
-              <p>Each formulation carries a lot, a revision and a date, and it is kept current for as long as it is in market. Since 2009, no Hawkes product has been left behind.</p>
-            </article>
-            <article class="pillar">
-              <p class="kicker">One house</p>
-              <h3>A line that supports itself</h3>
-              <p>Hawkes Gen supplies the laboratory work. The Place Department keeps the records. Imagine Live TV trains the clinicians. Each product is stronger for the others.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="band story story-alt" id="people" aria-labelledby="people-title">
-        <div class="wrap-wide chapter-story" data-reveal>
-          <figure class="story-visual">
-            <picture><source type="image/webp" srcset="./assets/brand/conference-far-800.webp 800w, ./assets/brand/conference-far-1280.webp 1280w" sizes="(max-width: 700px) 100vw, 800px" /><img src="./assets/brand/conference-far.jpg" alt="Four people seated at a long table in a bright conference room." loading="lazy" width="1280" height="720" /></picture>
-            <figcaption>The board, 58th floor, Hawkes Tower</figcaption>
-          </figure>
-          <div class="story-copy">
-            <p class="eyebrow">IV. The people</p>
-            <h2 class="section-title" id="people-title">Four names answer for the line</h2>
-            <p class="lede">Pierce Hawkes has chaired the company since 2009, and every product carries his name. Director Hale presents each quarter. Voss keeps the charter. Lang keeps the date, from the capital desk in Zurich.</p>
-            <blockquote>There's always room for grace.</blockquote>
-            <p class="fine">Pierce Hawkes, Chairman</p>
-            <div class="actions"><a class="btn" href="./leadership.html">Leadership</a></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="wrap-wide site-footer">
-        <div>
-          <span class="footer-brand"><img src="./assets/brand/logo.png" alt="Hawkes Biomedical logo" width="320" height="320" />Hawkes Biomedical</span>
-          <span>Hawkes Tower, 58th Floor</span>
-          <span>Capital desk, Zurich</span>
-        </div>
-        <nav aria-label="Footer">
-          <a href="./index.html">Home</a>
-          <a href="./company.html">Company</a>
-          <a href="./products.html">Products</a>
-          <a href="./stores.html">Participating Stores</a>
-          <a href="./research.html">Research</a>
-          <a href="./leadership.html">Leadership</a>
-          <a href="./newsroom.html">Newsroom</a>
-          <a href="./timeline.html">Timeline</a>
-          <a href="./investors.html">Investors</a>
-          <a href="./contact.html">Contact</a>
-          <a href="./whatsnew.html">What&rsquo;s new</a>
-          <a href="./compliance.html">Compliance</a>
-          <a href="./privacy.html">Privacy</a>
-          <a href="./terms.html">Terms</a>
-          <a href="./styleguide.html">Style guide</a>
-        </nav>
-      </div>
-      <p class="wrap-wide legal">Hawkes Biomedical is a work of fiction. <span class="stats">We keep anonymous site statistics. No cookies. No personal data.</span> <a class="revision" href="./whatsnew.html" data-hawkes-version data-prefix="Site revision " hidden>Site revision</a> <a class="powered" href="https://hawkesgen.ai">Powered by <strong>HAWKES GEN</strong></a></p>
-    </footer>
-
-    <script type="module" src="./site/brand.js"></script>
-    <script type="module" src="./site/hero-field.js"></script>
-    <script type="module" src="./site/latest-news.js"></script>
-    <script type="module" src="./site/playtest.js"></script>
-    <script src="./site/hawkes-release.js" data-releases="./releases.json" defer></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1eb">
+<meta name="description" content="One source doses ten compartments: theplacedepartment.com, icanbe.ai, hawkesbiomedical.com, imaginelivetv.com, doseofdestruction.com, hawkesgames.com, net.hawkesgen.ai, hawkesgen.ai, studio.hawkesgen.ai and yoobalandgame.com. Each clears exponentially and is written in its own bits, while a controller holds the mean level at its set point.">
+<title>Hawkes Biomedical</title>
+<style>html,body{margin:0;height:100%;background:#f4f1eb;overflow:hidden}canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
+<script>(function(){var s=location.search,h=location.hash;if(navigator.webdriver||s.length>1||h.length>1){location.replace('./home.html'+s+h);}})();</script>
+<link rel="icon" href="/favicon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hawkes Biomedical">
+<meta property="og:title" content="Hawkes Biomedical">
+<meta property="og:description" content="Hawkes Biomedical. Advancing tomorrow. Today. Seven products, seven categories, one standard. We do not pitch a cure. We own the category.">
+<meta property="og:url" content="https://hawkesbiomedical.com/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hawkes Biomedical">
+<meta name="twitter:description" content="Hawkes Biomedical. Advancing tomorrow. Today. Seven products, seven categories, one standard. We do not pitch a cure. We own the category.">
+<script src="https://hawkesgen.ai/sdk/analytics@1.js" data-product="hawkesbiomedical" defer></script>
+<script src="./site/analytics.js"></script>
+</head>
+<body>
+<canvas id="v" aria-hidden="true"></canvas>
+<main class="sr"><h1>Hawkes Biomedical</h1><p>One source doses ten compartments: theplacedepartment.com, icanbe.ai, hawkesbiomedical.com, imaginelivetv.com, doseofdestruction.com, hawkesgames.com, net.hawkesgen.ai, hawkesgen.ai, studio.hawkesgen.ai and yoobalandgame.com. Each clears exponentially and is written in its own bits, while a controller holds the mean level at its set point.</p></main>
+<script>
+(function runtime(P, F, make) {
+  var c = document.getElementById('v'), x = c.getContext('2d'), S = make(P, F), M = { x: .5, y: .5, in: false, down: false }, Wd = 0, Ht = 0, last = 0, T = 0;
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size() { var D = Math.min(2, window.devicePixelRatio || 1); Wd = window.innerWidth; Ht = window.innerHeight; c.width = Math.round(Wd * D); c.height = Math.round(Ht * D); x.setTransform(D, 0, 0, D, 0, 0); S.resize(Wd, Ht); if (still) for (var i = 0; i < 240; i++) S.frame(x, Wd, Ht, i / 30, 1 / 30, M); }
+  function frame(ms) { var dt = Math.min(.05, (ms - last) / 1000 || .016); last = ms; T += dt; S.frame(x, Wd, Ht, T, dt, M); window.requestAnimationFrame(frame); }
+  function pt(e) { M.x = e.clientX / Wd; M.y = e.clientY / Ht; M.in = true; }
+  c.addEventListener('pointermove', pt); c.addEventListener('pointerdown', function (e) { pt(e); M.down = true; });
+  window.addEventListener('pointerup', function () { M.down = false; }); c.addEventListener('pointerleave', function () { M.in = false; M.down = false; });
+  window.addEventListener('resize', size); size(); if (!still) window.requestAnimationFrame(frame);
+})({"bg":"#f4f1eb","fg":"#1c2225","dim":"#7d8489","rule":"#d6d0c4","a":"#b5372e","b":"#1f6f78","a3":[181,55,46],"b3":[31,111,120],"bg3":[244,241,235]}, {"mono":"ui-monospace,SFMono-Regular,Menlo,Consolas,monospace","serif":"Georgia,\"Times New Roman\",serif","sans":"system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif"}, function bio(P, F) {
+  let W = 0, H = 0, c = [], hist = [], integ = 0, pulse = [], mean = [], kick = 0;
+  const NAMES = ['theplacedepartment.com', 'icanbe.ai', 'hawkesbiomedical.com', 'imaginelivetv.com', 'doseofdestruction.com', 'hawkesgames.com', 'net.hawkesgen.ai', 'hawkesgen.ai', 'studio.hawkesgen.ai', 'yoobalandgame.com'];
+  const K = NAMES.map((_, i) => 0.22 + (i * 37 % 10) * 0.035), SET = 0.5;
+  const bits = NAMES.map(n => Array.from(n).map(ch => ch.charCodeAt(0).toString(2).padStart(8, '0')).join(''));
+  return {
+    resize(w, h) { W = w; H = h; c = NAMES.map(() => SET); hist = NAMES.map(() => []); pulse = NAMES.map(() => 0); mean = []; },
+    frame(x, w, h, T, dt, M) {
+      x.fillStyle = P.bg; x.fillRect(0, 0, W, H);
+      if (M.down && !kick) { kick = 1; const b = M.y < 0.5 ? 0.5 : -0.35; for (let i = 0; i < c.length; i++) c[i] = Math.max(0, c[i] + b); } if (!M.down) kick = 0;
+      const m = c.reduce((a, b) => a + b, 0) / c.length, err = SET - m; integ = Math.max(-1, Math.min(1, integ + err * dt)); const drive = Math.max(0, 0.16 + err * 2.4 + integ * 0.8);
+      for (let i = 0; i < c.length; i++) { c[i] += (-K[i] * c[i] + drive * (0.75 + 0.5 * Math.sin(T * 0.5 + i * 1.3))) * dt; pulse[i] = (pulse[i] + dt * drive * 2.2 * (0.6 + K[i])) % 1; hist[i].push(c[i]); if (hist[i].length > 90) hist[i].shift(); }
+      mean.push(m); if (mean.length > 300) mean.shift();
+      const two = W > 820, pad = Math.max(18, W * 0.04), top = 96, colW = two ? (W - pad * 3) / 2 : W - pad * 2, rows = two ? 5 : 10, rowH = Math.min(86, (H - top - 150) / rows), nameSz = Math.max(13, Math.min(22, colW / 22));
+      x.fillStyle = P.fg; x.textAlign = 'left'; x.font = '600 12px ' + F.mono; x.fillText('HAWKES BIOMEDICAL', pad, 34);
+      x.font = Math.max(20, Math.min(34, W / 34)) + 'px ' + F.serif; x.fillText('Distribution. Encoding. Homeostasis.', pad, 70);
+      for (let i = 0; i < NAMES.length; i++) {
+        const col = two ? (i / 5 | 0) : 0, row = two ? i % 5 : i, x0 = pad + col * (colW + pad), y0 = top + row * rowH;
+        x.strokeStyle = P.rule; x.lineWidth = 1; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 + colW, y0); x.stroke();
+        x.fillStyle = P.fg; x.font = '600 ' + nameSz + 'px ' + F.mono; x.fillText(NAMES[i], x0, y0 + rowH * 0.42);
+        // its name in bits, read out as doses arrive
+        const b = bits[i], n = Math.floor(colW * 0.56 / 4), offs = Math.floor(T * (2 + K[i] * 8)); for (let q = 0; q < n; q++) { if (b[(q + offs) % b.length] === '1') { x.fillStyle = P.b; x.fillRect(x0 + q * 4, y0 + rowH * 0.58, 3, Math.max(4, rowH * 0.12)); } }
+        // the dose in transit and the level
+        const gx = x0 + colW * 0.62, gw = colW * 0.38, gy = y0 + rowH * 0.2, gh = rowH * 0.6;
+        x.strokeStyle = P.dim; x.setLineDash([2, 4]); x.beginPath(); x.moveTo(gx, gy + gh - SET * gh / 1.2); x.lineTo(gx + gw, gy + gh - SET * gh / 1.2); x.stroke(); x.setLineDash([]);
+        x.strokeStyle = P.a; x.lineWidth = 1.6; x.beginPath(); hist[i].forEach((v, q) => { const px = gx + q / 90 * gw, py = gy + gh - Math.min(1.2, v) * gh / 1.2; q ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+        x.fillStyle = P.a; x.beginPath(); x.arc(x0 + colW * 0.58 * pulse[i], y0 + rowH * 0.86, 2.5, 0, 6.283); x.fill();
+        x.fillStyle = P.dim; x.font = '10.5px ' + F.mono; x.textAlign = 'right'; x.fillText('t½ ' + (0.693 / K[i]).toFixed(1) + ' s   C ' + c[i].toFixed(2), x0 + colW, y0 + rowH * 0.95); x.textAlign = 'left';
+      }
+      const by = top + rows * rowH + 18, bh = Math.max(40, H - by - 54);
+      x.strokeStyle = P.rule; x.beginPath(); x.moveTo(pad, by); x.lineTo(W - pad, by); x.stroke();
+      x.strokeStyle = P.dim; x.setLineDash([3, 5]); x.beginPath(); x.moveTo(pad, by + bh / 2); x.lineTo(W - pad, by + bh / 2); x.stroke(); x.setLineDash([]);
+      x.strokeStyle = P.fg; x.lineWidth = 1.8; x.beginPath(); mean.forEach((v, q) => { const px = pad + q / 300 * (W - pad * 2), py = by + bh - Math.max(0, Math.min(1, v)) * bh; q ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+      x.fillStyle = P.fg; x.font = 'italic ' + Math.max(14, Math.min(19, W / 60)) + 'px ' + F.serif; x.fillText('dCᵢ/dt = −kᵢCᵢ + u(t)        u = Kₚ e + Kᵢ∫e dt', pad, H - 20);
+      x.textAlign = 'right'; x.font = '11px ' + F.mono; x.fillStyle = P.dim; x.fillText('mean level ' + m.toFixed(3) + '   set point ' + SET.toFixed(2) + '   press high or low to disturb it', W - pad, H - 20); x.textAlign = 'left';
+    }
+  };
+});
+</script>
+</body>
 </html>
