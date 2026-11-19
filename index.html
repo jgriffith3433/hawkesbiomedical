@@ -4,31 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>The Cell</title>
-<meta name="description" content="The Cell (10⁻⁵ m): the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these. Explained simply by an AI narrator, with captions. One of nine scales, from the nucleus to the universe.">
+<meta name="description" content="The Cell (10⁻⁵ m): the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these. Explained simply by an AI narrator, with captions. Flip the page for its opposite: a virus. One of nine scales, from the nucleus to the universe.">
 <meta name="theme-color" content="#03050b">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#eef4ff;--dim:rgba(214,228,255,.66);--acc:#8fc2ff}
-html,body{margin:0;height:100%;background:#03050b;overflow:hidden;color:var(--ink);font-family:"Space Grotesk",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-#hud{position:fixed;left:0;right:0;top:0;pointer-events:none;text-align:center;padding:max(14px,env(safe-area-inset-top)) 16px 30px;background:linear-gradient(rgba(3,5,11,.72),rgba(3,5,11,.3) 65%,transparent)}
+:root{--ink:#eef4ff;--dim:rgba(214,228,255,.66)}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:"Space Grotesk",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#hud{position:fixed;left:0;right:0;top:0;pointer-events:none;text-align:center;padding:max(14px,env(safe-area-inset-top)) 16px 30px;background:linear-gradient(rgba(3,5,11,.72),rgba(3,5,11,.3) 65%,transparent);z-index:4}
 .k{font:600 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.38em;color:var(--dim);text-transform:uppercase}
-.k b{color:var(--acc);font-weight:600}
+.k b{color:#8fc2ff;font-weight:600}
 .name{font-weight:700;font-size:clamp(30px,6.2vw,76px);line-height:1.02;letter-spacing:.06em;text-transform:uppercase;margin:.18em 0 .12em;color:#fff;text-shadow:0 0 28px rgba(110,165,255,.7),0 0 6px rgba(160,200,255,.55),0 2px 14px rgba(0,0,0,.9);animation:rise 1.1s cubic-bezier(.2,.8,.2,1)}
 @keyframes rise{from{opacity:0;letter-spacing:.3em;filter:blur(6px)}to{opacity:1;letter-spacing:.06em;filter:blur(0)}}
 .sub{font:400 clamp(11px,1.3vw,14px)/1.5 "JetBrains Mono",ui-monospace,monospace;color:var(--dim);letter-spacing:.05em;max-width:920px;margin:0 auto}
-#cc{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + 74px);width:max-content;max-width:min(92vw,820px);text-align:center;pointer-events:none}
+:root{--acc:#8fc2ff}
+body{perspective:2400px;background:#000}
+#page{position:fixed;inset:0;transform-origin:50% 50%;will-change:transform;background:#03050b;overflow:hidden}
+#shade{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:40;background:linear-gradient(90deg,rgba(0,0,0,.8),rgba(0,0,0,.05) 42%,rgba(255,255,255,.22) 52%,rgba(0,0,0,.65))}
+#cc{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + 74px);width:max-content;max-width:min(92vw,820px);text-align:center;pointer-events:none;z-index:6}
 #cc span{display:inline-block;font:500 clamp(16px,2.2vw,25px)/1.4 "Space Grotesk",system-ui,sans-serif;color:#fff;background:rgba(3,6,14,.74);padding:.34em .8em;border-radius:10px;box-shadow:0 0 0 1px rgba(143,194,255,.22),0 8px 30px rgba(0,0,0,.5)}
 #cc span:empty{display:none}
-#snd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + 132px);font:600 clamp(12px,1.5vw,15px)/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#03050b;background:linear-gradient(180deg,#d7e9ff,#8fc2ff);padding:.8em 1.2em;border-radius:999px;box-shadow:0 0 30px rgba(143,194,255,.6);cursor:pointer;user-select:none;-webkit-user-select:none;animation:pulse 1.6s ease-in-out infinite;white-space:nowrap}
+#snd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + 132px);z-index:7;font:600 clamp(12px,1.5vw,15px)/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#03050b;background:linear-gradient(180deg,#d7e9ff,#8fc2ff);padding:.8em 1.2em;border-radius:999px;box-shadow:0 0 30px rgba(143,194,255,.6);cursor:pointer;user-select:none;-webkit-user-select:none;animation:pulse 1.6s ease-in-out infinite;white-space:nowrap}
 #snd.on{left:auto;right:max(14px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));bottom:auto;transform:none;animation:none;background:rgba(3,6,14,.7);color:var(--acc);box-shadow:0 0 0 1px rgba(143,194,255,.4);font-size:11px;padding:.7em 1em}
 @keyframes pulse{50%{box-shadow:0 0 54px rgba(143,194,255,.95)}}
-#ruler{position:fixed;left:max(52px,env(safe-area-inset-left));right:max(52px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));height:56px}
+#flip{position:fixed;left:max(14px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));z-index:8;cursor:pointer;user-select:none;-webkit-user-select:none;font:600 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#03050b;background:linear-gradient(135deg,#fff 0 46%,#8fc2ff 46% 100%);padding:.9em 1.15em .9em 1em;border-radius:4px 14px 4px 14px;box-shadow:0 0 22px rgba(143,194,255,.55),0 6px 16px rgba(0,0,0,.5);transition:transform .2s;outline:none}
+#flip:hover,#flip:focus-visible{transform:rotate(-3deg) scale(1.06)}
+#ruler{position:fixed;left:max(52px,env(safe-area-inset-left));right:max(52px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));height:56px;z-index:6}
 #ruler:before{content:"";position:absolute;left:0;right:0;top:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(143,194,255,.55) 6%,rgba(143,194,255,.55) 94%,transparent)}
-#ruler a{position:absolute;top:0;transform:translateX(-50%);text-decoration:none;color:var(--dim);font:400 10px/1.25 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.04em;text-align:center;white-space:nowrap;padding-top:30px;outline:none}
+#ruler a{position:absolute;top:0;transform:translateX(-50%);text-decoration:none;color:rgba(214,228,255,.66);font:400 10px/1.25 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.04em;text-align:center;white-space:nowrap;padding-top:30px;outline:none}
 #ruler a:before{content:"";position:absolute;left:50%;top:15px;width:9px;height:9px;margin-left:-5px;border-radius:50%;background:#0b1326;box-shadow:0 0 0 1.5px rgba(143,194,255,.75);transition:transform .2s,background .2s}
 #ruler a:hover,#ruler a:focus-visible{color:#fff}
 #ruler a:hover:before,#ruler a:focus-visible:before{transform:scale(1.5);background:var(--acc)}
@@ -39,34 +45,60 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #ruler a b{display:block;font-weight:600;color:var(--acc)}
 #ruler .cap{position:absolute;top:-30px;font:400 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;color:rgba(214,228,255,.4)}
 #ruler .cap.l{left:-30px}#ruler .cap.r{right:-30px}
-@media (max-width:760px){#ruler a:not(.me) span{display:none}#ruler a:not(.me) b{font-size:9px}#ruler .cap{display:none}#cc{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 70px)}}
 .nav{position:fixed;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;color:rgba(214,228,255,.7);font:400 10px/1.25 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;text-align:center;text-transform:uppercase;padding:14px 8px;outline:none;text-shadow:0 0 8px #000}
 .nav i{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:rgba(3,6,14,.62);box-shadow:0 0 0 1.5px rgba(143,194,255,.55);font:300 28px/1 system-ui,sans-serif;font-style:normal;color:#fff;padding-bottom:3px;box-sizing:border-box;transition:transform .2s,box-shadow .2s,background .2s}
 .nav:hover i,.nav:focus-visible i{transform:scale(1.12);background:rgba(143,194,255,.25);box-shadow:0 0 0 2px #8fc2ff,0 0 24px rgba(143,194,255,.75)}
 .nav.l{left:max(6px,env(safe-area-inset-left))}
 .nav.r{right:max(6px,env(safe-area-inset-right))}
 .nav b{display:block;color:#8fc2ff;font-weight:600}
-@media (max-width:760px){.nav span{display:none}.nav i{width:40px;height:40px;font-size:23px}}
-@media (prefers-reduced-motion:reduce){.name,#snd{animation:none}}
+/* ---- the back of the page: everything the other way round. Ink on paper instead of light on black, a quiet serif
+   instead of loud capitals, the ruler and the arrows reversed. */
+#hud2{display:none;position:fixed;left:0;right:0;top:0;pointer-events:none;text-align:center;padding:max(16px,env(safe-area-inset-top)) 16px 26px;z-index:4}
+.bk{font:400 12px/1 Georgia,"Times New Roman",serif;font-style:italic;letter-spacing:.06em;color:rgba(40,28,16,.7)}
+.bname{font:500 clamp(34px,6.6vw,84px)/1.02 "Playfair Display",Georgia,"Times New Roman",serif;font-style:italic;letter-spacing:-.01em;text-transform:lowercase;margin:.16em 0 .14em;color:#17110a;animation:settle 1.1s cubic-bezier(.2,.8,.2,1)}
+@keyframes settle{from{opacity:0;letter-spacing:-.08em;filter:blur(5px)}to{opacity:1;letter-spacing:-.01em;filter:blur(0)}}
+.bsub{font:400 clamp(12px,1.35vw,15px)/1.5 Georgia,"Times New Roman",serif;font-style:italic;color:rgba(40,28,16,.75);max-width:860px;margin:0 auto}
+body.flip #hud2{display:block}
+body.flip .fronthide{display:none!important}
+body.flip #page{background:#f1eadc}
+body.flip canvas.ink{filter:invert(1) hue-rotate(180deg);mix-blend-mode:multiply}
+#c2{position:fixed;inset:0;width:100%;height:100%;display:none}
+body.flip #c2{display:block}
+body.flip #cc span{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;color:#17110a;background:rgba(255,252,244,.9);box-shadow:0 0 0 1px rgba(70,45,20,.28),0 8px 26px rgba(70,45,20,.18)}
+body.flip #snd{color:#f1eadc;background:linear-gradient(180deg,#3a2a18,#17110a);box-shadow:0 0 26px rgba(60,40,20,.45)}
+body.flip #snd.on{background:rgba(255,252,244,.85);color:#7a3d0e;box-shadow:0 0 0 1px rgba(90,60,30,.5)}
+body.flip #flip{color:#f1eadc;background:linear-gradient(315deg,#17110a 0 46%,#7a3d0e 46% 100%);box-shadow:0 6px 16px rgba(60,40,20,.35);border-radius:14px 4px 14px 4px}
+body.flip #ruler:before{background:linear-gradient(90deg,transparent,rgba(70,45,20,.55) 6%,rgba(70,45,20,.55) 94%,transparent)}
+body.flip #ruler a{color:rgba(40,28,16,.7);font-family:Georgia,serif;font-style:italic;font-size:11px}
+body.flip #ruler a:before{background:#f1eadc;box-shadow:0 0 0 1.5px rgba(70,45,20,.8)}
+body.flip #ruler a:hover,body.flip #ruler a:focus-visible{color:#000}
+body.flip #ruler a.me{color:#17110a}
+body.flip #ruler a.me:before{background:#17110a;box-shadow:0 0 0 2px #7a3d0e}
+body.flip #ruler a b{color:#7a3d0e}
+body.flip #ruler .cap{color:rgba(40,28,16,.45);font-family:Georgia,serif;font-style:italic;text-transform:none;letter-spacing:.06em;font-size:11px}
+body.flip .nav{color:rgba(40,28,16,.75);text-shadow:none;font-family:Georgia,serif;font-style:italic;text-transform:none;font-size:11px}
+body.flip .nav i{background:rgba(255,252,244,.82);color:#17110a;box-shadow:0 0 0 1.5px rgba(70,45,20,.6)}
+body.flip .nav:hover i,body.flip .nav:focus-visible i{background:#17110a;color:#f1eadc;box-shadow:0 0 0 2px #7a3d0e}
+body.flip .nav b{color:#7a3d0e}
+@media (max-width:760px){#ruler a:not(.me) span{display:none}#ruler a:not(.me) b{font-size:9px}#ruler .cap{display:none}#cc{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 70px)}.nav span{display:none}.nav i{width:40px;height:40px;font-size:23px}#flip{font-size:10px;padding:.8em .9em}}
+@media (prefers-reduced-motion:reduce){#snd,.bname{animation:none}}
+
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="hud">
+<canvas id="c" class="ink"></canvas>
+<div id="hud" class="fronthide">
   <div class="k" id="k"></div>
   <h1 class="name" id="name"></h1>
   <div class="sub" id="sub"></div>
 </div>
-<div id="cc" aria-live="polite"><span id="cap"></span></div>
-<div id="snd" role="button" tabindex="0" aria-label="Turn the narration sound on">&#128266; Tap anywhere to hear it explained</div>
-<nav id="ruler" aria-label="The nine scales, from the nucleus to the universe"></nav>
-<audio id="au" src="./narration.mp3" preload="auto" loop muted autoplay playsinline></audio>
 <script>
 (function () {
 'use strict';
-// One of nine pages, one per scale of the world (10^-15 m to 10^27 m). Each draws its scale from the real numbers and
-// an AI voice explains it; the captions are cut from the voice's own timing. The ruler at the bottom links the nine.
-var D = {"i":2,"scales":[{"exp":-15,"name":"The Nucleus","short":"nucleus","size":"10⁻¹⁵ m","sub":"the heart of an atom · a millionth of a billionth of a meter · uranium-235: 92 protons, 143 neutrons","domain":"doseofdestruction.com"},{"exp":-10,"name":"The Atom","short":"atom","size":"10⁻¹⁰ m","sub":"the building brick of everything · one ten-billionth of a meter · hydrogen's electron clouds, drawn from the real equations","domain":"hawkesgames.com"},{"exp":-5,"name":"The Cell","short":"cell","size":"10⁻⁵ m","sub":"the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these","domain":"hawkesbiomedical.com"},{"exp":0,"name":"You","short":"you","size":"10⁰ m","sub":"the human scale · about a meter and a bit · 7 × 10²⁷ atoms, 37 trillion cells, 86 billion neurons","domain":"icanbe.ai"},{"exp":7,"name":"The Planet","short":"planet","size":"10⁷ m","sub":"Earth · 12,742 km across · a thin skin of rock and air around a ball of hot stone and metal","domain":"yoobalandgame.com"},{"exp":9,"name":"The Star","short":"star","size":"10⁹ m","sub":"the Sun · 1.39 million km across · a million Earths would fit inside","domain":"imaginelivetv.com"},{"exp":13,"name":"The Solar System","short":"solar system","size":"10¹³ m","sub":"the Sun's neighborhood · 9 billion km across at Neptune · real orbits and real speeds, distances squeezed to fit","domain":"theplacedepartment.com"},{"exp":21,"name":"The Galaxy","short":"galaxy","size":"10²¹ m","sub":"","domain":"phorigins.com"},{"exp":27,"name":"The Universe","short":"universe","size":"10²⁷ m","sub":"everything we could ever see · 93 billion light-years across · 13.8 billion years old","domain":"hawkesgen.ai"}],"cues":[[0,0.82,"Hello."],[0.82,4.41,"I'm the AI that lives here, and you are looking at a living cell."],[4.41,5.67,"You are made of these."],[5.67,8.16,"About thirty-seven trillion of them."],[8.16,11.18,"A cell is like a tiny city inside a soap bubble."],[11.18,13.61,"The big ball in the middle is city hall."],[13.61,18.29,"It keeps the instructions for building you, on a long string called DNA."],[18.29,23.21,"If you unrolled the DNA from just one cell, it would be as tall as a grown-up."],[23.21,25.67,"The little bean shapes are power plants."],[25.67,27.76,"They turn your breakfast into energy."],[27.76,32.48,"And those dots zooming around are delivery trucks, carrying packages."],[32.48,34.17,"How small is a cell?"],[34.17,37.23,"About ten of them would fit across one of your hairs."],[37.23,41.63,"Every second, millions of your cells split in two to make new ones."],[41.63,44.59,"That is how a scraped knee fixes itself."],[44.59,46.3,"You are not one thing."],[46.3,50.629999999999995,"You are a whole world of tiny things, working together."]],"dur":50.63};
+// One of nine pages, one per scale of the world (10^-15 m to 10^27 m). The front draws the scale from the real
+// numbers while an AI voice explains it; the back of the page (Flip) is its opposite, told by the other narrator.
+// Captions are cut from the voices' own timing. The ruler and the side arrows link the nine sites.
+var D = {"i":2,"key":"cell","title":"The Cell","chat":"","scales":[{"exp":-15,"name":"The Nucleus","short":"nucleus","size":"10⁻¹⁵ m","sub":"the heart of an atom · a millionth of a billionth of a meter · uranium-235: 92 protons, 143 neutrons","domain":"doseofdestruction.com"},{"exp":-10,"name":"The Atom","short":"atom","size":"10⁻¹⁰ m","sub":"the building brick of everything · one ten-billionth of a meter · hydrogen's electron clouds, drawn from the real equations","domain":"hawkesgames.com"},{"exp":-5,"name":"The Cell","short":"cell","size":"10⁻⁵ m","sub":"the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these","domain":"hawkesbiomedical.com"},{"exp":0,"name":"You","short":"you","size":"10⁰ m","sub":"the human scale · about a meter and a bit · 7 × 10²⁷ atoms, 37 trillion cells, 86 billion neurons","domain":"icanbe.ai"},{"exp":7,"name":"The Planet","short":"planet","size":"10⁷ m","sub":"Earth · 12,742 km across · a thin skin of rock and air around a ball of hot stone and metal","domain":"yoobalandgame.com"},{"exp":9,"name":"The Star","short":"star","size":"10⁹ m","sub":"the Sun · 1.39 million km across · a million Earths would fit inside","domain":"imaginelivetv.com"},{"exp":13,"name":"The Solar System","short":"solar system","size":"10¹³ m","sub":"the Sun's neighborhood · 9 billion km across at Neptune · real orbits and real speeds, distances squeezed to fit","domain":"theplacedepartment.com"},{"exp":21,"name":"The Galaxy","short":"galaxy","size":"10²¹ m","sub":"","domain":"phorigins.com"},{"exp":27,"name":"The Universe","short":"universe","size":"10²⁷ m","sub":"everything we could ever see · 93 billion light-years across · 13.8 billion years old","domain":"hawkesgen.ai"}],"sides":[{"cues":[[0,0.82,"Hello."],[0.82,4.41,"I'm the AI that lives here, and you are looking at a living cell."],[4.41,5.67,"You are made of these."],[5.67,8.16,"About thirty-seven trillion of them."],[8.16,11.18,"A cell is like a tiny city inside a soap bubble."],[11.18,13.61,"The big ball in the middle is city hall."],[13.61,18.29,"It keeps the instructions for building you, on a long string called DNA."],[18.29,23.21,"If you unrolled the DNA from just one cell, it would be as tall as a grown-up."],[23.21,25.67,"The little bean shapes are power plants."],[25.67,27.76,"They turn your breakfast into energy."],[27.76,32.48,"And those dots zooming around are delivery trucks, carrying packages."],[32.48,34.17,"How small is a cell?"],[34.17,37.23,"About ten of them would fit across one of your hairs."],[37.23,41.63,"Every second, millions of your cells split in two to make new ones."],[41.63,44.59,"That is how a scraped knee fixes itself."],[44.59,46.3,"You are not one thing."],[46.3,50.629999999999995,"You are a whole world of tiny things, working together."]],"dur":50.63},{"name":"a virus","size":"10⁻⁷ m","sub":"not alive · a hundred times smaller than a cell · instructions in a shell, and nothing else","cues":[[0,1.6,"You turned the page."],[1.6,3.01,"I'm the other AI."],[3.01,4.33,"The one on the back."],[4.33,5.93,"A cell is alive."],[5.93,7.3,"This is the opposite."],[7.3,8.63,"This is a virus."],[8.63,10.01,"It is not alive."],[10.01,13.62,"It has no power plants, and no delivery trucks."],[13.62,17.97,"It is just a set of instructions, inside a tiny shell,"],[17.97,20.79,"a hundred times smaller than a cell."],[20.79,23.39,"On its own, it can do nothing at all."],[23.39,25.04,"It only drifts."],[25.04,28.85,"But if it bumps into a cell, and its keys fit the locks,"],[28.85,33.52,"it slips inside, and tricks the city into building copies of it."],[33.52,36.8,"Your body remembers every one it has beaten."],[36.8,40.04,"That is what a vaccine teaches it."]],"dur":40.04}]};
 var TAU = Math.PI * 2;
 function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function gauss(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); }
@@ -88,11 +120,13 @@ function label(x, text, px, py, align, col, size) {
 }
 function lead(x, x0, y0, x1, y1, col) { x.save(); x.globalAlpha = 0.6; x.globalCompositeOperation = 'source-over'; x.strokeStyle = col || 'rgba(143,194,255,.7)'; x.lineWidth = 1; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.restore(); }
 function scaleBar(x, W, H, px, text) { // a labelled length, bottom-left above the ruler
-  var bx = Math.max(22, W * 0.03), by = H - 150; x.save(); x.globalAlpha = 0.9; x.strokeStyle = '#fff'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(bx, by - 5); x.lineTo(bx, by); x.lineTo(bx + px, by); x.lineTo(bx + px, by - 5); x.stroke(); x.restore();
+  var bx = Math.max(64, W * 0.05), by = H - 150; x.save(); x.globalAlpha = 0.9; x.strokeStyle = '#fff'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(bx, by - 5); x.lineTo(bx, by); x.lineTo(bx + px, by); x.lineTo(bx + px, by - 5); x.stroke(); x.restore();
   label(x, text, bx, by + 14, 'left', 'rgba(238,244,255,.92)', 12);
 }
 var H3 = { rng: rng, gauss: gauss, clamp: clamp, lerp: lerp, smooth: smooth, dot: dot, label: label, lead: lead, scaleBar: scaleBar, TAU: TAU };
 
+
+// ---------------------------------------------------------------- the front: the scale
 // THE CELL: an animal cell about 20 micrometers across, with its parts at roughly their real proportions:
 // the nucleus (about a third of the width) holding 2 m of DNA, mitochondria about 1-2 um long, the folded ER round
 // the nucleus, the Golgi stack, vesicles carried out to the membrane, and ribosomes jiggling in Brownian motion
@@ -156,45 +190,139 @@ var SCENE = (function () {
 })();
 
 
+// ---------------------------------------------------------------- the back: its opposite (drawn light on black, shown as ink on paper)
+// THE OPPOSITE OF THE CELL: a virus. About 100 nanometres across (a cell is 100 times wider), with no metabolism
+// and no machinery of its own: a strand of instructions (RNA or DNA) in a protein shell studded with spikes.
+// It drifts by Brownian motion until a spike (the key) meets a matching receptor on a cell (the lock); then it is
+// drawn in, and the cell's own ribosomes are made to build copies, which bud back out through the membrane.
+var SCENE2 = (function () {
+  var r = H3.rng(64), V = [], CYC = 22;
+  function init() { for (var i = 0; i < 6; i++) V.push({ x: 0.12 + r() * 0.76, y: 0.34 + r() * 0.2, rot: r() * 6.28, w: (r() - 0.5) * 0.3, s: 0.75 + r() * 0.5, ph: r() * 6.28 }); }
+  function virion(x, px, py, R, rot, a, t) {
+    x.save(); x.translate(px, py); x.rotate(rot); x.globalAlpha = a; x.strokeStyle = '#fff'; x.fillStyle = 'rgba(255,255,255,.1)';
+    for (var i = 0; i < 16; i++) { var an = i / 16 * 6.2832; x.lineWidth = Math.max(1.2, R * 0.05); x.beginPath(); x.moveTo(Math.cos(an) * R, Math.sin(an) * R); x.lineTo(Math.cos(an) * R * 1.3, Math.sin(an) * R * 1.3); x.stroke(); x.beginPath(); x.arc(Math.cos(an) * R * 1.36, Math.sin(an) * R * 1.36, R * 0.085, 0, 7); x.fillStyle = '#fff'; x.fill(); }
+    x.beginPath(); for (i = 0; i <= 6; i++) { var a2 = i / 6 * 6.2832 + 0.26; x.lineTo(Math.cos(a2) * R, Math.sin(a2) * R); } x.closePath(); x.fillStyle = 'rgba(255,255,255,.12)'; x.fill(); x.lineWidth = Math.max(1.6, R * 0.07); x.stroke();
+    x.beginPath(); for (i = 0; i < 60; i++) { var q = i / 60, rr = R * 0.62 * (0.25 + 0.75 * q), an2 = q * 15 + t * 0.4; x.lineTo(Math.cos(an2) * rr * (1 + 0.1 * Math.sin(i * 1.7)), Math.sin(an2) * rr * (1 + 0.1 * Math.cos(i * 1.3))); } x.lineWidth = Math.max(1, R * 0.045); x.strokeStyle = 'rgba(255,190,120,1)'; x.stroke();
+    x.restore();
+  }
+  function draw(x, W, H, t, dt, nt) {
+    var tc = t % CYC, R = Math.min(W, H) * 0.065, my = H - 215, i;
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over';
+    // the surface of a cell along the bottom (it curves so gently because the cell is so much bigger), with receptors
+    var dockX = W * 0.5, dip = tc > 7 && tc < 12 ? H3.smooth((tc - 7) / 2.5) * (1 - H3.smooth((tc - 11) / 1)) : 0;
+    function mem(px) { return my + 10 * Math.sin(px * 0.012 + t * 0.5) + dip * R * 2.3 * Math.exp(-Math.pow((px - dockX) / (R * 1.5), 2)); }
+    x.fillStyle = 'rgba(120,200,255,.14)'; x.beginPath(); x.moveTo(0, H); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.lineTo(W, H); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(160,230,225,1)'; x.lineWidth = 5; x.beginPath(); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.stroke(); x.strokeStyle = '#000'; x.lineWidth = 1.4; x.beginPath(); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.stroke();
+    x.strokeStyle = 'rgba(255,220,140,1)'; x.lineWidth = 2; for (i = 30; i < W; i += 64) { var ry = mem(i); x.beginPath(); x.moveTo(i, ry); x.lineTo(i, ry - 14); x.moveTo(i - 6, ry - 22); x.lineTo(i, ry - 14); x.lineTo(i + 6, ry - 22); x.stroke(); }
+    // free virions, jiggling: they cannot swim or steer
+    for (i = 0; i < V.length; i++) { var v = V[i]; v.x += H3.gauss(r) * 0.0009 + 0.0004 * Math.sin(t * 0.3 + v.ph); v.y += H3.gauss(r) * 0.0009; v.x = H3.clamp(v.x, 0.08, 0.92); v.y = H3.clamp(v.y, 0.34, 0.56); v.rot += v.w * dt; virion(x, v.x * W, v.y * H, R * v.s * 0.8, v.rot, 0.85, t); }
+    // one meets the cell: 0-6 s it drifts down, 6-9 its spikes fit the receptors, 9-12 it is drawn inside
+    var py = tc < 6 ? H3.lerp(H * 0.3, my - R * 1.45, H3.smooth(tc / 6)) : tc < 9 ? my - R * 1.45 + 2 * Math.sin(t * 9) : H3.lerp(my - R * 1.45, my + R * 1.6, H3.smooth((tc - 9) / 3));
+    var pa = tc < 9 ? 1 : 1 - H3.smooth((tc - 10) / 2);
+    if (tc < 12.2) virion(x, dockX + (tc < 6 ? Math.sin(t * 1.3) * 12 * (1 - tc / 6) : 0), py, R, tc < 6 ? t * 0.3 : 0.26, pa, t);
+    if (tc > 6 && tc < 9.4) { x.globalCompositeOperation = 'lighter'; H3.dot(x, dockX, my - 8, R * 0.9, 'rgba(255,225,150,1)', 0.5 + 0.3 * Math.sin(t * 8)); x.globalCompositeOperation = 'source-over'; }
+    // 13 s on: the copies the cell was made to build bud out and drift away
+    if (tc > 13.5) for (i = 0; i < 7; i++) { var f = (tc - 13.5 - i * 0.55) / 6; if (f <= 0 || f > 1) continue; var bx = dockX + (i - 3) * R * 1.5 + Math.sin(t + i) * 8; virion(x, bx, H3.lerp(mem(bx) + R * 0.4, H * 0.24, H3.smooth(f)), R * 0.62 * Math.min(1, f * 4), t * 0.4 + i, Math.min(1, f * 5) * (1 - H3.smooth((f - 0.75) * 4)), t); }
+    x.globalAlpha = 1;
+    var msg = tc < 6 ? 'on its own it can do nothing: it only drifts' : tc < 9 ? 'its keys fit the cell’s locks' : tc < 13.5 ? 'inside, it hands over its instructions' : 'the cell is tricked into building copies';
+    H3.label(x, msg, W / 2, H * 0.265, 'center', '#fff', 14);
+    H3.label(x, 'the surface of one cell (100 times wider than the virus)', Math.max(64, W * 0.05), my + 46, 'left', 'rgba(190,240,235,.95)', 11);
+    if (W > 700) { H3.lead(x, V[0].x * W + R * 0.5, V[0].y * H, V[0].x * W + R * 1.9, V[0].y * H - R * 1.2); H3.label(x, 'a shell, spikes, and a strand of instructions. That is all.', V[0].x * W + R * 2, V[0].y * H - R * 1.2, V[0].x > 0.55 ? 'right' : 'left', 'rgba(255,225,190,.95)', 11); }
+    H3.scaleBar(x, W, H, R * 2, '100 nanometers (a ten-thousandth of a millimeter)');
+  }
+  return { init: init, draw: draw };
+})();
+
+
+// The page itself: captions, the voice, the ruler of nine scales, the side arrows, and the flip.
+// Each page has two sides. The front is the scale; the back is its opposite, with the other narrator. Flipping turns
+// the whole page over in 3D (it swaps sides when it is edge-on) and everything on the back runs the other way:
+// ink on paper instead of light on black, the ruler and arrows reversed.
+function Chrome(D, opt) {
+  opt = opt || {};
+  var doc = document, body = doc.body, page = doc.createElement('div'); page.id = 'page';
+  Array.prototype.slice.call(body.childNodes).forEach(function (n) { if (n.nodeName !== 'SCRIPT') page.appendChild(n); });
+  body.insertBefore(page, body.firstChild);
+  var f = doc.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&display=swap'; doc.head.appendChild(f);
+  function el(tag, id, html, cls) { var e = doc.createElement(tag); if (id) e.id = id; if (cls) e.className = cls; e.innerHTML = html || ''; page.appendChild(e); return e; }
+  el('div', 'hud2', '<div class="bk" id="bk"></div><div class="bname" id="bname"></div><div class="bsub" id="bsub"></div>');
+  var cc = el('div', 'cc', '<span id="cap"></span>'); cc.setAttribute('aria-live', 'polite');
+  var snd = el('div', 'snd', '&#128266; Tap anywhere to hear it explained'); snd.setAttribute('role', 'button'); snd.tabIndex = 0;
+  var flipB = el('div', 'flip', ''); flipB.setAttribute('role', 'button'); flipB.tabIndex = 0;
+  var ruler = el('nav', 'ruler', ''); ruler.setAttribute('aria-label', 'The nine scales, from the nucleus to the universe');
+  var navL = el('a', '', '', 'nav l'), navR = el('a', '', '', 'nav r'), shade = el('div', 'shade', ''), cap = doc.getElementById('cap');
+  var A = [new Audio('./narration.mp3'), new Audio('./narration-flip.mp3')]; A[0].loop = A[1].loop = false; // each explanation plays once A[0].preload = 'auto'; A[1].preload = 'none'; A[0].muted = A[1].muted = true;
+  var side = 0, started = false, done = false, userMute = false, t0 = performance.now(), shown = -2, turning = false, fresh = false;
+  function nt() { var a = A[side]; if (a.ended || done) return 1e9; if (!a.paused && a.readyState > 1 && isFinite(a.currentTime)) return a.currentTime; var s = (performance.now() - t0) / 1000; if (s > D.sides[side].dur + 1) { done = true; setSnd(); } return s; } // once through, then quiet
+  function over() { return done || A[side].ended; }
+  function setSnd() { if (!started) return; snd.classList.add('on'); snd.innerHTML = over() ? '&#8635; Play again' : userMute ? '&#128263; Sound off' : '&#128266; Sound on'; snd.setAttribute('aria-label', userMute ? 'Turn the sound on' : 'Turn the sound off'); }
+  function playSide() { done = false; A[1 - side].pause(); var a = A[side]; a.muted = !started || userMute; try { a.currentTime = 0; } catch (e) {} t0 = performance.now(); shown = -2; var p = a.play(); if (p && p.catch) p.catch(function () {}); }
+  function begin() { if (started) return; started = true; fresh = true; playSide(); setSnd(); }
+  function render() {
+    var n = D.scales.length, lo = D.scales[0].exp, hi = D.scales[n - 1].exp, back = side === 1, me = D.scales[D.i];
+    body.classList.toggle('flip', back);
+    ruler.innerHTML = '<span class="cap l">' + (back ? '← bigger' : '← smaller') + '</span><span class="cap r">' + (back ? 'smaller →' : 'bigger →') + '</span>' + D.scales.map(function (s, i) {
+      var pct = (s.exp - lo) / (hi - lo) * 100; if (back) pct = 100 - pct;
+      return '<a href="https://' + s.domain + '/" class="' + (i === D.i ? 'me ' : '') + (i % 2 ? 'up' : '') + '" style="left:' + pct.toFixed(2) + '%"' + (i === D.i ? ' aria-current="page"' : '') + ' title="' + s.name + ' · ' + s.size + ' · ' + s.domain + '"><b>' + s.size + '</b><span>' + s.short + '</span></a>';
+    }).join('');
+    var smaller = D.scales[(D.i - 1 + n) % n], bigger = D.scales[(D.i + 1) % n];
+    function nav(a, s, arrow, word) { a.href = 'https://' + s.domain + '/'; a.title = word + ': ' + s.name + ' (' + s.size + ')'; a.setAttribute('aria-label', word + ': ' + s.name); a.innerHTML = '<i>' + arrow + '</i><span>' + word + '<b>' + s.short + '</b></span>'; }
+    var wS = D.i === 0 ? 'biggest' : 'smaller', wB = D.i === n - 1 ? 'smallest' : 'bigger';
+    if (back) { nav(navL, bigger, '‹', wB); nav(navR, smaller, '›', wS); } else { nav(navL, smaller, '‹', wS); nav(navR, bigger, '›', wB); }
+    var b = D.sides[1];
+    doc.getElementById('bk').textContent = 'the other side of ' + me.name.toLowerCase() + '  ·  ' + b.size;
+    doc.getElementById('bname').textContent = b.name; doc.getElementById('bsub').textContent = b.sub;
+    flipB.innerHTML = back ? '↩ Flip back' : 'Flip the page ↪'; flipB.title = back ? 'Back to ' + me.name : 'See the opposite: ' + b.name; flipB.setAttribute('aria-label', flipB.title);
+    doc.title = back ? b.name.charAt(0).toUpperCase() + b.name.slice(1) + ' (the other side of ' + me.name + ')' : D.title;
+    var bn = doc.getElementById('bname'); bn.style.animation = 'none'; void bn.offsetWidth; bn.style.animation = '';
+    if (opt.onSide) opt.onSide(side);
+  }
+  function flip() { // turn the page: to edge-on, swap sides, and on round
+    if (turning) return; turning = true; var start = performance.now(), dur = 1150, swapped = false, dir = side === 0 ? -1 : 1;
+    (function step(now) {
+      var p = Math.min(1, (now - start) / dur), e, ang;
+      if (p < 0.5) { e = p * 2; e = e * e; ang = dir * 90 * e; }
+      else { if (!swapped) { swapped = true; side = 1 - side; render(); playSide(); setSnd(); } e = (p - 0.5) * 2; e = 1 - (1 - e) * (1 - e); ang = -dir * 90 * (1 - e); }
+      page.style.transform = 'rotateY(' + ang.toFixed(2) + 'deg) scale(' + (1 - 0.14 * Math.sin(p * Math.PI)).toFixed(4) + ')'; shade.style.opacity = (Math.sin(p * Math.PI) * 0.9).toFixed(3);
+      if (p < 1) requestAnimationFrame(step); else { page.style.transform = ''; shade.style.opacity = 0; turning = false; }
+    })(start);
+  }
+  addEventListener('pointerdown', function () { if (!started) begin(); }, { passive: true });
+  function sndTap() { if (over()) { userMute = false; playSide(); setSnd(); return; } userMute = !userMute; A[side].muted = userMute; setSnd(); }
+  snd.addEventListener('click', function () { if (fresh) { fresh = false; return; } sndTap(); });
+  A.forEach(function (a) { a.addEventListener('ended', setSnd); });
+  flipB.addEventListener('click', function () { fresh = false; flip(); });
+  addEventListener('click', function (e) { if (e.target !== snd) fresh = false; });
+  addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return; var first = !started; if (first) begin();
+    if (e.key === 'ArrowLeft') location.href = navL.href; else if (e.key === 'ArrowRight') location.href = navR.href;
+    else if (e.key === 'f' || e.key === 'F' || ((e.key === 'Enter' || e.key === ' ') && e.target === flipB)) { e.preventDefault(); flip(); }
+    else if (!first && (e.key === 'Enter' || e.key === ' ') && e.target === snd) sndTap();
+  });
+  render();
+  var p0 = A[0].play(); if (p0 && p0.catch) p0.catch(function () {});
+  (function tick() { requestAnimationFrame(tick); var n = nt(), cues = D.sides[side].cues, q = -1; for (var j = 0; j < cues.length; j++) { if (n >= cues[j][0] && n < cues[j][1]) { q = j; break; } } if (q !== shown) { shown = q; cap.textContent = q < 0 ? '' : cues[q][2]; } })();
+  return { side: function () { return side; }, nt: nt, flip: flip };
+}
+
+
 // ---------------------------------------------------------------- page
-var cv = document.getElementById('c'), cx = cv.getContext('2d'), W = 0, Hh = 0, dpr = 1;
-function fit() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; Hh = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0); if (SCENE.resize) SCENE.resize(W, Hh); }
-addEventListener('resize', fit);
-var me = D.scales[D.i];
+var cv = document.getElementById('c'), cx = cv.getContext('2d'), W = 0, Hh = 0, dpr = 1, me = D.scales[D.i];
 document.getElementById('k').innerHTML = 'Scale ' + (D.i + 1) + ' of ' + D.scales.length + ' · <b>' + me.size + '</b>';
 document.getElementById('name').textContent = me.name;
 document.getElementById('sub').textContent = me.sub;
-var ruler = document.getElementById('ruler'), lo = D.scales[0].exp, hi = D.scales[D.scales.length - 1].exp;
-ruler.innerHTML = '<span class="cap l">← smaller</span><span class="cap r">bigger →</span>' + D.scales.map(function (s, i) {
-  return '<a href="https://' + s.domain + '/" class="' + (i === D.i ? 'me ' : '') + (i % 2 ? 'up' : '') + '" style="left:' + ((s.exp - lo) / (hi - lo) * 100).toFixed(2) + '%"' + (i === D.i ? ' aria-current="page"' : '') + ' title="' + s.name + ' · ' + s.size + ' · ' + s.domain + '"><b>' + s.size + '</b><span>' + s.short + '</span></a>';
-}).join('');
-
-// the arrows at the sides: one scale smaller, one scale bigger (they wrap round at the ends); the arrow keys do the same
-(function () { var n = D.scales.length, pv = D.scales[(D.i - 1 + n) % n], nx = D.scales[(D.i + 1) % n];
-  function nav(cls, s, arrow, word) { var a = document.createElement('a'); a.className = 'nav ' + cls; a.href = 'https://' + s.domain + '/'; a.title = word + ': ' + s.name + ' (' + s.size + ')'; a.setAttribute('aria-label', word + ': ' + s.name); a.innerHTML = '<i>' + arrow + '</i><span>' + word + '<b>' + s.short + '</b></span>'; document.body.appendChild(a); return a; }
-  var L = nav('l', pv, '‹', D.i === 0 ? 'biggest' : 'smaller'), R = nav('r', nx, '›', D.i === n - 1 ? 'smallest' : 'bigger');
-  addEventListener('keydown', function (e) { if (e.altKey || e.ctrlKey || e.metaKey) return; if (e.key === 'ArrowLeft') location.href = L.href; else if (e.key === 'ArrowRight') location.href = R.href; });
-})();
-
-// the voice: muted until the first tap (browsers require it); the captions and the picture follow its clock either way
-var au = document.getElementById('au'), snd = document.getElementById('snd'), cap = document.getElementById('cap'), started = false, t0 = performance.now(), shown = -2;
-function nt() { return (!au.paused && au.readyState > 1 && isFinite(au.currentTime)) ? au.currentTime : ((performance.now() - t0) / 1000) % (D.dur + 2); }
-function setSnd() { snd.classList.add('on'); snd.innerHTML = au.muted ? '&#128263; Sound off' : '&#128266; Sound on'; snd.setAttribute('aria-label', au.muted ? 'Turn the sound on' : 'Turn the sound off'); }
-function begin() { if (started) return; started = true; au.muted = false; au.currentTime = 0; t0 = performance.now(); var p = au.play(); if (p && p.catch) p.catch(function () {}); setSnd(); }
-addEventListener('pointerdown', function (e) { if (!started) { begin(); return; } if (e.target === snd) { au.muted = !au.muted; setSnd(); } }, { passive: true });
-addEventListener('keydown', function (e) { if (!started) begin(); else if (e.target === snd && (e.key === 'Enter' || e.key === ' ')) { au.muted = !au.muted; setSnd(); } });
-var pp = au.play(); if (pp && pp.catch) pp.catch(function () {});
-
-var last = performance.now(), T = +(new URLSearchParams(location.search).get("t") || 0); // ?t=seconds jumps the picture ahead
-fit(); SCENE.init(W, Hh);
+var CH = Chrome(D, {});
+function fit() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; Hh = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+addEventListener('resize', fit); fit();
+var last = performance.now(), T = +(new URLSearchParams(location.search).get('t') || 0), Tb = T, inited = [false, false]; // ?t=seconds jumps the picture ahead
+if (new URLSearchParams(location.search).get('flip') != null) CH.flip();
 function frame(now) {
   requestAnimationFrame(frame);
-  var dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
-  var n = nt();
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; var s = CH.side(), sc = s ? SCENE2 : SCENE;
+  if (s) Tb += dt; else T += dt;
+  if (!inited[s]) { inited[s] = true; sc.init(W, Hh); }
   cx.globalCompositeOperation = 'source-over'; cx.globalAlpha = 1;
-  SCENE.draw(cx, W, Hh, T, dt, n);
-  var q = -1; for (var j = 0; j < D.cues.length; j++) { if (n >= D.cues[j][0] && n < D.cues[j][1]) { q = j; break; } }
-  if (q !== shown) { shown = q; cap.textContent = q < 0 ? '' : D.cues[q][2]; }
+  sc.draw(cx, W, Hh, s ? Tb : T, dt, CH.nt());
 }
 requestAnimationFrame(frame);
 })();
