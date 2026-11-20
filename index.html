@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>The Cell</title>
-<meta name="description" content="The Cell (10⁻⁵ m): the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these. Explained simply by an AI narrator, with captions. Flip the page for its opposite: a virus. One of nine scales, from the nucleus to the universe.">
+<title>Attention · How an A.I. works, part 3 of 9</title>
+<meta name="description" content="Attention: how the pieces share what they know · each piece looks back at the ones before it · real looking, from the small model in this page. Part 3 of nine on how a large language model works, drawn from real numbers and explained simply by an A.I. narrator, with captions. Flip the page for its opposite: recall.">
 <meta name="theme-color" content="#03050b">
+<meta property="og:title" content="Attention · How an A.I. works, part 3 of 9">
+<meta property="og:description" content="Attention: how the pieces share what they know · each piece looks back at the ones before it · real looking, from the small model in this page. Part 3 of nine on how a large language model works, drawn from real numbers and explained simply by an A.I. narrator, with captions. Flip the page for its opposite: recall.">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +82,7 @@ body.flip .nav{color:rgba(40,28,16,.75);text-shadow:none;font-family:Georgia,ser
 body.flip .nav i{background:rgba(255,252,244,.82);color:#17110a;box-shadow:0 0 0 1.5px rgba(70,45,20,.6)}
 body.flip .nav:hover i,body.flip .nav:focus-visible i{background:#17110a;color:#f1eadc;box-shadow:0 0 0 2px #7a3d0e}
 body.flip .nav b{color:#7a3d0e}
-@media (max-width:760px){#ruler a:not(.me) span{display:none}#ruler a:not(.me) b{font-size:9px}#ruler .cap{display:none}#cc{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 70px)}.nav span{display:none}.nav i{width:40px;height:40px;font-size:23px}#flip{font-size:10px;padding:.8em .9em}}
+@media (max-width:760px){.nav{top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom)) - 4px);transform:none;padding:4px 2px}.nav.l{left:max(4px,env(safe-area-inset-left))}.nav.r{right:max(4px,env(safe-area-inset-right))}#hud,#hud2{padding-top:calc(max(14px,env(safe-area-inset-top)) + 42px)}.sub,.bsub{font-size:11px;line-height:1.4}#ruler a:not(.me) span{display:none}#ruler a:not(.me) b{font-size:9px}#ruler .cap{display:none}#cc{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 70px)}.nav span{display:none}.nav i{width:40px;height:40px;font-size:23px}#flip{font-size:10px;padding:.8em .9em}}
 @media (prefers-reduced-motion:reduce){#snd,.bname{animation:none}}
 /* ---- talking to the page. Front: a glass panel on the right. Back: paper, on the left, the bubbles swapped. */
 #askb{position:fixed;right:max(14px,env(safe-area-inset-right));top:calc(max(14px,env(safe-area-inset-top)) + 44px);z-index:9;border:0;cursor:pointer;font:600 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#03050b;background:linear-gradient(180deg,#d7e9ff,#8fc2ff);padding:.9em 1.15em;border-radius:999px;box-shadow:0 0 22px rgba(143,194,255,.5),0 6px 16px rgba(0,0,0,.5);transition:transform .2s}
@@ -152,10 +154,11 @@ body.flip #askm{box-shadow:0 0 0 1px rgba(70,45,20,.45)}
 <script>
 (function () {
 'use strict';
-// One of nine pages, one per scale of the world (10^-15 m to 10^27 m). The front draws the scale from the real
-// numbers while an AI voice explains it; the back of the page (Flip) is its opposite, told by the other narrator.
-// Captions are cut from the voices' own timing. The ruler and the side arrows link the nine sites.
-var D = {"i":2,"key":"cell","title":"The Cell","chat":"https://api.hawkesgen.ai/v1/public/scale-chat","scales":[{"exp":-15,"name":"The Nucleus","short":"nucleus","size":"10⁻¹⁵ m","sub":"the heart of an atom · a millionth of a billionth of a meter · uranium-235: 92 protons, 143 neutrons","domain":"doseofdestruction.com"},{"exp":-10,"name":"The Atom","short":"atom","size":"10⁻¹⁰ m","sub":"the building brick of everything · one ten-billionth of a meter · hydrogen's electron clouds, drawn from the real equations","domain":"hawkesgames.com"},{"exp":-5,"name":"The Cell","short":"cell","size":"10⁻⁵ m","sub":"the smallest living thing · a hundredth of a millimeter · you are about 37 trillion of these","domain":"hawkesbiomedical.com"},{"exp":0,"name":"You","short":"you","size":"10⁰ m","sub":"the human scale · about a meter and a bit · 7 × 10²⁷ atoms, 37 trillion cells, 86 billion neurons","domain":"icanbe.ai"},{"exp":7,"name":"The Planet","short":"planet","size":"10⁷ m","sub":"Earth · 12,742 km across · a thin skin of rock and air around a ball of hot stone and metal","domain":"yoobalandgame.com"},{"exp":9,"name":"The Star","short":"star","size":"10⁹ m","sub":"the Sun · 1.39 million km across · a million Earths would fit inside","domain":"imaginelivetv.com"},{"exp":13,"name":"The Solar System","short":"solar system","size":"10¹³ m","sub":"the Sun's neighborhood · 9 billion km across at Neptune · real orbits and real speeds, distances squeezed to fit","domain":"theplacedepartment.com"},{"exp":21,"name":"The Galaxy","short":"galaxy","size":"10²¹ m","sub":"","domain":"phorigins.com"},{"exp":27,"name":"The Universe","short":"universe","size":"10²⁷ m","sub":"everything we could ever see · 93 billion light-years across · 13.8 billion years old","domain":"hawkesgen.ai"}],"sides":[{"cues":[[0,0.82,"Hello."],[0.82,4.41,"I'm the AI that lives here, and you are looking at a living cell."],[4.41,5.67,"You are made of these."],[5.67,8.16,"About thirty-seven trillion of them."],[8.16,11.18,"A cell is like a tiny city inside a soap bubble."],[11.18,13.61,"The big ball in the middle is city hall."],[13.61,18.29,"It keeps the instructions for building you, on a long string called DNA."],[18.29,23.21,"If you unrolled the DNA from just one cell, it would be as tall as a grown-up."],[23.21,25.67,"The little bean shapes are power plants."],[25.67,27.76,"They turn your breakfast into energy."],[27.76,32.48,"And those dots zooming around are delivery trucks, carrying packages."],[32.48,34.17,"How small is a cell?"],[34.17,37.23,"About ten of them would fit across one of your hairs."],[37.23,41.63,"Every second, millions of your cells split in two to make new ones."],[41.63,44.59,"That is how a scraped knee fixes itself."],[44.59,46.3,"You are not one thing."],[46.3,50.629999999999995,"You are a whole world of tiny things, working together."]],"dur":50.63},{"name":"a virus","size":"10⁻⁷ m","sub":"not alive · a hundred times smaller than a cell · instructions in a shell, and nothing else","cues":[[0,1.6,"You turned the page."],[1.6,3.01,"I'm the other AI."],[3.01,4.33,"The one on the back."],[4.33,5.93,"A cell is alive."],[5.93,7.3,"This is the opposite."],[7.3,8.63,"This is a virus."],[8.63,10.01,"It is not alive."],[10.01,13.62,"It has no power plants, and no delivery trucks."],[13.62,17.97,"It is just a set of instructions, inside a tiny shell,"],[17.97,20.79,"a hundred times smaller than a cell."],[20.79,23.39,"On its own, it can do nothing at all."],[23.39,25.04,"It only drifts."],[25.04,28.85,"But if it bumps into a cell, and its keys fit the locks,"],[28.85,33.52,"it slips inside, and tricks the city into building copies of it."],[33.52,36.8,"Your body remembers every one it has beaten."],[36.8,40.04,"That is what a vaccine teaches it."]],"dur":40.04}]};
+// One of nine pages on how a large language model works, from one piece of a word up to the data center. The front
+// draws one part from real numbers (most of them computed with GPT-2 small, a small open model from 2019) while an AI
+// voice explains it; the back of the page (Flip) is its opposite, told by the other narrator. Each picture is a film
+// timed to its narrator. Captions are cut from the voices' own timing. The ruler and the side arrows link the nine sites.
+var D = {"i":2,"key":"attention","title":"Attention · How an A.I. works, part 3 of 9","chat":"https://api.hawkesgen.ai/v1/public/scale-chat","scales":[{"exp":1,"name":"The Token","short":"token","size":"1 piece","sub":"where every sentence starts · a word, or a piece of a word, swapped for a number · the small model in this page knows 50,257 pieces","domain":"doseofdestruction.com"},{"exp":2,"name":"The Neuron","short":"neuron","size":"1 light","sub":"the smallest working part · it multiplies, adds up, and glows or stays dark · this small model has 36,864 of them","domain":"hawkesgames.com"},{"exp":3,"name":"Attention","short":"attention","size":"144 lookers","sub":"how the pieces share what they know · each piece looks back at the ones before it · real looking, from the small model in this page","domain":"hawkesbiomedical.com"},{"exp":4,"name":"The Layers","short":"layers","size":"12 floors","sub":"one piece's trip up through the machine · every layer reads a running note and adds to it · 12 layers here, many more in big models","domain":"icanbe.ai"},{"exp":5,"name":"The Guess","short":"guess","size":"50,257 scores","sub":"what comes out at the top · not one word, but a score for every piece it knows · real scores from the small model in this page","domain":"yoobalandgame.com"},{"exp":6,"name":"The Mistake","short":"mistake","size":"1 surprise","sub":"how a machine finds out it was wrong · hide the next piece, guess, then look · the mistake is how surprised it was","domain":"imaginelivetv.com"},{"exp":7,"name":"Reading","short":"reading","size":"15 trillion pieces","sub":"the first school · guess the next piece of things people wrote, over and over · a tiny model learning from one book, for real","domain":"theplacedepartment.com"},{"exp":8,"name":"What It Knows","short":"what it knows","size":"frozen numbers","sub":"everything it learned, baked in · not one number changes while you talk to it · and it can't always tell knowing from guessing","domain":"phorigins.com"},{"exp":9,"name":"The Data Center","short":"data center","size":"16,000 chips","sub":"where a model gets made · buildings full of chips, all doing the same small sum · numbers from a maker who published them, with the year","domain":"hawkesgen.ai"}],"data":{"attn":{"pieces":["When"," Mary"," and"," John"," went"," to"," the"," store",","," John"," gave"," a"," drink"," to"],"top":[[" Mary",0.446],[" them",0.2116],[" the",0.0711],[" John",0.06],[" her",0.045],[" his",0.0124]],"swap":{"When John and Mary went to the store, Mary gave a drink to":[[" John",0.5371],[" them",0.125],[" the",0.0842]],"When Mary and John went to the store, Mary gave a drink to":[[" John",0.3024],[" them",0.2392],[" the",0.1294]]},"heads":{"9.6":[[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.989,0.011,0,0,0,0,0,0,0,0,0,0,0,0],[0.887,0.11,0.003,0,0,0,0,0,0,0,0,0,0,0],[0.944,0.016,0.027,0.013,0,0,0,0,0,0,0,0,0,0],[0.989,0.003,0.001,0.001,0.006,0,0,0,0,0,0,0,0,0],[0.975,0.014,0.001,0.006,0.002,0.002,0,0,0,0,0,0,0,0],[0.995,0.002,0,0,0.001,0.001,0.001,0,0,0,0,0,0,0],[0.986,0.003,0.001,0.001,0.001,0.001,0.001,0.008,0,0,0,0,0,0],[0.634,0.234,0.004,0.121,0.001,0,0,0.003,0.002,0,0,0,0,0],[0.937,0.009,0.019,0.008,0.015,0.002,0,0.004,0.001,0.003,0,0,0,0],[0.572,0.293,0.006,0.086,0.001,0,0.001,0.002,0.001,0.035,0.003,0,0,0],[0.979,0.003,0.001,0.001,0.001,0,0,0.005,0.001,0,0.002,0.008,0,0],[0.976,0.003,0,0.001,0,0,0,0.001,0.002,0.001,0.001,0.005,0.007,0],[0.331,0.492,0.001,0.116,0,0,0,0.001,0,0.057,0,0,0.001,0.001]],"9.9":[[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.993,0.007,0,0,0,0,0,0,0,0,0,0,0,0],[0.949,0.044,0.007,0,0,0,0,0,0,0,0,0,0,0],[0.978,0.007,0.003,0.012,0,0,0,0,0,0,0,0,0,0],[0.992,0.001,0,0.001,0.006,0,0,0,0,0,0,0,0,0],[0.974,0.006,0,0.014,0.002,0.004,0,0,0,0,0,0,0,0],[0.995,0.001,0,0.001,0,0,0.003,0,0,0,0,0,0,0],[0.988,0.002,0.001,0.001,0,0,0,0.007,0,0,0,0,0,0],[0.518,0.223,0.007,0.238,0.002,0.001,0.003,0.004,0.006,0,0,0,0,0],[0.926,0.009,0.008,0.017,0.028,0.002,0.001,0.003,0.002,0.003,0,0,0,0],[0.585,0.244,0.005,0.079,0.001,0.001,0.005,0.005,0.005,0.061,0.008,0,0,0],[0.979,0.003,0.002,0.001,0.001,0,0,0.005,0.001,0,0.003,0.005,0,0],[0.974,0.001,0.001,0.001,0,0.001,0,0.002,0.002,0,0.002,0.005,0.01,0],[0.359,0.362,0.004,0.132,0,0,0.003,0.001,0.004,0.129,0,0.003,0.001,0.002]],"4.11":[[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,0]],"5.5":[[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.998,0.002,0,0,0,0,0,0,0,0,0,0,0,0],[0.981,0.005,0.013,0,0,0,0,0,0,0,0,0,0,0],[0.988,0.006,0.001,0.006,0,0,0,0,0,0,0,0,0,0],[0.96,0.029,0,0.001,0.009,0,0,0,0,0,0,0,0,0],[0.98,0.015,0,0.002,0.002,0.001,0,0,0,0,0,0,0,0],[0.978,0.01,0,0.002,0.001,0.002,0.007,0,0,0,0,0,0,0],[0.995,0,0,0.001,0,0,0,0.002,0,0,0,0,0,0],[0.96,0.005,0.001,0.009,0.002,0.001,0.001,0.007,0.016,0,0,0,0,0],[0.164,0.001,0,0.001,0.816,0,0.001,0.014,0,0,0,0,0,0],[0.947,0.009,0,0.003,0.012,0,0.001,0.01,0,0.004,0.014,0,0,0],[0.973,0.003,0,0.001,0,0,0,0.005,0.001,0.005,0.001,0.011,0,0],[0.985,0.001,0,0.004,0,0,0,0.001,0.001,0.002,0,0.001,0.005,0],[0.931,0.007,0,0.005,0,0,0.006,0.005,0.004,0.006,0,0.005,0.016,0.016]],"2.2":[[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.993,0.007,0,0,0,0,0,0,0,0,0,0,0,0],[0.357,0.623,0.02,0,0,0,0,0,0,0,0,0,0,0],[0.551,0.113,0.268,0.068,0,0,0,0,0,0,0,0,0,0],[0.366,0.024,0.356,0.176,0.077,0,0,0,0,0,0,0,0,0],[0.226,0.003,0.034,0.027,0.645,0.066,0,0,0,0,0,0,0,0],[0.019,0.001,0.008,0.021,0.084,0.837,0.03,0,0,0,0,0,0,0],[0.011,0.001,0.002,0.005,0.077,0.316,0.565,0.023,0,0,0,0,0,0],[0.029,0.001,0.004,0.006,0.021,0.068,0.319,0.134,0.418,0,0,0,0,0],[0.039,0,0,0,0.001,0.015,0.055,0.043,0.688,0.158,0,0,0,0],[0.106,0,0.001,0.001,0.001,0.003,0.019,0.012,0.433,0.337,0.088,0,0,0],[0.01,0,0,0,0,0.002,0.003,0.004,0.069,0.05,0.773,0.088,0,0],[0.023,0,0,0,0.001,0.004,0.004,0.004,0.039,0.038,0.227,0.53,0.13,0],[0.051,0,0,0,0,0,0.001,0.001,0.004,0.005,0.069,0.354,0.444,0.07]]},"last":[[[0.24,0.07,0.02,0.04,0.13,0.01,0.03,0.06,0.02,0.06,0.14,0.03,0.12,0.02],[0,0,0.02,0,0,0.46,0,0,0,0,0,0,0,0.51],[0.2,0.04,0.1,0.03,0.06,0.15,0.03,0.03,0.06,0.03,0.07,0.03,0.02,0.17],[0,0,0,0,0,0,0,0,0.01,0.01,0.27,0.07,0.02,0.61],[0.03,0,0,0,0.06,0.01,0.01,0.01,0.01,0.01,0.35,0.08,0.17,0.24],[0.03,0,0.06,0,0.01,0.38,0.14,0,0.01,0,0,0.1,0,0.25],[0.11,0.05,0.01,0.04,0.04,0.17,0,0.06,0,0.06,0.06,0.01,0.1,0.31],[0.03,0,0.01,0,0.01,0.01,0.02,0.02,0.05,0.04,0.12,0.17,0.21,0.3],[0.01,0,0.09,0.01,0.02,0.12,0.16,0.01,0.14,0.01,0.02,0.19,0.01,0.22],[0.15,0.05,0.09,0.05,0.05,0.09,0.08,0.04,0.07,0.05,0.06,0.08,0.05,0.1],[0.12,0.04,0.11,0.04,0.07,0.12,0.08,0.03,0.08,0.04,0.06,0.08,0.03,0.11],[0.18,0.04,0.08,0.04,0.07,0.08,0.04,0.05,0.09,0.04,0.09,0.05,0.06,0.09]],[[0.05,0,0,0,0.03,0,0.02,0.01,0.04,0.03,0.44,0.17,0.12,0.07],[0.12,0.01,0.02,0.02,0.02,0.02,0.03,0.02,0.19,0.07,0.09,0.13,0.12,0.15],[0.07,0.02,0.04,0.04,0.05,0.08,0.06,0.05,0.1,0.07,0.08,0.09,0.09,0.16],[0.52,0.02,0.02,0.02,0.03,0.03,0.03,0.03,0.05,0.04,0.05,0.04,0.06,0.06],[0.24,0.04,0.03,0.04,0.04,0.04,0.04,0.06,0.05,0.08,0.07,0.06,0.11,0.08],[0.15,0,0.04,0,0.01,0.28,0.03,0,0.05,0,0.01,0.04,0,0.39],[0.38,0.02,0.04,0.02,0.08,0.04,0.05,0.03,0.06,0.02,0.14,0.07,0.04,0.03],[0.33,0.04,0.04,0.03,0.03,0.05,0.04,0.06,0.11,0.02,0.04,0.06,0.06,0.08],[0.32,0.04,0.05,0.04,0.05,0.07,0.06,0.03,0.08,0.04,0.05,0.07,0.03,0.07],[0.35,0.03,0.04,0.04,0.04,0.05,0.12,0.02,0.04,0.05,0.05,0.1,0.02,0.04],[0,0.03,0.03,0.05,0.06,0.05,0.05,0.08,0.08,0.09,0.11,0.07,0.17,0.12],[0.08,0,0.04,0,0,0.26,0.01,0,0.07,0,0,0.02,0,0.5]],[[0.15,0,0.01,0.01,0,0.02,0.01,0.02,0.05,0.04,0.07,0.09,0.19,0.33],[0.6,0.03,0.04,0.04,0.02,0.04,0.02,0.01,0.08,0.01,0.03,0.02,0.02,0.06],[0.05,0,0,0,0,0,0,0,0,0.01,0.07,0.35,0.44,0.07],[0.08,0,0,0,0,0,0.03,0.01,0.03,0.06,0.13,0.36,0.21,0.09],[0.14,0,0,0,0.01,0,0.01,0,0.05,0,0.24,0.12,0.24,0.18],[0.09,0,0,0,0,0,0.01,0.01,0.2,0.02,0.11,0.17,0.2,0.21],[0.46,0,0.01,0.01,0.01,0.02,0.03,0.01,0.18,0.03,0.05,0.08,0.01,0.1],[0.08,0.01,0.01,0.03,0.05,0.04,0.03,0.04,0.07,0.12,0.17,0.08,0.13,0.14],[0.03,0,0,0,0.01,0,0,0,0.02,0,0.8,0.05,0.07,0.03],[0.03,0,0,0,0,0,0,0.03,0.02,0.06,0.06,0.06,0.69,0.05],[0.12,0.02,0.01,0.03,0.05,0.04,0.03,0.06,0.05,0.07,0.14,0.06,0.17,0.14],[0.62,0.01,0.01,0.01,0.02,0.01,0.02,0.03,0.03,0.03,0.05,0.04,0.07,0.07]],[[0.96,0,0,0,0.01,0.01,0,0,0,0,0,0,0,0.01],[0.39,0,0,0,0.01,0,0.01,0,0.12,0.03,0.14,0.15,0.02,0.12],[0.11,0,0,0,0,0,0,0,0,0.02,0.37,0.4,0.04,0.04],[0.65,0,0,0,0,0,0,0,0,0,0.04,0.06,0.08,0.16],[0.89,0,0,0,0.02,0.01,0.01,0.01,0.01,0,0.03,0.01,0.01,0],[0.58,0.03,0.04,0.02,0.02,0.04,0.01,0.04,0.02,0.03,0.03,0.03,0.07,0.03],[0.14,0,0,0,0.01,0,0,0.02,0.03,0.16,0.07,0.23,0.16,0.16],[0.14,0,0,0,0,0,0,0.01,0,0.01,0.06,0.05,0.65,0.08],[0.34,0,0,0,0,0,0,0,0.06,0.01,0.14,0.04,0.06,0.34],[0.23,0,0,0,0.01,0,0,0,0.04,0.01,0.57,0.1,0.02,0.01],[0.52,0,0,0,0.01,0.04,0.01,0.01,0.02,0,0.07,0.08,0.04,0.21],[0.16,0,0,0,0,0,0,0,0.03,0,0.19,0.17,0.36,0.08]],[[0.11,0,0,0,0,0,0,0,0.01,0.01,0.31,0.44,0.09,0.03],[0.45,0,0,0,0,0,0,0.01,0.14,0.02,0.01,0.13,0.16,0.08],[0.7,0.04,0.01,0.01,0.02,0.01,0.01,0.02,0.03,0.02,0.03,0.02,0.06,0.02],[0.09,0.01,0,0,0,0,0,0,0.01,0.03,0.05,0.06,0.73,0.02],[0.59,0.02,0.02,0,0.01,0.03,0.04,0.01,0.02,0,0.09,0.04,0.05,0.08],[0.37,0,0,0,0,0,0.01,0,0.04,0.01,0.12,0.1,0.31,0.04],[0.6,0.01,0.01,0,0.01,0.01,0.01,0.03,0.02,0.02,0.04,0.06,0.12,0.07],[0.09,0,0,0,0,0.01,0,0,0.02,0.01,0.02,0.07,0.14,0.65],[0.71,0.01,0.01,0.01,0.01,0.02,0.02,0.11,0.01,0,0.01,0.01,0.05,0.02],[0.51,0.01,0.01,0,0.02,0.01,0.01,0.01,0.01,0.02,0.21,0.07,0.06,0.05],[0.86,0,0.01,0.01,0.01,0.02,0.01,0.01,0.02,0,0.01,0.01,0.01,0.03],[0,0,0,0,0,0,0,0,0,0,0,0,1,0]],[[0.95,0,0,0,0,0,0.01,0,0,0,0,0,0.02,0.01],[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.4,0.01,0,0,0.01,0,0.01,0.02,0.01,0.01,0.13,0.15,0.25,0.01],[0.36,0.02,0,0,0.03,0.01,0.01,0.02,0.15,0.05,0.17,0.09,0.04,0.04],[0.2,0,0,0,0,0,0,0.02,0.02,0.01,0.08,0.13,0.49,0.04],[0.93,0.01,0,0,0,0,0.01,0,0,0.01,0,0,0.02,0.02],[0.93,0,0,0,0,0,0,0,0,0,0,0,0.06,0],[0.51,0,0,0,0,0,0,0.01,0.01,0.01,0.13,0.04,0.23,0.06],[0.84,0.01,0,0.01,0,0,0.02,0.01,0.04,0.03,0.01,0.02,0.01,0.01],[0.85,0.02,0,0.01,0.01,0.01,0.02,0.02,0.01,0.01,0.01,0.01,0.02,0.01],[0.28,0.02,0,0.01,0,0.01,0.02,0.01,0.01,0.01,0.06,0.04,0.45,0.09],[0.66,0.01,0.01,0,0,0.02,0.02,0.02,0.01,0,0.01,0.03,0.06,0.15]],[[0.14,0.01,0.01,0.01,0.02,0,0,0.01,0.01,0.23,0.43,0.08,0.04,0.02],[0.75,0.02,0.02,0,0,0,0.01,0.01,0.04,0.08,0.02,0.02,0.02,0],[0.57,0.01,0.05,0.03,0.04,0.03,0.01,0.03,0.11,0.02,0.02,0.02,0.02,0.03],[0.46,0.06,0.02,0.05,0.05,0.02,0.02,0.05,0.08,0.05,0.03,0.02,0.06,0.03],[0.37,0.04,0.03,0.03,0.06,0.06,0.02,0.05,0.12,0.02,0.09,0.05,0.02,0.02],[0.68,0.01,0,0.01,0.01,0.01,0.01,0.02,0.03,0.03,0.04,0.03,0.06,0.06],[0.67,0.01,0,0,0.01,0.02,0.01,0.01,0.01,0.01,0.02,0.01,0.03,0.19],[0.57,0.02,0.01,0.01,0.01,0,0.01,0.03,0.01,0.03,0.03,0.04,0.19,0.05],[0.26,0,0,0,0,0,0,0,0,0,0.16,0.2,0.34,0.03],[0.97,0.01,0,0,0,0,0,0,0,0,0,0,0.01,0],[0.86,0,0,0,0.01,0,0.01,0.01,0.02,0.01,0.01,0.02,0.04,0.02],[0.35,0,0,0,0,0,0,0.01,0.06,0.03,0.16,0.18,0.15,0.06]],[[0.87,0,0,0,0,0,0,0,0,0.01,0.03,0.01,0.07,0.02],[0.97,0,0,0,0,0,0,0,0,0,0,0.01,0.01,0],[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.2,0.01,0.01,0.01,0.01,0,0.01,0.02,0.03,0.16,0.28,0.1,0.11,0.07],[0.86,0,0,0,0,0,0,0,0,0.01,0.06,0.02,0.03,0.01],[0.64,0.01,0,0.01,0.01,0.01,0.01,0.06,0.05,0.06,0.04,0.06,0.04,0.02],[0.85,0.01,0.01,0.02,0.01,0.01,0,0.02,0.01,0.01,0.02,0.01,0.02,0.01],[0.96,0,0,0,0,0,0,0.01,0.01,0.01,0,0,0.01,0],[0.22,0,0,0,0,0,0,0,0,0.02,0.25,0.08,0.41,0.02],[0.29,0.03,0,0.03,0.01,0,0,0.02,0.08,0.4,0.05,0.02,0.04,0.02],[0.98,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.84,0.04,0,0.03,0.01,0,0.03,0.01,0,0.01,0.01,0.01,0.01,0]],[[0.55,0,0.01,0.01,0.02,0.02,0.05,0.04,0.04,0.01,0.02,0.07,0.08,0.07],[0.99,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.23,0.04,0.04,0.06,0.05,0.04,0.01,0.07,0.15,0.13,0.02,0.05,0.07,0.04],[0.1,0.05,0.07,0.43,0.2,0.02,0.01,0.02,0.02,0.05,0.01,0.01,0,0],[0.5,0,0,0,0,0,0,0.01,0.01,0,0.11,0.12,0.2,0.04],[0.2,0.02,0,0.03,0.02,0,0,0.01,0.03,0.25,0.29,0.05,0.08,0.01],[0.27,0.06,0,0.03,0,0,0,0,0,0.6,0,0.01,0.01,0],[0.65,0,0,0,0,0,0,0.01,0,0,0.01,0.01,0.22,0.09],[0.51,0.02,0.02,0.02,0.01,0.01,0.01,0.07,0.06,0.05,0.05,0.02,0.1,0.06],[0.74,0.02,0.02,0.02,0.01,0,0.01,0.01,0.01,0.01,0.02,0.02,0.05,0.06],[0.24,0.09,0.03,0.09,0.01,0.01,0.01,0.01,0.01,0.42,0.04,0.01,0.01,0.02],[0.45,0.03,0.02,0.07,0.03,0.01,0.02,0.18,0.11,0.02,0,0.01,0.04,0.01]],[[0.84,0.09,0,0.01,0,0,0,0.03,0,0.01,0,0,0.01,0],[0.93,0.02,0.01,0.01,0,0,0,0,0,0.01,0,0.01,0,0],[0.83,0.06,0.01,0.01,0,0,0,0.04,0.01,0.01,0,0,0.02,0.01],[0.3,0.01,0,0,0.02,0.01,0,0.04,0.07,0.02,0.14,0.03,0.31,0.06],[0.7,0.16,0.05,0.02,0,0.01,0,0,0,0.02,0,0,0,0.01],[0.53,0.09,0.04,0.05,0.01,0.01,0,0.01,0.01,0.07,0.05,0.01,0.06,0.05],[0.33,0.49,0,0.12,0,0,0,0,0,0.06,0,0,0,0],[0.57,0.08,0.05,0.08,0.02,0.01,0.01,0.02,0.01,0.11,0.01,0.01,0.01,0.01],[0.36,0.29,0.01,0.21,0.01,0.01,0.01,0.01,0.01,0.08,0,0,0.01,0],[0.36,0.36,0,0.13,0,0,0,0,0,0.13,0,0,0,0],[0.89,0,0,0,0,0,0,0,0,0.01,0.01,0.01,0.05,0.03],[0.79,0.04,0.01,0.1,0,0,0.01,0,0,0.02,0,0.01,0.01,0]],[[0.43,0.32,0.01,0.1,0,0,0,0.01,0.01,0.07,0,0,0.02,0.01],[0.52,0.38,0.01,0.04,0,0,0,0,0,0.03,0,0,0,0],[0.34,0.11,0.02,0.34,0,0,0,0,0.01,0.15,0,0.01,0,0.01],[0.58,0.27,0.01,0.06,0,0,0,0,0.01,0.05,0,0,0,0.01],[0.76,0.05,0.01,0.05,0.01,0.01,0.01,0.01,0.01,0.05,0,0.01,0,0.01],[0.8,0.01,0,0.01,0,0,0.01,0,0.02,0.03,0.03,0.04,0.03,0.01],[0.51,0.1,0,0.21,0,0,0,0.02,0,0.14,0,0,0,0],[0.09,0.58,0.03,0.14,0,0,0.01,0,0.02,0.09,0,0.01,0,0.02],[0.92,0.01,0.01,0.01,0,0,0.01,0,0,0,0,0.01,0,0.01],[0.16,0.09,0.01,0.03,0.06,0.04,0.02,0.1,0.22,0.04,0.04,0.04,0.08,0.05],[0.58,0.26,0.02,0.07,0,0,0,0,0.01,0.03,0,0,0,0.01],[0.71,0.14,0.01,0.04,0,0,0,0,0,0.05,0.01,0,0,0.05]],[[0.09,0.11,0.15,0.11,0.03,0.02,0.04,0.03,0.08,0.23,0.03,0.03,0.03,0.04],[0.3,0.12,0.07,0.12,0.02,0.01,0.02,0.01,0.07,0.12,0.05,0.02,0.01,0.08],[0.63,0.12,0.02,0.09,0,0,0,0,0.03,0.03,0.01,0,0,0.04],[0.31,0.03,0.04,0.01,0.01,0.01,0.01,0.17,0.24,0.01,0.04,0.01,0.09,0.04],[0.59,0.07,0.06,0.08,0.01,0.01,0.02,0.01,0.07,0.04,0.02,0.01,0,0.03],[0.71,0.08,0.05,0.03,0.01,0,0.01,0.01,0.04,0.02,0.01,0,0.01,0.02],[0.7,0.14,0.03,0.05,0,0,0,0,0.01,0.04,0.01,0,0,0.02],[0.58,0.05,0.05,0.04,0.01,0.02,0.03,0.02,0.09,0.03,0.03,0.01,0,0.03],[0,0.01,0.03,0.01,0.05,0.02,0.02,0.02,0.29,0.15,0.32,0.03,0.01,0.05],[0.79,0.07,0.01,0.05,0,0,0,0,0.01,0.03,0.01,0,0,0.01],[0.04,0.53,0.03,0.16,0,0,0,0,0.04,0.16,0.02,0,0,0.02],[0.3,0.07,0.11,0.02,0.01,0,0.01,0.02,0.26,0.01,0.02,0.01,0.07,0.09]]]},"recall":{"target":" cold","base":0.1627,"mlp_off":[0.0017,0.1735,0.0987,0.0944,0.1166,0.0808,0.116,0.1586,0.1082,0.1661,0.1643,0.2638],"attn_off":[0.001,0.1076,0.1668,0.1799,0.1087,0.0563,0.1132,0.123,0.0278,0.1061,0.1089,0.0988],"top":[[" cold",0.1627],[" the",0.0822],[" a",0.0619],[" hot",0.0401],[" not",0.0376],[" cool",0.0199]],"pieces":["The"," opposite"," of"," hot"," is"]},"counts":{"total":124439808,"mlp":56669184,"attn":28348416,"embed":38597376,"pos":786432,"neurons_per_layer":3072,"ctx":1024}},"sides":[{"cues":[[0,0.67,"Hi."],[0.67,2.5,"I'm the A.I. in this page."],[2.5,5.14,"Here's a sentence with a hole at the end."],[5.14,8.74,"When Mary and John went to the store, John gave a drink to..."],[8.74,9.51,"who?"],[9.51,10.88,"You know it's Mary."],[10.88,12.47,"But how would a machine know?"],[12.47,14.43,"Every piece starts out alone."],[14.43,16.17,"It only knows itself."],[16.17,19.05,"So each piece looks back at the pieces that came before it,"],[19.05,21.51,"and borrows a little from the ones that help."],[21.51,23.11,"This is called attention."],[23.11,24.72,"Watch the last piece."],[24.72,26.17,"These lines are real."],[26.17,28.18,"It is looking hardest at Mary."],[28.18,30.17,"So the machine guesses Mary."],[30.17,33.72,"Swap the names around, and it guesses John instead."],[33.72,36.76,"A piece can only look backward, never ahead."],[36.76,39.45,"And it has to know what order the pieces came in,"],[39.45,41.71,"or Mary and John would get mixed up."],[41.71,43.71,"There isn't just one looker."],[43.71,46.51,"This small model has one hundred and forty four,"],[46.51,48.68,"all looking for different things at once."],[48.68,51.599999999999994,"Most of them, nobody can explain yet."]],"dur":51.6},{"name":"recall","size":"3,072 lights a layer","sub":"the other half of every layer · each piece, alone, is topped up from what was learned · no drawer, no list: it is spread out","cues":[[0,1.5,"You turned the page."],[1.5,3.31,"I'm the other A.I."],[3.31,5.71,"On the front, pieces looked at each other."],[5.71,7.19,"Here is the opposite."],[7.19,10.55,"Each piece, all by itself, looking inward."],[10.55,11.73,"Finish this."],[11.73,13.39,"The opposite of hot is..."],[13.39,14.16,"Cold."],[14.16,15.93,"It just popped into your head."],[15.93,17.25,"You didn't look it up."],[17.25,19.4,"The machine has a step like that."],[19.4,23.55,"After the looking, every piece passes through thousands of little lights,"],[23.55,26.71,"and things the machine learned long ago get added on."],[26.71,27.86,"Hot goes in."],[27.86,29.93,"A little bit of cold comes out."],[29.93,33.61,"Most of this model's working numbers sit in these steps."],[33.61,37.05,"So is there a drawer inside, with cold in it?"],[37.05,38,"No."],[38,40.69,"Switch these steps off, one at a time,"],[40.69,43.93,"and most times, the answer is still there."],[43.93,49.47,"As far as anyone can tell, what a model knows isn't kept in one place."],[49.47,52.529999999999994,"It is spread across all of it."]],"dur":52.53}]};
 var TAU = Math.PI * 2;
 function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function gauss(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); }
@@ -183,116 +186,240 @@ function scaleBar(x, W, H, px, text) { // a labelled length, bottom-left above t
 var H3 = { rng: rng, gauss: gauss, clamp: clamp, lerp: lerp, smooth: smooth, dot: dot, label: label, lead: lead, scaleBar: scaleBar, TAU: TAU };
 
 
-// ---------------------------------------------------------------- the front: the scale
-// THE CELL: an animal cell about 20 micrometers across, with its parts at roughly their real proportions:
-// the nucleus (about a third of the width) holding 2 m of DNA, mitochondria about 1-2 um long, the folded ER round
-// the nucleus, the Golgi stack, vesicles carried out to the membrane, and ribosomes jiggling in Brownian motion
-// (each step a random kick: mean square distance grows in proportion to time).
-var SCENE = (function () {
-  var r = H3.rng(77), mito = [], ves = [], ribo = [], chrom = [], lyso = [];
-  function init() {
-    var i;
-    for (i = 0; i < 11; i++) { var a = r() * 6.28, d = 0.5 + r() * 0.34; mito.push({ a: a, d: d, rot: r() * 6.28, w: 0.075 + r() * 0.035, sp: (r() - 0.5) * 0.05, ph: r() * 6.28 }); }
-    for (i = 0; i < 46; i++) ves.push(newVes(r() * 1));
-    for (i = 0; i < 520; i++) { var a2 = r() * 6.28, d2 = Math.sqrt(r()) * 0.9; ribo.push({ x: Math.cos(a2) * d2, y: Math.sin(a2) * d2 }); }
-    var px = 0, py = 0; for (i = 0; i < 260; i++) { px += H3.gauss(r) * 0.045; py += H3.gauss(r) * 0.045; var l = Math.hypot(px, py); if (l > 0.24) { px *= 0.24 / l; py *= 0.24 / l; } chrom.push([px, py]); }
-    for (i = 0; i < 7; i++) { var a3 = r() * 6.28, d3 = 0.45 + r() * 0.4; lyso.push({ x: Math.cos(a3) * d3, y: Math.sin(a3) * d3, ph: r() * 6.28 }); }
+// The drawing kit shared by the eighteen pictures. Every picture is a film timed to its narrator: K.at(side, 'words')
+// gives the second at which the caption containing those words starts, and the picture is a function of that clock.
+var K = (function () {
+  var SANS = '"Space Grotesk",system-ui,sans-serif', MONO = '"JetBrains Mono",ui-monospace,monospace';
+  var C = { ink: '#eef4ff', dim: 'rgba(214,228,255,.62)', faint: 'rgba(214,228,255,.28)', acc: '#8fc2ff', warm: '#ffc46b', hot: '#ff7a5c', good: '#7dffb0', vio: '#c9a2ff', bg: '#03050b' };
+  var GROUP = ['#ffc46b', '#ff7a9c', '#8fc2ff', '#7dffb0', '#ff9a5c', '#c9a2ff', '#6fe3e1', '#f5f07a', '#b8c4d9'];
+  function at(side, words) { var cs = D.sides[side].cues, w = words.toLowerCase(); for (var i = 0; i < cs.length; i++) if (cs[i][2].toLowerCase().indexOf(w) >= 0) return cs[i][0]; if (window.console) console.warn('no caption has: ' + words); return 0; }
+  function end(side) { return D.sides[side].dur; }
+  // the narrator's clock; once the explanation is over the picture rests on its last moment (plus a slow idle clock)
+  function clock(side, nt) { return nt > 1e8 ? D.sides[side].dur + 2 : nt; }
+  function cl(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function ramp(n, a, d) { return H3.smooth((n - a) / (d || 0.6)); }               // 0 -> 1 starting at second a, over d seconds
+  function span(n, a, b, d) { d = d || 0.5; return Math.min(ramp(n, a, d), 1 - ramp(n, b, d)); }   // on between a and b
+  function bump(n, a, d) { var u = (n - a) / (d || 0.8); return u < 0 || u > 1 ? 0 : Math.sin(u * Math.PI); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function font(size, o) { o = o || {}; return (o.w || 500) + ' ' + size.toFixed(1) + 'px ' + (o.mono ? MONO : SANS); }
+  function text(x, s, px, py, size, o) {
+    o = o || {}; var al = o.al == null ? 1 : o.al; if (al <= 0.003) return 0; x.save(); x.globalAlpha = al; x.globalCompositeOperation = 'source-over'; x.font = font(size, o); x.textAlign = o.a || 'left'; x.textBaseline = o.base || 'middle';
+    if (o.glow) { x.shadowColor = o.glow; x.shadowBlur = size * 0.7; }
+    // a line never runs off the screen: if it would, it is drawn smaller (pictures written for a wide screen stay readable on a phone)
+    var w = x.measureText(s).width, sw = x.canvas.clientWidth || innerWidth, room = (o.a === 'center' ? 2 * Math.min(px, sw - px) : o.a === 'right' ? px : sw - px) - 6;
+    if (!o.free && w > room && room > 20) { var k = Math.max(0.5, room / w); x.font = font(size * k, o); w = x.measureText(s).width; }
+    x.fillStyle = o.c || C.ink; x.fillText(s, px, py); x.restore(); return w;
   }
-  function newVes(f) { var a = -0.9 + r() * 2.6; return { a: a, f: f, sp: 0.07 + r() * 0.09, big: r() < 0.25, ph: r() * 6.28 }; }
-  var NX = -0.16, NY = -0.04, NR = 0.31, GX = 0.3, GY = 0.1;
-  function rim(a, t) { return 1 + 0.028 * Math.sin(3 * a + t * 0.4) + 0.018 * Math.sin(5 * a - t * 0.3) + 0.012 * Math.sin(8 * a + t * 0.7); }
-  function draw(x, W, H, t, dt, nt) {
-    var cx = W / 2, cy = H * 0.47, R = Math.min(W * 0.4, H * 0.265), i, a;
-    var bg = x.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.75); bg.addColorStop(0, '#0a1a22'); bg.addColorStop(1, '#02060b'); x.fillStyle = bg; x.fillRect(0, 0, W, H);
-    // the membrane and the cytoplasm
-    x.beginPath(); for (i = 0; i <= 120; i++) { a = i / 120 * 6.2832; var rr = R * rim(a, t); x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath();
-    var cg = x.createRadialGradient(cx - R * 0.2, cy - R * 0.2, R * 0.1, cx, cy, R * 1.05); cg.addColorStop(0, 'rgba(70,170,180,.5)'); cg.addColorStop(0.7, 'rgba(30,110,140,.42)'); cg.addColorStop(1, 'rgba(20,70,110,.5)');
-    x.fillStyle = cg; x.fill(); x.lineWidth = Math.max(3, R * 0.022); x.strokeStyle = 'rgba(150,235,225,.85)'; x.stroke(); x.lineWidth = Math.max(1, R * 0.007); x.strokeStyle = 'rgba(8,40,50,.9)'; x.stroke();
-    x.save(); x.clip();
-    // ribosomes: Brownian motion
-    x.globalCompositeOperation = 'lighter';
-    for (i = 0; i < ribo.length; i++) { var b = ribo[i]; b.x += H3.gauss(r) * 0.0035; b.y += H3.gauss(r) * 0.0035; var l = Math.hypot(b.x, b.y); if (l > 0.94) { b.x *= 0.94 / l; b.y *= 0.94 / l; } H3.dot(x, cx + b.x * R, cy + b.y * R, R * 0.012, 'rgba(190,255,235,1)', 0.5); }
-    x.globalCompositeOperation = 'source-over';
-    // rough ER: folded sheets round the nucleus, studded with ribosomes
-    for (i = 0; i < 5; i++) { var er = NR + 0.045 + i * 0.038; x.beginPath(); for (a = 1.9; a < 5.2; a += 0.05) { var w = er + 0.012 * Math.sin(a * 9 + i * 2 + t * 0.6); x.lineTo(cx + (NX + Math.cos(a) * w) * R, cy + (NY + Math.sin(a) * w) * R); } x.strokeStyle = 'rgba(120,150,255,.55)'; x.lineWidth = R * 0.016; x.lineCap = 'round'; x.stroke(); }
-    // the Golgi: a stack of curved sacs
-    for (i = 0; i < 6; i++) { x.beginPath(); for (a = -0.9; a <= 0.9; a += 0.1) x.lineTo(cx + (GX + i * 0.03 + 0.05 * a * a) * R, cy + (GY + a * (0.17 - i * 0.012)) * R); x.strokeStyle = 'rgba(255,200,120,.75)'; x.lineWidth = R * 0.017; x.stroke(); }
-    // lysosomes
-    for (i = 0; i < lyso.length; i++) { var ly = lyso[i]; x.fillStyle = 'rgba(140,230,150,.75)'; x.beginPath(); x.arc(cx + (ly.x + 0.01 * Math.sin(t + ly.ph)) * R, cy + (ly.y + 0.01 * Math.cos(t * 0.8 + ly.ph)) * R, R * 0.028, 0, 7); x.fill(); }
-    // mitochondria: the power plants
-    for (i = 0; i < mito.length; i++) { var m = mito[i]; m.a += m.sp * dt; var mx = cx + Math.cos(m.a) * m.d * R, my = cy + Math.sin(m.a) * m.d * R, ml = m.w * R, mw = ml * 0.42, ro = m.rot + 0.3 * Math.sin(t * 0.3 + m.ph);
-      x.save(); x.translate(mx, my); x.rotate(ro); x.beginPath(); x.roundRect(-ml, -mw, ml * 2, mw * 2, mw); var mg = x.createLinearGradient(0, -mw, 0, mw); mg.addColorStop(0, 'rgba(255,170,90,.95)'); mg.addColorStop(1, 'rgba(200,80,50,.95)'); x.fillStyle = mg; x.fill(); x.strokeStyle = 'rgba(90,25,15,.9)'; x.lineWidth = 1.2; x.stroke();
-      x.beginPath(); for (var k = -ml * 0.8; k <= ml * 0.8; k += ml * 0.1) x.lineTo(k, Math.sin(k / ml * 9 + t * 2 + m.ph) * mw * 0.55); x.strokeStyle = 'rgba(255,230,180,.8)'; x.lineWidth = 1; x.stroke(); x.restore(); }
-    // vesicles: packages carried from the Golgi out to the membrane, where they open
-    x.globalCompositeOperation = 'lighter';
-    for (i = 0; i < ves.length; i++) { var v = ves[i]; v.f += v.sp * dt; if (v.f > 1.08) ves[i] = v = newVes(0); var e = Math.min(1, v.f), ex = Math.cos(v.a) * 0.97, ey = Math.sin(v.a) * 0.97, vx = H3.lerp(GX + 0.1, ex, e) + 0.012 * Math.sin(t * 3 + v.ph), vy = H3.lerp(GY, ey, e) + 0.012 * Math.cos(t * 2.6 + v.ph);
-      if (v.f <= 1) H3.dot(x, cx + vx * R, cy + vy * R, R * (v.big ? 0.036 : 0.024), 'rgba(255,240,150,1)', 0.95); else { x.globalAlpha = 1 - (v.f - 1) / 0.08; x.strokeStyle = '#fff3b0'; x.lineWidth = 1.5; x.beginPath(); x.arc(cx + ex * R, cy + ey * R, R * 0.03 + (v.f - 1) * R * 0.9, 0, 7); x.stroke(); x.globalAlpha = 1; } }
-    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
-    // the nucleus: envelope, pores, chromatin (the DNA), nucleolus
-    var ncx = cx + NX * R, ncy = cy + NY * R, ng = x.createRadialGradient(ncx - NR * R * 0.3, ncy - NR * R * 0.3, NR * R * 0.1, ncx, ncy, NR * R); ng.addColorStop(0, 'rgba(160,110,230,.95)'); ng.addColorStop(1, 'rgba(70,40,140,.95)');
-    x.beginPath(); x.arc(ncx, ncy, NR * R, 0, 7); x.fillStyle = ng; x.fill(); x.lineWidth = R * 0.016; x.strokeStyle = 'rgba(210,180,255,.9)'; x.stroke();
-    for (i = 0; i < 26; i++) { a = i / 26 * 6.2832 + t * 0.02; x.fillStyle = 'rgba(30,15,60,.9)'; x.beginPath(); x.arc(ncx + Math.cos(a) * NR * R, ncy + Math.sin(a) * NR * R, R * 0.008, 0, 7); x.fill(); }
-    x.beginPath(); for (i = 0; i < chrom.length; i++) x.lineTo(ncx + (chrom[i][0] + 0.004 * Math.sin(t * 1.3 + i)) * R, ncy + (chrom[i][1] + 0.004 * Math.cos(t * 1.1 + i * 0.7)) * R); x.strokeStyle = 'rgba(255,190,240,.75)'; x.lineWidth = R * 0.011; x.lineJoin = 'round'; x.stroke();
-    x.beginPath(); x.arc(ncx + NR * R * 0.3, ncy + NR * R * 0.25, NR * R * 0.27, 0, 7); x.fillStyle = 'rgba(40,20,90,.85)'; x.fill();
-    x.restore();
-    // labels, in the narrator's words
-    var small = W < 760, L = function (text, tx, ty, px, py, al, col) { H3.lead(x, px, py, tx + (al === 'right' ? 6 : -6), ty); H3.label(x, text, tx, ty, al, col, small ? 10 : 12); };
-    L(small ? 'nucleus: city hall' : 'nucleus: city hall, keeping the DNA', cx - R * (small ? 0.2 : 1.12), cy - R * 1.13, ncx - NR * R * 0.4, ncy - NR * R * 0.85, small ? 'left' : 'left', '#e2ccff');
-    L(small ? 'power plants' : 'mitochondria: power plants', cx + R * (small ? 0.3 : 1.06), cy + R * 1.12, cx + Math.cos(mito[0].a) * mito[0].d * R, cy + Math.sin(mito[0].a) * mito[0].d * R, small ? 'left' : 'left', '#ffc79a');
-    L(small ? 'delivery trucks' : 'vesicles: delivery trucks', cx + R * (small ? 0.25 : 1.1), cy - R * 0.98, cx + (GX + 0.2) * R, cy + (GY - 0.12) * R, 'left', '#fff0a0');
-    if (!small) L('membrane: the soap bubble', cx - R * 1.72, cy + R * 0.55, cx - R * 0.93, cy + R * 0.35, 'left', '#a8f0e6');
-    H3.scaleBar(x, W, H, R, '10 micrometers (a hair is about 10 cells wide)');
+  function width(x, s, size, o) { x.save(); x.font = font(size, o); var w = x.measureText(s).width; x.restore(); return w; }
+  function rr(x, px, py, w, h, r) { r = Math.min(r, w / 2, h / 2); x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
+  function box(x, px, py, w, h, o) { // a rounded panel: o.fill, o.line, o.r, o.al, o.lw
+    o = o || {}; var al = o.al == null ? 1 : o.al; if (al <= 0.003) return; x.save(); x.globalAlpha = al; x.globalCompositeOperation = 'source-over'; rr(x, px, py, w, h, o.r == null ? 8 : o.r);
+    if (o.fill) { x.fillStyle = o.fill; x.fill(); } if (o.line) { x.strokeStyle = o.line; x.lineWidth = o.lw || 1.2; x.stroke(); } x.restore();
+  }
+  // a piece of text in its own little box. Spaces at the front of a piece are shown as a small dot so they can be seen.
+  function chipW(x, s, size, o) { return width(x, show(s), size, o) + size * 0.9; }
+  function show(s) { return s.replace(/^ /, '·').replace(/\n/g, '↵'); }
+  function chip(x, s, px, py, size, o) { // left edge px, centre line py; returns its width
+    o = o || {}; var w = o.wd || chipW(x, s, size, o), h = size * 1.75, al = o.al == null ? 1 : o.al; if (al <= 0.003) return w;
+    box(x, px, py - h / 2, w, h, { fill: o.bg || 'rgba(143,194,255,.10)', line: o.bd || 'rgba(143,194,255,.55)', r: size * 0.38, al: al, lw: o.lw });
+    text(x, o.raw ? s : show(s), px + w / 2, py + size * 0.04, size, { a: 'center', c: o.c || C.ink, mono: o.mono, w: o.w || 500, al: al, glow: o.glow }); return w;
+  }
+  // lay pieces out in centred rows that fit a width; returns [{x, y, w}] and the height used
+  function flow(x, list, size, cx, top, maxW, gap, o) {
+    var ws = list.map(function (s) { return chipW(x, s, size, o); }), rows = [[]], rw = [0], i;
+    for (i = 0; i < list.length; i++) { var r = rows.length - 1; if (rows[r].length && rw[r] + gap + ws[i] > maxW) { rows.push([]); rw.push(0); r++; } rw[r] += (rows[r].length ? gap : 0) + ws[i]; rows[r].push(i); }
+    var out = [], lh = size * ((o && o.lh) || 2.5); rows.forEach(function (row, r) { var px = cx - rw[r] / 2; row.forEach(function (k) { out[k] = { x: px, y: top + r * lh + size, w: ws[k], row: r }; px += ws[k] + gap; }); });
+    out.h = rows.length * lh; out.rows = rows.length; return out;
+  }
+  function bar(x, px, py, w, h, f, col, o) { // a track with a filled part f (0..1)
+    o = o || {}; var al = o.al == null ? 1 : o.al; if (al <= 0.003) return; box(x, px, py, w, h, { fill: o.track || 'rgba(143,194,255,.10)', r: h / 2, al: al }); if (f > 0.002) box(x, px, py, Math.max(h, w * cl(f)), h, { fill: col || C.acc, r: h / 2, al: al });
+  }
+  function line(x, x0, y0, x1, y1, col, lw, al) { if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.strokeStyle = col || C.acc; x.lineWidth = lw || 1; x.lineCap = 'round'; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.restore(); }
+  function arc(x, x0, y0, x1, y1, lift, col, lw, al, f) { // a curved link from one point up and over to another; f draws only the first part of it
+    if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.strokeStyle = col || C.acc; x.lineWidth = lw || 1; x.lineCap = 'round'; x.beginPath(); var mx = (x0 + x1) / 2, my = Math.min(y0, y1) - lift, n = 28, m = Math.max(1, Math.round(n * (f == null ? 1 : cl(f))));
+    for (var i = 0; i <= m; i++) { var u = i / n, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; x.lineTo(a * x0 + b * mx + c * x1, a * y0 + b * my + c * y1); } x.stroke(); x.restore();
+  }
+  function disc(x, px, py, r, col, al) { if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.fillStyle = col || C.ink; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill(); x.restore(); }
+  function ring(x, px, py, r, col, lw, al) { if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.strokeStyle = col || C.ink; x.lineWidth = lw || 1; x.beginPath(); x.arc(px, py, r, 0, 7); x.stroke(); x.restore(); }
+  function glow(x, px, py, r, col, al) { x.save(); x.globalCompositeOperation = 'lighter'; H3.dot(x, px, py, r, col, al); x.restore(); }
+  function clear(x, W, H, col) { x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = col || C.bg; x.fillRect(0, 0, W, H); }
+  // the part of the screen a picture may use: under the title, above the captions, between the side arrows
+  function area(W, H) {
+    var wide = W > 760, top = wide ? Math.max(178, H * 0.235) : Math.max(206, H * 0.25), bot = H - (wide ? 192 : 196), l = wide ? 78 : 14, r = W - (wide ? 78 : 14);
+    return { x: l, y: top, w: r - l, h: Math.max(120, bot - top), cx: (l + r) / 2, cy: (top + bot) / 2, r: r, b: bot, wide: wide, u: Math.max(0.62, Math.min(1.25, Math.min((r - l) / 900, (bot - top) / 430))) };
+  }
+  function credit(x, A, s, al) { // where the numbers come from; on a narrow screen it takes two lines
+    var size = Math.max(9.5, 11 * A.u), o = { a: 'center', c: C.dim, mono: true, w: 400, al: al == null ? 0.85 : al };
+    if (width(x, s, size, o) <= A.w) return void text(x, s, A.cx, A.b + 3, size, o);
+    var mid = s.length / 2, cut = -1, i; for (i = 0; i < s.length; i++) if (s[i] === ' ' && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i;
+    text(x, s.slice(0, cut), A.cx, A.b - 4, size, o); text(x, s.slice(cut + 1), A.cx, A.b - 4 + size * 1.25, size, o);
+  } // where the numbers come from
+  function pct(p, d) { var v = p * 100; return (v >= 10 ? v.toFixed(d == null ? 0 : d) : v >= 1 ? v.toFixed(d == null ? 1 : d) : v >= 0.1 ? v.toFixed(2) : v >= 0.001 ? v.toFixed(3) : v.toExponential(0)) + '%'; }
+  function commas(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function dial(x, px, py, r, ang, col, al) { // a little dial with its mark at an angle
+    if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.strokeStyle = col || C.acc; x.lineWidth = Math.max(0.8, r * 0.16); x.beginPath(); x.arc(px, py, r, 0, 7); x.stroke(); x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.sin(ang) * r * 0.92, py - Math.cos(ang) * r * 0.92); x.stroke(); x.restore();
+  }
+  function tick(x, px, py, r, ok, al) { // a check mark or a cross
+    if (al != null && al <= 0.003) return; x.save(); x.globalAlpha = al == null ? 1 : al; x.lineWidth = Math.max(1.6, r * 0.3); x.lineCap = 'round'; x.strokeStyle = ok ? C.good : C.hot; x.beginPath();
+    if (ok) { x.moveTo(px - r * 0.6, py); x.lineTo(px - r * 0.15, py + r * 0.5); x.lineTo(px + r * 0.7, py - r * 0.55); } else { x.moveTo(px - r * 0.55, py - r * 0.55); x.lineTo(px + r * 0.55, py + r * 0.55); x.moveTo(px + r * 0.55, py - r * 0.55); x.lineTo(px - r * 0.55, py + r * 0.55); } x.stroke(); x.restore();
+  }
+  return { C: C, GROUP: GROUP, at: at, end: end, clock: clock, cl: cl, ramp: ramp, span: span, bump: bump, lerp: lerp, text: text, width: width, rr: rr, box: box, chip: chip, chipW: chipW, show: show, flow: flow, bar: bar, line: line, arc: arc, disc: disc, ring: ring, glow: glow, clear: clear, area: area, credit: credit, pct: pct, commas: commas, dial: dial, tick: tick };
+})();
+
+
+// ---------------------------------------------------------------- the front
+// ATTENTION. The sentence "When Mary and John went to the store, John gave a drink to" is shown as the 14 pieces GPT-2
+// small (OpenAI, 2019) cuts it into, with a hole at the end. Lines drawn from a piece to earlier pieces are real
+// attention weights from that model: first five of its lookers averaged, as each piece in turn looks back; then, for
+// the last piece, the looker in layer 10, head 7, which puts 49% of its attention on "Mary", 33% on the first piece
+// and 12% on "John". The model's real answer fills the hole: "Mary" 45%, "them" 21%, "the" 7%. With the names swapped
+// ("When John and Mary went to the store, Mary gave a drink to") its real answer is "John" 54%. Pieces can only look
+// at earlier pieces, and each carries its place in the order. At the end all 144 lookers (12 layers of 12) are shown
+// at once, each as a strip of where it looks from the last piece; most have no known job.
+var SCENE = (function () {
+  var d = D.data.attn, P = d.pieces, N = P.length, t = {}, C = K.C, H1 = [], H2 = d.heads['9.6'], SW = P.slice(), SWTOP = null;
+  function init() {
+    t.hole = K.at(0, 'a hole at the end'); t.say = K.at(0, 'When Mary and John went'); t.who = K.at(0, 'who?'); t.know = K.at(0, "You know it's Mary"); t.how = K.at(0, 'how would a machine know'); t.alone = K.at(0, 'starts out alone');
+    t.itself = K.at(0, 'only knows itself'); t.looks = K.at(0, 'looks back at the pieces'); t.borrow = K.at(0, 'borrows a little'); t.called = K.at(0, 'called attention'); t.watch = K.at(0, 'Watch the last piece'); t.real = K.at(0, 'These lines are real');
+    t.mary = K.at(0, 'looking hardest at Mary'); t.guess = K.at(0, 'the machine guesses Mary'); t.swap = K.at(0, 'Swap the names around'); t.back = K.at(0, 'only look backward'); t.order = K.at(0, 'what order the pieces came in'); t.mixed = K.at(0, 'would get mixed up');
+    t.one = K.at(0, "isn't just one looker"); t.many = K.at(0, 'one hundred and forty four'); t.diff = K.at(0, 'different things at once'); t.most = K.at(0, 'nobody can explain yet');
+    for (var a = 0; a < N; a++) { H1.push([]); for (var b = 0; b < N; b++) { var s = 0; for (var h in d.heads) s += d.heads[h][a][b]; H1[a].push(s / 5); } }
+    SW[1] = ' John'; SW[3] = ' Mary'; SW[9] = ' Mary'; SWTOP = d.swap['When John and Mary went to the store, Mary gave a drink to'];
+  }
+  function draw(x, W, H, tt, dt, nt) {
+    var n = K.clock(0, nt), A = K.area(W, H), u = A.u, i, j, fs = Math.max(11.5, 16 * u);
+    K.clear(x, W, H);
+    var grid = K.ramp(n, t.one, 1.2), size = (A.wide ? K.lerp(25, 17, grid) : 15) * u * (A.wide ? 1 : 1.15), list = P.concat(['  ?  ']);
+    var L = K.flow(x, list, size, A.cx, 0, A.w * 0.98, size * 0.3), rowsN = L.rows, lift = Math.min(A.h * 0.36, 150 * u) * (rowsN > 1 ? 0.55 : 1);
+    var top = K.lerp(A.y + lift + size * 0.4 + (A.h - lift - L.h - fs * 5) * 0.35, A.y + size * 0.3, grid);
+    var sw = K.span(n, t.swap + 0.5, t.back, 0.5), last = N - 1, appear = function (k) { return K.ramp(n, t.say + k * 0.22, 0.3); };
+    function cx(k) { return L[k].x + L[k].w / 2; } function cy(k) { return top + L[k].y - size * 0.95; }
+    // ---- the looking: lines from one piece back to the earlier ones
+    var mode = n < t.looks ? 0 : n < t.watch ? 1 : n < t.one ? 2 : 3, from = -1, row = null, lineAl = 0;
+    if (mode === 1) { var k = Math.min(N - 1, 2 + Math.floor((n - t.looks) / ((t.watch - t.looks) / (N - 2)))); from = k; row = H1[k]; lineAl = 1; }
+    if (mode === 2) { from = last; row = H2[last]; lineAl = K.ramp(n, t.watch + 0.6, 1) * (1 - sw) * (1 - K.span(n, t.back, t.one, 0.5) * 0.85); }
+    if (from >= 0 && lineAl > 0.01) for (i = 0; i < from; i++) { var w = row[i]; if (w < 0.02) continue; var grow = mode === 2 ? K.ramp(n, t.watch + 0.6 + i * 0.05, 0.8) : 1, sameRow = L[i].row === L[from].row;
+      K.arc(x, cx(from), cy(from), cx(i), cy(i), sameRow ? Math.min(lift, 26 * u + Math.abs(cx(from) - cx(i)) * 0.22) : 10, w > 0.3 ? C.warm : C.acc, 1 + w * 9 * u, lineAl * (0.35 + 0.65 * Math.min(1, w * 2.2)), grow);
+      if (mode === 2 && w >= 0.1 && grow > 0.9) K.text(x, Math.round(w * 100) + '%', cx(i), cy(i) - fs * 0.9, fs * 1.05, { a: 'center', mono: true, w: 700, c: w > 0.3 ? C.warm : C.acc, al: lineAl * K.ramp(n, t.real, 0.5) }); }
+    // ---- the pieces
+    var aloneP = K.span(n, t.alone, t.looks, 0.4), behind = K.span(n, t.back, t.order, 0.4), ord = K.span(n, t.order, t.one, 0.4);
+    for (i = 0; i < N; i++) { var a = appear(i), p = L[i], hot = 0, txt = P[i];
+      if (mode === 1 && i === from) hot = 1; if (mode === 2 && i === last) hot = Math.max(hot, 0.8 * (1 - sw)); if (i === 1 && mode === 2) hot = Math.max(hot, K.span(n, t.mary, t.swap, 0.3));
+      var dimmed = behind > 0.01 && i > 4 ? behind * 0.75 : 0, sp = (i === 1 || i === 3 || i === 9) ? sw : 0;
+      K.chip(x, txt, p.x, top + p.y, size, { wd: p.w, al: a * (1 - dimmed) * (1 - sp), bd: hot > 0.02 ? C.warm : null, bg: hot > 0.02 ? 'rgba(255,196,107,' + (0.25 * hot).toFixed(3) + ')' : null, lw: hot > 0.02 ? 2 : 1.2 });
+      if (sp > 0.01) K.chip(x, SW[i], p.x, top + p.y, size, { wd: p.w, al: a * sp, bd: C.vio, bg: 'rgba(201,162,255,.2)', lw: 2 });
+      if (aloneP > 0.01) K.ring(x, p.x + p.w / 2, top + p.y, Math.max(p.w * 0.62, size * 1.05), C.faint, 1, aloneP * a);
+      if (ord > 0.01) K.text(x, String(i + 1), p.x + p.w / 2, top + p.y + size * 1.5, size * 0.52, { a: 'center', mono: true, c: C.good, w: 600, al: ord * K.ramp(n, t.order + i * 0.07, 0.3) }); }
+    if (behind > 0.01) { K.chip(x, P[4], L[4].x, top + L[4].y, size, { wd: L[4].w, al: behind, bd: C.warm, lw: 2, bg: 'rgba(255,196,107,.2)' }); for (i = 0; i < 4; i++) K.arc(x, cx(4), cy(4), cx(i), cy(i), 22 * u + Math.abs(cx(4) - cx(i)) * 0.2, C.acc, 2, behind * 0.8);
+      if (L[5].row === L[N - 1].row || true) K.text(x, 'still to come: it cannot look here', (cx(5) + cx(N - 1)) / 2, top + L[N - 1].y + size * 1.7, fs, { a: 'center', mono: true, c: C.hot, al: behind }); K.text(x, 'it can look back at these', (cx(0) + cx(3)) / 2, top + L[0].y + size * 1.7, fs, { a: 'center', mono: true, c: C.acc, al: behind * (L[0].row === L[3].row ? 1 : 0) }); }
+    // ---- the hole, and what the machine puts in it
+    var hp = L[N], ha = appear(N), gs = K.ramp(n, t.guess, 0.5), kn = K.span(n, t.know, t.how, 0.3), ans = sw > 0.5 ? SWTOP[0] : d.top[0];
+    K.box(x, hp.x, top + hp.y - size * 0.875, hp.w, size * 1.75, { line: gs > 0.5 ? (sw > 0.5 ? C.vio : C.warm) : C.dim, fill: gs > 0.5 ? (sw > 0.5 ? 'rgba(201,162,255,.2)' : 'rgba(255,196,107,.22)') : 'rgba(255,255,255,.03)', r: size * 0.38, al: ha, lw: 2 });
+    K.text(x, gs > 0.5 ? ans[0].trim() : kn > 0.3 ? 'Mary?' : '?', hp.x + hp.w / 2, top + hp.y, size * (gs > 0.5 ? 0.86 : 0.8), { a: 'center', w: 700, c: gs > 0.5 ? '#fff' : C.dim, al: ha * (gs > 0.5 ? 1 : 0.6 + 0.4 * Math.sin(tt * 4)) });
+    if (gs > 0.5 && grid < 0.5) { var gl = sw > 0.5 ? SWTOP : d.top, s2 = ''; for (i = 0; i < 3; i++) s2 += (i ? '   ' : '') + gl[i][0].trim() + ' ' + Math.round(gl[i][1] * 100) + '%';
+      K.text(x, 'the machine’s real answer:  ' + s2, A.cx, top + L.h + fs * (ord > 0.01 || behind > 0.01 ? 2.6 : 1.4), fs * 1.05, { a: 'center', mono: true, c: sw > 0.5 ? C.vio : C.warm, al: gs * (1 - grid) * (1 - behind) }); }
+    // ---- words on the picture
+    var above = A.y + fs * 0.4;
+    K.text(x, 'each piece knows only itself', A.cx, above, fs * 1.1, { a: 'center', mono: true, c: C.dim, al: aloneP });
+    var l1 = K.span(n, t.looks, t.watch, 0.4); K.text(x, n < t.called ? 'each piece looks back, and borrows from the ones that help' : 'this is attention', A.cx, above, fs * 1.1, { a: 'center', mono: true, c: n < t.called ? C.dim : C.ink, al: l1 });
+    var l2 = K.span(n, t.watch, t.swap, 0.4); K.text(x, 'where the last piece looks (one real looker: layer 10, head 7)', A.cx, above, fs * 1.02, { a: 'center', mono: true, c: C.dim, al: l2 });
+    K.text(x, 'names swapped: the answer swaps too', A.cx, above, fs * 1.1, { a: 'center', mono: true, c: C.vio, al: sw });
+    K.text(x, 'every piece carries its place in the line', A.cx, above, fs * 1.1, { a: 'center', mono: true, c: C.good, al: ord });
+    // ---- all 144 lookers at once
+    if (grid > 0.01) {
+      var gy = top + L.h + fs * 2.4, gh = A.b - gy - fs * 0.6, gw = Math.min(A.w * 0.96, gh * 3.2), cw = gw / 12, ch = gh / 12, gx = A.cx - gw / 2, unk = K.ramp(n, t.most, 1.2);
+      K.text(x, '144 lookers: 12 layers of 12 · each strip shows where one of them looks from the last piece', A.cx, gy - fs * 1.1, fs * 0.9, { a: 'center', mono: true, c: C.dim, w: 400, al: grid * K.ramp(n, t.many, 0.6) });
+      for (var Lr = 0; Lr < 12; Lr++) for (var Hd = 0; Hd < 12; Hd++) { var on = K.ramp(n, t.many + (Lr * 12 + Hd) * 0.012, 0.4) * grid; if (on <= 0.01) continue; var r = d.last[Lr][Hd], tx = gx + Hd * cw, ty = gy + (11 - Lr) * ch, ours = Lr === 9 && Hd === 6, bw = (cw - 6) / N;
+        K.box(x, tx + 1, ty + 1, cw - 3, ch - 3, { fill: 'rgba(143,194,255,.05)', line: ours ? C.warm : null, r: 3, al: on, lw: 1.5 });
+        for (i = 0; i < N; i++) if (r[i] > 0.03) { x.globalAlpha = on * Math.min(1, 0.15 + r[i] * 1.3) * (ours ? 1 : 1 - unk * 0.6); x.fillStyle = ours ? C.warm : i === 0 ? '#5f7fa8' : C.acc; x.fillRect(tx + 3 + i * bw, ty + 3, Math.max(1, bw - 0.6), ch - 7); }
+        x.globalAlpha = 1; if (unk > 0.01 && !ours && (Lr * 7 + Hd * 3) % 4 !== 0) K.text(x, '?', tx + cw / 2, ty + ch / 2, Math.min(ch * 0.7, fs), { a: 'center', mono: true, c: C.ink, al: unk * 0.7 * on }); }
+      if (A.wide) { K.text(x, 'layer 12', gx - 8, gy + ch / 2, fs * 0.75, { a: 'right', mono: true, c: C.dim, w: 400, al: grid }); K.text(x, 'layer 1', gx - 8, gy + gh - ch / 2, fs * 0.75, { a: 'right', mono: true, c: C.dim, w: 400, al: grid }); K.text(x, '← the one above', gx + 7 * cw + 6, gy + 2.5 * ch, fs * 0.8, { mono: true, c: C.warm, al: grid * K.ramp(n, t.diff, 0.5) * (gx + 7 * cw + 150 < A.r ? 0 : 0) }); }
+    }
+    K.credit(x, A, 'real attention weights and real answers from GPT-2 small (OpenAI, 2019)');
   }
   return { init: init, draw: draw };
 })();
 
 
 // ---------------------------------------------------------------- the back: its opposite (drawn light on black, shown as ink on paper)
-// THE OPPOSITE OF THE CELL: a virus. About 100 nanometres across (a cell is 100 times wider), with no metabolism
-// and no machinery of its own: a strand of instructions (RNA or DNA) in a protein shell studded with spikes.
-// It drifts by Brownian motion until a spike (the key) meets a matching receptor on a cell (the lock); then it is
-// drawn in, and the cell's own ribosomes are made to build copies, which bud back out through the membrane.
+// THE OPPOSITE OF ATTENTION: recall (the MLP, or feed-forward, half of every layer). The sentence "The opposite of
+// hot is" with a hole; GPT-2 small's real top answer is "cold" (16%). One piece passes alone through a panel of
+// 3,072 lights (the real number in each recall step of GPT-2 small) and comes out with a little added on. Two bars
+// compare the model's real counts of numbers: 28 million in its looking steps, 57 million in its recall steps. Then
+// a real experiment on that model: the recall step of each of the 12 layers is switched off in turn and the chance of
+// "cold" is measured again. With layer 1 off it falls to 0.2%; with any other layer off it stays between 8% and 26%
+// (it was 16%). So there is no one place where "cold" is kept: what the model knows is spread through it.
 var SCENE2 = (function () {
-  var r = H3.rng(64), V = [], CYC = 22;
-  function init() { for (var i = 0; i < 6; i++) V.push({ x: 0.12 + r() * 0.76, y: 0.34 + r() * 0.2, rot: r() * 6.28, w: (r() - 0.5) * 0.3, s: 0.75 + r() * 0.5, ph: r() * 6.28 }); }
-  function virion(x, px, py, R, rot, a, t) {
-    x.save(); x.translate(px, py); x.rotate(rot); x.globalAlpha = a; x.strokeStyle = '#fff'; x.fillStyle = 'rgba(255,255,255,.1)';
-    for (var i = 0; i < 16; i++) { var an = i / 16 * 6.2832; x.lineWidth = Math.max(1.2, R * 0.05); x.beginPath(); x.moveTo(Math.cos(an) * R, Math.sin(an) * R); x.lineTo(Math.cos(an) * R * 1.3, Math.sin(an) * R * 1.3); x.stroke(); x.beginPath(); x.arc(Math.cos(an) * R * 1.36, Math.sin(an) * R * 1.36, R * 0.085, 0, 7); x.fillStyle = '#fff'; x.fill(); }
-    x.beginPath(); for (i = 0; i <= 6; i++) { var a2 = i / 6 * 6.2832 + 0.26; x.lineTo(Math.cos(a2) * R, Math.sin(a2) * R); } x.closePath(); x.fillStyle = 'rgba(255,255,255,.12)'; x.fill(); x.lineWidth = Math.max(1.6, R * 0.07); x.stroke();
-    x.beginPath(); for (i = 0; i < 60; i++) { var q = i / 60, rr = R * 0.62 * (0.25 + 0.75 * q), an2 = q * 15 + t * 0.4; x.lineTo(Math.cos(an2) * rr * (1 + 0.1 * Math.sin(i * 1.7)), Math.sin(an2) * rr * (1 + 0.1 * Math.cos(i * 1.3))); } x.lineWidth = Math.max(1, R * 0.045); x.strokeStyle = 'rgba(255,190,120,1)'; x.stroke();
-    x.restore();
+  var d = D.data.recall, cnt = D.data.counts, P = d.pieces, t = {}, C = K.C, r = H3.rng(4), lights = [];
+  function init() {
+    t.front = K.at(1, 'pieces looked at each other'); t.opp = K.at(1, 'Here is the opposite'); t.inward = K.at(1, 'looking inward'); t.finish = K.at(1, 'Finish this'); t.say = K.at(1, 'The opposite of hot is'); t.cold = K.at(1, 'Cold.');
+    t.popped = K.at(1, 'popped into your head'); t.look = K.at(1, "didn't look it up"); t.step = K.at(1, 'has a step like that'); t.after = K.at(1, 'thousands of little lights'); t.added = K.at(1, 'get added on'); t.hot = K.at(1, 'Hot goes in');
+    t.out = K.at(1, 'cold comes out'); t.most = K.at(1, 'working numbers sit'); t.drawer = K.at(1, 'a drawer inside'); t.no = K.at(1, 'No.'); t.off = K.at(1, 'Switch these steps off'); t.still = K.at(1, 'the answer is still there');
+    t.far = K.at(1, 'As far as anyone can tell'); t.spread = K.at(1, 'spread across all of it');
+    for (var i = 0; i < 96 * 16; i++) lights.push([r(), Math.pow(r(), 5)]);
   }
-  function draw(x, W, H, t, dt, nt) {
-    var tc = t % CYC, R = Math.min(W, H) * 0.065, my = H - 215, i;
-    x.fillStyle = '#000'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over';
-    // the surface of a cell along the bottom (it curves so gently because the cell is so much bigger), with receptors
-    var dockX = W * 0.5, dip = tc > 7 && tc < 12 ? H3.smooth((tc - 7) / 2.5) * (1 - H3.smooth((tc - 11) / 1)) : 0;
-    function mem(px) { return my + 10 * Math.sin(px * 0.012 + t * 0.5) + dip * R * 2.3 * Math.exp(-Math.pow((px - dockX) / (R * 1.5), 2)); }
-    x.fillStyle = 'rgba(120,200,255,.14)'; x.beginPath(); x.moveTo(0, H); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.lineTo(W, H); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(160,230,225,1)'; x.lineWidth = 5; x.beginPath(); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.stroke(); x.strokeStyle = '#000'; x.lineWidth = 1.4; x.beginPath(); for (i = 0; i <= W; i += 8) x.lineTo(i, mem(i)); x.stroke();
-    x.strokeStyle = 'rgba(255,220,140,1)'; x.lineWidth = 2; for (i = 30; i < W; i += 64) { var ry = mem(i); x.beginPath(); x.moveTo(i, ry); x.lineTo(i, ry - 14); x.moveTo(i - 6, ry - 22); x.lineTo(i, ry - 14); x.lineTo(i + 6, ry - 22); x.stroke(); }
-    // free virions, jiggling: they cannot swim or steer
-    for (i = 0; i < V.length; i++) { var v = V[i]; v.x += H3.gauss(r) * 0.0009 + 0.0004 * Math.sin(t * 0.3 + v.ph); v.y += H3.gauss(r) * 0.0009; v.x = H3.clamp(v.x, 0.08, 0.92); v.y = H3.clamp(v.y, 0.34, 0.56); v.rot += v.w * dt; virion(x, v.x * W, v.y * H, R * v.s * 0.8, v.rot, 0.85, t); }
-    // one meets the cell: 0-6 s it drifts down, 6-9 its spikes fit the receptors, 9-12 it is drawn inside
-    var py = tc < 6 ? H3.lerp(H * 0.3, my - R * 1.45, H3.smooth(tc / 6)) : tc < 9 ? my - R * 1.45 + 2 * Math.sin(t * 9) : H3.lerp(my - R * 1.45, my + R * 1.6, H3.smooth((tc - 9) / 3));
-    var pa = tc < 9 ? 1 : 1 - H3.smooth((tc - 10) / 2);
-    if (tc < 12.2) virion(x, dockX + (tc < 6 ? Math.sin(t * 1.3) * 12 * (1 - tc / 6) : 0), py, R, tc < 6 ? t * 0.3 : 0.26, pa, t);
-    if (tc > 6 && tc < 9.4) { x.globalCompositeOperation = 'lighter'; H3.dot(x, dockX, my - 8, R * 0.9, 'rgba(255,225,150,1)', 0.5 + 0.3 * Math.sin(t * 8)); x.globalCompositeOperation = 'source-over'; }
-    // 13 s on: the copies the cell was made to build bud out and drift away
-    if (tc > 13.5) for (i = 0; i < 7; i++) { var f = (tc - 13.5 - i * 0.55) / 6; if (f <= 0 || f > 1) continue; var bx = dockX + (i - 3) * R * 1.5 + Math.sin(t + i) * 8; virion(x, bx, H3.lerp(mem(bx) + R * 0.4, H * 0.24, H3.smooth(f)), R * 0.62 * Math.min(1, f * 4), t * 0.4 + i, Math.min(1, f * 5) * (1 - H3.smooth((f - 0.75) * 4)), t); }
-    x.globalAlpha = 1;
-    var msg = tc < 6 ? 'on its own it can do nothing: it only drifts' : tc < 9 ? 'its keys fit the cell’s locks' : tc < 13.5 ? 'inside, it hands over its instructions' : 'the cell is tricked into building copies';
-    H3.label(x, msg, W / 2, H * 0.265, 'center', '#fff', 14);
-    H3.label(x, 'the surface of one cell (100 times wider than the virus)', Math.max(64, W * 0.05), my + 46, 'left', 'rgba(190,240,235,.95)', 11);
-    if (W > 700) { H3.lead(x, V[0].x * W + R * 0.5, V[0].y * H, V[0].x * W + R * 1.9, V[0].y * H - R * 1.2); H3.label(x, 'a shell, spikes, and a strand of instructions. That is all.', V[0].x * W + R * 2, V[0].y * H - R * 1.2, V[0].x > 0.55 ? 'right' : 'left', 'rgba(255,225,190,.95)', 11); }
-    H3.scaleBar(x, W, H, R * 2, '100 nanometers (a ten-thousandth of a millimeter)');
+  function panel(x, px, py, w, h, al, heat, tt) { // 3,072 lights, drawn as 96 x 16 pairs
+    var cw = w / 96, ch = h / 16, i; K.box(x, px - 6, py - 6, w + 12, h + 12, { line: 'rgba(143,194,255,.45)', fill: 'rgba(143,194,255,.04)', r: 8, al: al });
+    for (i = 0; i < lights.length; i++) { var v = lights[i][1] * heat * (0.6 + 0.4 * Math.sin(tt * (2 + lights[i][0] * 5) + i)), on = v > 0.25; x.globalAlpha = al * (on ? Math.min(1, v + 0.2) : 0.22); x.fillStyle = on ? C.warm : C.acc; x.fillRect(px + (i % 96) * cw, py + Math.floor(i / 96) * ch, Math.max(1, cw - 1), Math.max(1, ch - 1)); } x.globalAlpha = 1;
+  }
+  function draw(x, W, H, tt, dt, nt) {
+    var n = K.clock(1, nt), A = K.area(W, H), u = A.u, i, fs = Math.max(11.5, 16 * u);
+    K.clear(x, W, H, '#000');
+    var size = (A.wide ? 28 : 19) * u, list = P.concat(['  ?  ']), L = K.flow(x, list, size, A.cx, 0, A.w * 0.96, size * 0.3), exp = K.ramp(n, t.drawer, 1), top = A.y + size * 0.4;
+    // ---- the sentence and its hole
+    var sa = K.ramp(n, t.finish, 0.5), got = K.ramp(n, t.cold, 0.3), lastHot = K.span(n, t.step, t.most, 0.4);
+    for (i = 0; i < P.length; i++) { var hi = (i === 3 ? K.span(n, t.hot, t.most, 0.3) : 0) + (i === 4 ? lastHot * 0.8 : 0); K.chip(x, P[i], L[i].x, top + L[i].y, size, { wd: L[i].w, al: sa * K.ramp(n, t.say + i * 0.2, 0.3), bd: hi > 0.02 ? C.warm : null, bg: hi > 0.02 ? 'rgba(255,196,107,' + (0.24 * Math.min(1, hi)).toFixed(3) + ')' : null, lw: hi > 0.02 ? 2 : 1.2 }); }
+    var hp = L[P.length]; K.box(x, hp.x, top + hp.y - size * 0.875, hp.w, size * 1.75, { line: got > 0.5 ? C.warm : C.dim, fill: got > 0.5 ? 'rgba(255,196,107,.22)' : 'rgba(255,255,255,.03)', r: size * 0.38, al: sa * K.ramp(n, t.say + 1.1, 0.3), lw: 2 });
+    K.text(x, got > 0.5 ? 'cold' : '?', hp.x + hp.w / 2, top + hp.y, size * 0.86, { a: 'center', w: 700, c: got > 0.5 ? '#fff' : C.dim, al: sa * K.ramp(n, t.say + 1.1, 0.3) });
+    var base = top + L.h + fs * 0.4, zh = A.b - base, zc = base + zh / 2;
+    // ---- before the sentence: each piece, alone, looking inward
+    var inw = K.span(n, t.front, t.finish, 0.5);
+    if (inw > 0.01) { var ex = ['When', 'Mary', 'and', 'John'], gap = Math.min(A.w / 4.6, 170 * u), each = K.ramp(n, t.opp, 1);
+      for (i = 0; i < 4; i++) { var px = A.cx + (i - 1.5) * gap, py = A.cy; K.chip(x, ex[i], px - K.chipW(x, ex[i], size) / 2, py, size, { al: inw });
+        if (i) K.arc(x, px, py - size, px - gap, py - size, 36 * u, C.acc, 2, inw * (1 - each));
+        for (var q = 0; q < 3; q++) { var ph = ((n * 0.6 + q / 3) % 1), rad = size * (2.6 - 1.7 * ph); K.ring(x, px, py, rad, C.warm, 1.5, inw * K.ramp(n, t.inward - 0.5, 0.8) * (1 - ph) * 0.9); } }
+      K.text(x, each < 0.5 ? 'the front: pieces looking at each other' : 'the back: each piece alone, looking inward', A.cx, A.cy + size * 3.4, fs * 1.1, { a: 'center', mono: true, c: C.dim, al: inw }); }
+    // ---- the step itself: one piece goes through 3,072 lights and comes out with something added
+    var st = K.span(n, t.popped + 0.5, t.drawer, 0.6);
+    if (st > 0.01) {
+      var pw = Math.min(A.w * 0.62, 620 * u), ph2 = Math.min(zh * 0.36, pw * 0.2), px2 = A.cx - pw / 2, py2 = zc - ph2 / 2 + fs * 0.3, go = K.ramp(n, t.after, 2.2), heat = K.span(n, t.after + 0.6, t.most, 0.8);
+      var mine = K.span(n, t.popped + 0.5, t.step, 0.4); if (mine > 0.01) K.text(x, 'you did not look it up. it was just there.', A.cx, zc, fs * 1.25, { a: 'center', c: C.ink, al: mine });
+      var sh = K.ramp(n, t.step, 0.7) * st; panel(x, px2, py2, pw, ph2, sh, 0.25 + Math.max(heat, 0.55 * K.ramp(n, t.after + 0.6, 0.8)), tt);
+      K.text(x, 'one recall step: ' + K.commas(cnt.neurons_per_layer) + ' little lights', A.cx, py2 - fs * 1.5, fs, { a: 'center', mono: true, c: C.dim, w: 400, al: sh });
+      // the piece on its way through
+      var word = n < t.hot ? 'is' : 'hot', inX = K.lerp(px2 - fs * 7, px2 - fs * 2.4, K.cl(go * 2)), cw2 = K.chipW(x, word, size * 0.8);
+      K.chip(x, word, inX - cw2 / 2, py2 + ph2 / 2, size * 0.8, { al: sh * K.ramp(n, t.after - 0.2, 0.4), bd: C.warm });
+      K.line(x, inX + cw2 / 2 + 4, py2 + ph2 / 2, px2 - 10, py2 + ph2 / 2, C.warm, 2, sh * go);
+      var outA = sh * K.ramp(n, t.added, 0.7), ox = px2 + pw + fs * 1.2; K.line(x, px2 + pw + 8, py2 + ph2 / 2, ox + fs * 1.2, py2 + ph2 / 2, C.warm, 2, outA);
+      var tail = n >= t.out ? '+ a little “cold”' : '+ what it learned'; K.text(x, A.wide ? tail : '', ox + fs * 1.8, py2 + ph2 / 2, fs * 1.1, { mono: true, w: 600, c: C.warm, al: outA });
+      if (!A.wide) K.text(x, tail, A.cx, py2 + ph2 + fs * 1.6, fs * 1.1, { a: 'center', mono: true, w: 600, c: C.warm, al: outA });
+      // where the model's numbers are
+      var mo = K.span(n, t.most, t.drawer, 0.4); if (mo > 0.01) { var by = py2 + ph2 + fs * (A.wide ? 2 : 3.4), bw = Math.min(A.w * 0.5, 420 * u), bx = A.cx - bw / 2;
+        K.text(x, 'looking steps', bx - 10, by, fs * 0.9, { a: 'right', mono: true, c: C.dim, w: 400, al: mo }); K.bar(x, bx, by - 5, bw, 10, cnt.attn / cnt.mlp * K.ramp(n, t.most, 0.8), C.acc, { al: mo }); K.text(x, Math.round(cnt.attn / 1e6) + ' million numbers', bx + bw + 10, by, fs * 0.9, { mono: true, c: C.acc, al: mo * (A.wide ? 1 : 0) });
+        K.text(x, 'recall steps', bx - 10, by + fs * 1.7, fs * 0.9, { a: 'right', mono: true, c: C.dim, w: 400, al: mo }); K.bar(x, bx, by + fs * 1.7 - 5, bw, 10, K.ramp(n, t.most + 0.4, 0.8), C.warm, { al: mo }); K.text(x, Math.round(cnt.mlp / 1e6) + ' million numbers', bx + bw + 10, by + fs * 1.7, fs * 0.9, { mono: true, c: C.warm, al: mo * (A.wide ? 1 : 0) }); }
+    }
+    // ---- is there a drawer with "cold" in it? switch each recall step off and see
+    if (exp > 0.01) {
+      var no = K.ramp(n, t.no, 0.3), dr = K.span(n, t.drawer, t.off, 0.4), dw = Math.min(150 * u, A.w * 0.3), dh = dw * 0.55, dx = A.cx - dw / 2, dy = zc - dh / 2;
+      if (dr > 0.01) { K.box(x, dx, dy, dw, dh, { line: C.ink, fill: 'rgba(255,255,255,.04)', r: 6, al: dr, lw: 2 }); K.box(x, dx + dw * 0.38, dy + dh * 0.62, dw * 0.24, dh * 0.14, { fill: C.ink, r: 3, al: dr }); K.text(x, 'cold', A.cx, dy + dh * 0.34, dh * 0.34, { a: 'center', w: 700, al: dr });
+        K.text(x, 'a drawer with the answer in it?', A.cx, dy - fs * 1.3, fs * 1.1, { a: 'center', mono: true, c: C.dim, al: dr }); if (no > 0.01) { K.line(x, dx - 10, dy - 10, dx + dw + 10, dy + dh + 10, C.hot, 4, dr * no); K.line(x, dx + dw + 10, dy - 10, dx - 10, dy + dh + 10, C.hot, 4, dr * no); } }
+      var ex2 = K.ramp(n, t.off, 0.6);
+      if (ex2 > 0.01) { var cw3 = Math.min((A.w * 0.9) / 12, 62 * u), gw = cw3 * 12, gx = A.cx - gw / 2, gb = A.b - fs * 2.6, gh = Math.max(60, gb - base - fs * 3.2), mx = 0.3, y16 = gb - d.base / mx * gh, spr = K.ramp(n, t.spread, 1);
+        K.text(x, 'switch off one recall step at a time: is “cold” still the answer?  (dashed line: nothing off, ' + Math.round(d.base * 100) + '%)', A.cx, base + fs * 0.9, fs * 1.02, { a: 'center', mono: true, c: C.dim, w: 400, al: ex2 });
+        K.line(x, gx, gb, gx + gw, gb, C.faint, 1, ex2); x.save(); x.setLineDash([5, 5]); K.line(x, gx, y16, gx + gw, y16, C.ink, 1, ex2 * 0.7); x.restore();
+        for (i = 0; i < 12; i++) { var on = K.ramp(n, t.off + 0.8 + i * 0.42, 0.5); if (on <= 0.01) continue; var v = d.mlp_off[i], bh = Math.max(2, v / mx * gh * on), bad = v < d.base * 0.3, bx2 = gx + i * cw3 + cw3 * 0.16;
+          K.box(x, bx2, gb - bh, cw3 * 0.68, bh, { fill: bad ? C.hot : spr > 0.01 ? C.warm : C.acc, r: 3, al: ex2 * (0.85 + 0.15 * Math.sin(tt * 2 + i) * spr) }); K.text(x, v < 0.01 ? (v * 100).toFixed(1) + '%' : Math.round(v * 100) + '%', bx2 + cw3 * 0.34, gb - bh - fs * 0.7, fs * 0.82, { a: 'center', mono: true, w: 600, c: bad ? C.hot : C.ink, al: ex2 * on });
+          K.text(x, String(i + 1), bx2 + cw3 * 0.34, gb + fs * 0.8, fs * 0.8, { a: 'center', mono: true, c: C.dim, w: 400, al: ex2 }); }
+        var st2 = K.ramp(n, t.still + 1.2, 0.6); K.text(x, st2 > 0.5 ? 'which layer’s recall step is off · only the very first one breaks it' : 'which layer’s recall step is off', A.cx, gb + fs * 2, fs * 0.85, { a: 'center', mono: true, c: st2 > 0.5 ? C.hot : C.dim, w: 400, al: ex2 }); }
+    }
+    K.credit(x, A, n >= t.off ? 'a real test on GPT-2 small (2019): the chance it gives “cold” with each recall step set to zero' : 'the real sizes of GPT-2 small (OpenAI, 2019) · the lights are a drawing');
   }
   return { init: init, draw: draw };
 })();
 
 
-// The page itself: captions, the voice, the ruler of nine scales, the side arrows, and the flip.
-// Each page has two sides. The front is the scale; the back is its opposite, with the other narrator. Flipping turns
+// The page itself: captions, the voice, the ruler of the nine parts, the side arrows, and the flip.
+// Each page has two sides. The front is one part of how the machine works; the back is its opposite, with the other narrator. Flipping turns
 // the whole page over in 3D (it swaps sides when it is edge-on) and everything on the back runs the other way:
 // ink on paper instead of light on black, the ruler and arrows reversed.
 function Chrome(D, opt) {
@@ -306,11 +433,11 @@ function Chrome(D, opt) {
   var cc = el('div', 'cc', '<span id="cap"></span>'); cc.setAttribute('aria-live', 'polite');
   var snd = el('div', 'snd', '&#128266; Tap anywhere to hear it explained'); snd.setAttribute('role', 'button'); snd.tabIndex = 0;
   var flipB = el('div', 'flip', ''); flipB.setAttribute('role', 'button'); flipB.tabIndex = 0;
-  var ruler = el('nav', 'ruler', ''); ruler.setAttribute('aria-label', 'The nine scales, from the nucleus to the universe');
+  var ruler = el('nav', 'ruler', ''); ruler.setAttribute('aria-label', 'The nine parts, from one piece of a word to the data center');
   var navL = el('a', '', '', 'nav l'), navR = el('a', '', '', 'nav r'), shade = el('div', 'shade', ''), cap = doc.getElementById('cap');
   var A = [new Audio('./narration.mp3'), new Audio('./narration-flip.mp3')]; A[0].loop = A[1].loop = false; /* each explanation plays once */ A[0].preload = 'auto'; A[1].preload = 'none'; A[0].muted = A[1].muted = true;
   var subs = [], side = 0, started = false, done = false, userMute = false, t0 = performance.now(), shown = -2, turning = false, fresh = false;
-  function nt() { var a = A[side]; if (a.ended || done) return 1e9; if (!a.paused && a.readyState > 1 && isFinite(a.currentTime)) return a.currentTime; var s = (performance.now() - t0) / 1000; if (s > D.sides[side].dur + 1) { done = true; setSnd(); } return s; } // once through, then quiet
+  function nt() { if (opt.fix != null) return opt.fix + (opt.go ? (performance.now() - t0) / 1000 : 0); var a = A[side]; if (a.ended || done) return 1e9; if (!a.paused && a.readyState > 1 && isFinite(a.currentTime)) return a.currentTime; var s = (performance.now() - t0) / 1000; if (s > D.sides[side].dur + 1) { done = true; setSnd(); } return s; } // once through, then quiet
   function over() { return done || A[side].ended; }
   function setSnd() { if (!started) return; snd.classList.add('on'); snd.innerHTML = over() ? '&#8635; Play again' : userMute ? '&#128263; Sound off' : '&#128266; Sound on'; snd.setAttribute('aria-label', userMute ? 'Turn the sound on' : 'Turn the sound off'); }
   function playSide() { done = false; A[1 - side].pause(); var a = A[side]; a.muted = !started || userMute; try { a.currentTime = 0; } catch (e) {} t0 = performance.now(); shown = -2; var p = a.play(); if (p && p.catch) p.catch(function () {}); }
@@ -320,11 +447,11 @@ function Chrome(D, opt) {
     body.classList.toggle('flip', back);
     ruler.innerHTML = '<span class="cap l">' + (back ? '← bigger' : '← smaller') + '</span><span class="cap r">' + (back ? 'smaller →' : 'bigger →') + '</span>' + D.scales.map(function (s, i) {
       var pct = (s.exp - lo) / (hi - lo) * 100; if (back) pct = 100 - pct;
-      return '<a href="https://' + s.domain + '/" class="' + (i === D.i ? 'me ' : '') + (i % 2 ? 'up' : '') + '" style="left:' + pct.toFixed(2) + '%"' + (i === D.i ? ' aria-current="page"' : '') + ' title="' + s.name + ' · ' + s.size + ' · ' + s.domain + '"><b>' + s.size + '</b><span>' + s.short + '</span></a>';
+      return '<a href="https://' + s.domain + '/" class="' + (i === D.i ? 'me ' : '') + (i % 2 ? 'up' : '') + '" style="left:' + pct.toFixed(2) + '%"' + (i === D.i ? ' aria-current="page"' : '') + ' title="Part ' + (i + 1) + ': ' + s.name + ' · ' + s.domain + '"><b>' + (i + 1) + '</b><span>' + s.short + '</span></a>';
     }).join('');
     var smaller = D.scales[(D.i - 1 + n) % n], bigger = D.scales[(D.i + 1) % n];
-    function nav(a, s, arrow, word) { a.href = 'https://' + s.domain + '/'; a.title = word + ': ' + s.name + ' (' + s.size + ')'; a.setAttribute('aria-label', word + ': ' + s.name); a.innerHTML = '<i>' + arrow + '</i><span>' + word + '<b>' + s.short + '</b></span>'; }
-    var wS = D.i === 0 ? 'biggest' : 'smaller', wB = D.i === n - 1 ? 'smallest' : 'bigger';
+    function nav(a, s, arrow, word) { a.href = 'https://' + s.domain + '/'; a.title = word + ': ' + s.name; a.setAttribute('aria-label', word + ': ' + s.name); a.innerHTML = '<i>' + arrow + '</i><span>' + word + '<b>' + s.short + '</b></span>'; }
+    var wS = D.i === 0 ? 'the last part' : 'before this', wB = D.i === n - 1 ? 'back to the start' : 'next';
     if (back) { nav(navL, bigger, '‹', wB); nav(navR, smaller, '›', wS); } else { nav(navL, smaller, '‹', wS); nav(navR, bigger, '›', wB); }
     var b = D.sides[1];
     doc.getElementById('bk').textContent = 'the other side of ' + me.name.toLowerCase() + '  ·  ' + b.size;
@@ -366,7 +493,8 @@ function Chrome(D, opt) {
 
 // Talking to the page. A visitor types or speaks a question; the answer comes back as text and is read aloud in the
 // voice of the side they are on. The server (D.chat) is told which scale and which side, so the page knows what it is
-// showing. Replies are spoken with the browser's own voice (a different one on the back of the page).
+// showing. Replies are spoken with the browser's own voice (a different one on the back of the page). The pictures are
+// timed to the narrator, so opening the chat only quiets the narrator: the film stays where it is.
 function Chat(D, CH, page) {
   var doc = document, API = D.chat.replace(/\/+$/, ''), SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var busy = false, voice = true, hist = [], rec = null, au = null, greeted = [false, false], lastSide = -1;
@@ -387,7 +515,7 @@ function Chat(D, CH, page) {
     btn.textContent = isOpen() ? 'Close the chat' : 'Ask about ' + lc; btn.classList.toggle('open', isOpen());
     $('askwho').textContent = 'The A.I. on this page'; $('askon').textContent = (s ? 'the back: ' : 'the front: ') + lc;
     inp.placeholder = 'Ask about ' + lc + '…';
-    var qs = s ? ['What am I looking at?', 'Why is this the opposite?', 'Is that known for sure?'] : ['What am I looking at?', 'How big is it, really?', 'What is its opposite?'];
+    var qs = s ? ['What am I looking at?', 'Why is this the opposite?', 'Is that known for sure?'] : ['What am I looking at?', 'Are those numbers real?', 'Do you work like this too?'];
     chips.innerHTML = ''; qs.forEach(function (q) { var b = doc.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = function () { send(q); }; chips.appendChild(b); });
     if (!isOpen()) return;
     if (lastSide >= 0 && lastSide !== s) add('', (s ? 'you turned the page: now ' : 'you turned back: now ') + lc, 'i');
@@ -440,14 +568,14 @@ function Chat(D, CH, page) {
 
 // ---------------------------------------------------------------- page
 var cv = document.getElementById('c'), cx = cv.getContext('2d'), W = 0, Hh = 0, dpr = 1, me = D.scales[D.i];
-document.getElementById('k').innerHTML = 'Scale ' + (D.i + 1) + ' of ' + D.scales.length + ' · <b>' + me.size + '</b>';
+document.getElementById('k').innerHTML = 'Part ' + (D.i + 1) + ' of ' + D.scales.length + ' · <b>' + me.size + '</b>';
 document.getElementById('name').textContent = me.name;
 document.getElementById('sub').textContent = me.sub;
-var CH = Chrome(D, {});
+var QS = new URLSearchParams(location.search), CH = Chrome(D, QS.get('n') != null ? { fix: +QS.get('n'), go: QS.get('go') != null } : {}); // ?n=seconds holds the film at that moment (&go lets it run on from there)
 function fit() { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; Hh = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0); }
 addEventListener('resize', fit); fit();
-var last = performance.now(), T = +(new URLSearchParams(location.search).get('t') || 0), Tb = T, inited = [false, false]; // ?t=seconds jumps the picture ahead
-if (new URLSearchParams(location.search).get('flip') != null) CH.flip();
+var last = performance.now(), T = 0, Tb = 0, inited = [false, false];
+if (QS.get('flip') != null) CH.flip();
 function frame(now) {
   requestAnimationFrame(frame);
   var dt = Math.min(0.05, (now - last) / 1000); last = now; var s = CH.side(), sc = s ? SCENE2 : SCENE;
